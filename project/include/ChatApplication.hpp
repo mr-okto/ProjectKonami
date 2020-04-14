@@ -7,6 +7,8 @@
 #include <Wt/WText.h>
 #include "ChatServer.hpp"
 
+
+namespace chat {
 class ChatApplication : public Wt::WApplication
 {
 public:
@@ -17,3 +19,4 @@ private:
     Wt::WLineEdit *nameEdit_;
     Wt::WText *greeting_;
 };
+}

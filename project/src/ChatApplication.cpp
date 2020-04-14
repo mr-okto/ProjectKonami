@@ -1,5 +1,6 @@
 #include "ChatApplication.hpp"
 
+namespace chat {
 ChatApplication::ChatApplication(const Wt::WEnvironment& env, ChatServer& server)
     : Wt::WApplication(env),
       server_(server)
@@ -15,4 +16,5 @@ ChatApplication::ChatApplication(const Wt::WEnvironment& env, ChatServer& server
       greeting_->setText("Hello there, " + nameEdit_->text());
     };
     button->clicked().connect(greet);
+}
 }
