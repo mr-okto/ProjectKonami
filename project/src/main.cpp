@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
     // WTHTTP_CONFIGURATION is e.g. "/etc/wt/wthttpd"
     // add a single entry point, at the default location (as determined
     // by the server configuration's deploy-path)
-    chat::ChatServer chat_server(server);
+    chat::AuthSFA auth;
+    chat::ChatServer chat_server(server, auth);
     server.addEntryPoint(Wt::EntryPointType::Application,
                        std::bind(createApplication, std::placeholders::_1,
                                    std::ref(chat_server)));
