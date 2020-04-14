@@ -20,6 +20,13 @@ struct Message {
     time_t time;
 };
 
+static bool operator==(const Message& lhs, const Message& rhs) {
+    if (lhs.message_id == rhs.message_id) {
+        return true;
+    }
+    return false;
+}
+
 class DialogService {
  public:
     std::vector<Dialogue> get_dialogues(unsigned int user_id);
