@@ -27,7 +27,7 @@ static bool operator==(const Message& lhs, const Message& rhs) {
     return false;
 }
 
-class DialogService {
+class DialogueService {
  public:
     std::vector<Dialogue> get_dialogues(unsigned int user_id);
     Dialogue get_dealogue(unsigned int dialog_id);

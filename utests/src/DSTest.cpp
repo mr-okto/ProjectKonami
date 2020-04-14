@@ -1,8 +1,7 @@
+#include "DialogueService.hpp"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <DialogueService.hpp>
-#include <UserService.hpp>
-#include <iostream>
+
 
 class MockCache {
  public:
@@ -23,7 +22,7 @@ TEST(DSPostMessageTEST, ok) {
     MockCache object;
     EXPECT_CALL(object, new_message(msg)).Times(testing::AtLeast(1));
 
-    chat::DialogService dialogue;
+    chat::DialogueService dialogue;
     dialogue.post_message(msg);
 }
 
@@ -32,7 +31,7 @@ TEST(DSGetMessageTEST, ok) {
     MockCache object;
     EXPECT_CALL(object, get_messages(user_id)).Times(testing::AtLeast(1));
 
-    chat::DialogService dialogue;
+    chat::DialogueService dialogue;
     dialogue.get_messages(user_id, 1, 1);
 }
 
@@ -41,19 +40,7 @@ TEST(DSGetDialogueTEST, ok) {
     MockCache object;
     EXPECT_CALL(object, get_dialogues(user_id)).Times(testing::AtLeast(1));
 
-    chat::DialogService dialogue;
+    chat::DialogueService dialogue;
     dialogue.get_dialogues(user_id);
 }
 
-/*class MockAuth : public Auth {
-public:
-    Auth(){};
-    MOCK_METHOD(bool, check_data_from_db, ());
-};*/
-
-
-
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
