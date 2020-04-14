@@ -4,7 +4,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "Auth.hpp"
 #include "SessionManager.hpp"
 #include "Session.hpp"
 

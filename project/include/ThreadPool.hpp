@@ -59,7 +59,7 @@ public:
     
     // the destructor waits for all the functions in the queue to be finished
     ~ThreadPool() {
-//        stop(true);
+        stop(true);
     }
     
     // get the number of running threads in the pool
@@ -85,6 +85,11 @@ public:
         auto pck = std::make_shared<std::packaged_task<decltype(f(0))(int)>>(std::forward<F>(f));
         return pck->get_future();
     };
+
+    // wait for all computing threads to finish and stop all threads
+    // may be called asynchronously to not pause the calling thread while waiting
+    // if isWait == true, all the functions in the queue are run, otherwise the queue is cleared without running the functions
+    void stop(bool isWait = false) {};
 
 };
 

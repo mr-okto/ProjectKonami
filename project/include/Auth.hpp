@@ -50,7 +50,6 @@ private:
     ITokenGenerator* token_generator_;
     SessionManager* session_manager_;
 
-
 public:
     Auth() = delete;
     Auth(const Auth&) = delete;
@@ -67,7 +66,6 @@ public:
 
 private:
     bool check_data_from_db();
-    std::string generate_token();
 
 };
 

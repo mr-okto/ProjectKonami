@@ -10,7 +10,6 @@
 #include "InterruptableSleep.hpp"
 #include "ThreadPool.hpp"
 
-
 using Clock = std::chrono::system_clock;
 
 class Task {
@@ -22,7 +21,6 @@ public:
     virtual Clock::time_point get_next_new_time() const = 0;
 
     std::function<void()> task_;
-
     bool repeatable_;
 
 };
@@ -56,7 +54,7 @@ private:
 
     ThreadPool threads_;
 
-    void add_task(const Clock::time_point time, std::shared_ptr<Task> t);
+    void add_task(Clock::time_point time, std::shared_ptr<Task> t);
 
     void manage_tasks();
 

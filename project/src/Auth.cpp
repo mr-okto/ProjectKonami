@@ -1,7 +1,3 @@
-//
-// Created by user on 10.04.2020.
-//
-
 #include "Auth.hpp"
 
 std::string Auth::sign_in(const AuthData &data) {
