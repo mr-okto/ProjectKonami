@@ -1,6 +1,9 @@
 #include "DialogueService.hpp"
 
 namespace chat {
+DialogueService::DialogueService(Cache& cache) 
+    : cache_(cache) {}
+
 std::vector<Dialogue> DialogueService::get_dialogues(unsigned int user_id) {
     return std::vector<Dialogue>();
 }
