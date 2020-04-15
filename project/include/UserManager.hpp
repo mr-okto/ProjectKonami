@@ -47,7 +47,7 @@ bool UserManager<DBConnector>::update_username(uint32_t user_id, const std::stri
 }
 
 template< class DBConnector >
-bool UserManager<DBConnector>::update_password(uint32_t user_id, const std::string &username) {
+bool UserManager<DBConnector>::update_password(uint32_t user_id, const std::string &pwd_hash) {
   return false;
 }
 
