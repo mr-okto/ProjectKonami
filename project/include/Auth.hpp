@@ -7,6 +7,14 @@
 
 #include "SessionManager.hpp"
 
+class UserModelPtr {};
+
+class UserManager {
+public:
+    virtual UserModelPtr get_user(uint32_t id) = 0;
+    virtual UserModelPtr get_user(const std::string &username) = 0;
+};
+
 struct AuthData {
     std::string login;
     std::string password;
@@ -47,6 +55,7 @@ private:
 
     VerificationStatus current_verification_status_;
 
+    UserManager& user_manager_;
     ITokenGenerator* token_generator_;
     SessionManager* session_manager_;
 
@@ -55,7 +64,8 @@ public:
     Auth(const Auth&) = delete;
     ~Auth() = default;
 
-    explicit Auth(ITokenGenerator *generator, SessionManager* session_manager) :
+    explicit Auth(UserManager& user_manager, ITokenGenerator *generator, SessionManager* session_manager) :
+        user_manager_(user_manager),
         token_generator_(generator),
         session_manager_(session_manager) {};
 

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <chrono>
+#include <utility>
 
 class Session {
 public:
@@ -22,11 +23,19 @@ public:
     Session(const Session& s) = default;
     ~Session() = default;
 
+    Session(Session&& s) {};
+
     explicit Session(uint32_t id, std::string&& token) :
         token_(token),
         userID_(id),
         time_point_(std::chrono::system_clock::now()),
         status_(Status::Active) {};
+
+    explicit Session(uint32_t id, const std::string&  token) :
+            token_(token),
+            userID_(id),
+            time_point_(std::chrono::system_clock::now()),
+            status_(Status::Active) {};
 
     bool operator==(const Session& rhs) const {};
 

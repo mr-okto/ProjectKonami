@@ -26,6 +26,11 @@ public:
     MOCK_METHOD(bool, add_session, (Session&&));
 };
 
+class MockUserManager : public UserManager {
+public:
+    MOCK_METHOD(UserModelPtr, get_user, (const std::string&));
+    MOCK_METHOD(UserModelPtr, get_user, (uint32_t));
+};
 
 class AuthTest : public ::testing::Test {
 protected:
@@ -38,6 +43,7 @@ protected:
 
     }
 
+    MockUserManager userManager_;
     MockTokenGenerator tokenGenerator_;
     MockSessionManager sessionManager_;
 };
@@ -47,24 +53,26 @@ TEST_F(AuthTest, CanProcessAuth) {
     {
         InSequence s;
 
+        EXPECT_CALL(userManager_, get_user("login")).Times(AtLeast(1));
         EXPECT_CALL(tokenGenerator_, generate_token()).Times(AtLeast(1));
-        EXPECT_CALL(sessionManager_, add_session(std::move(Session(0, std::string())))).Times(AtLeast(1));
-
     }
 
-    Auth auth(&tokenGenerator_, &sessionManager_);
+    Auth auth(std::ref(userManager_), &tokenGenerator_, &sessionManager_);
     EXPECT_NE(std::string(), auth.sign_in(AuthData("login", "password")));
 }
 
 class MockAuth : public Auth {
 public:
-    explicit MockAuth(ITokenGenerator* t, SessionManager* s) : Auth(t, s){};
+    explicit MockAuth(UserManager& u, ITokenGenerator* t, SessionManager* s) : Auth(u, t, s){};
     MOCK_METHOD(bool, check_data_from_db, ());
 };
 
 TEST_F(AuthTest, MustCheckAuthDataFromDB) {
-    MockAuth mockAuth(&tokenGenerator_, &sessionManager_);
+    MockAuth mockAuth(std::ref(userManager_), &tokenGenerator_, &sessionManager_);
     EXPECT_CALL(mockAuth, check_data_from_db()).Times(AtLeast(2));
+    EXPECT_CALL(userManager_, get_user("123")).Times(AtLeast(2));
+    EXPECT_CALL(tokenGenerator_, generate_token()).Times(AtLeast(1));
+
 
     mockAuth.sign_up(AuthData("123", "123"));
     mockAuth.sign_in(AuthData("123", "123"));
@@ -81,17 +89,4 @@ TEST_F(AuthTest, MustCheckAuthDataFromDB) {
 //public:
 //    MOCK_METHOD(UserModel*, get_user, (std::string));
 //};
-
-//TEST_F(AuthTest, CanRequestToDb) {
-//    {
-//        InSequence s;
-//
-//        EXPECT_CALL(tokenGenerator_, generate_token()).Times(AtLeast(1));
-//        EXPECT_CALL(sessionManager_, add_session(std::move(Session(0, std::string())))).Times(AtLeast(1));
-//
-//    }
-//
-//    Auth auth(&tokenGenerator_, &sessionManager_);
-//    EXPECT_NE(std::string(), auth.sign_in(AuthData("login", "password")));
-//}
 

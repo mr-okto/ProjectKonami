@@ -27,9 +27,13 @@ public:
     bool validate_session(const std::string& token) {return false;};
 
     bool add_session(const Session& s) { return false;}; // вызывается модулем Auth при успешной авторизации (Session создается в Auth)
-    bool add_session(Session&& s) {return false;};
+    bool add_session(Session&& s) {return false;};// вызывается модулем Auth при успешной авторизации (Session создается в Auth)
+    bool add_session(std::unique_ptr<Session> s) { return false;};
+
     bool close_session(const Session& s) {return false;}; // вызывается при принудительном завершении сессии
-    bool close_session(Session&& s) {return false;}; // вызывается при принудительном завершении сессии
+    bool close_session(const std::string& token) {return false;};
+    bool close_session(uint32_t user_id) {return false;};
+
 
     std::vector<uint32_t> get_online_users(); // вызывается ядром
     uint32_t get_id_by_token(std::string& token);
