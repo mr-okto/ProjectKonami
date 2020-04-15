@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client(Server &server) : server_(server) {}
+Client::Client(ClientService &server) : client_service_(server) {}
 
 Client::~Client() {}
 
@@ -16,7 +16,7 @@ void Client::update_dialogues() {
 
 }
 
-bool Client::update_messages(uint32_t dialogue_id) {
+bool Client::update_messages() {
   return false;
 }
 

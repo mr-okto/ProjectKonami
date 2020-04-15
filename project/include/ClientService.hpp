@@ -7,11 +7,11 @@
 
 class Client;
 
-class Server {
+class ClientService {
  public:
-  Server();
-  Server(const Server&) = delete;
-  Server &operator=(const Server &) = delete;
+  ClientService();
+  ClientService(const ClientService&) = delete;
+  ClientService &operator=(const ClientService &) = delete;
   bool connect(Client *client, ChatEventCallback event_callback);
   bool disconnect(Client *client);
   std::string get_session_token(const std::string &username, const std::string &password);

@@ -1,10 +1,10 @@
 #include <cstring>
 #include <gtest/gtest.h>
 #include "Client.hpp"
-#include "Server.hpp"
+#include "ClientService.hpp"
 
 TEST(Client, Client_NewClient_Test) {
-  auto server = Server();
+  auto server = ClientService();
   auto client = Client(server);
   auto result = client.log_in("uname", "pwd");
   EXPECT_EQ(result, true);
@@ -13,7 +13,7 @@ TEST(Client, Client_NewClient_Test) {
 }
 
 TEST(Client, Client_UpdateDialogues_Test) {
-  auto server = Server();
+  auto server = ClientService();
   auto client = Client(server);
   auto login = client.log_in("uname", "pwd");
   EXPECT_EQ(login, true);
@@ -23,7 +23,7 @@ TEST(Client, Client_UpdateDialogues_Test) {
 }
 
 TEST(Client, Client_OpenDialogue_Test) {
-  auto server = Server();
+  auto server = ClientService();
   auto client = Client(server);
   auto login = client.log_in("uname", "pwd");
   EXPECT_EQ(login, true);
@@ -36,7 +36,7 @@ TEST(Client, Client_OpenDialogue_Test) {
 
 
 TEST(Client, Client_SendMsg_Test) {
-  auto server = Server();
+  auto server = ClientService();
   auto client = Client(server);
   auto login = client.log_in("uname", "pwd");
   EXPECT_EQ(login, true);
@@ -48,7 +48,7 @@ TEST(Client, Client_SendMsg_Test) {
 }
 
 TEST(Client, Client_ChatEvent_Msg_Test) {
-  auto server = Server();
+  auto server = ClientService();
   auto client = Client(server);
   ChatEvent event;
   event.action = NEW_MSG;

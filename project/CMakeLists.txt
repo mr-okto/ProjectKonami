@@ -2,7 +2,7 @@ include_directories("include")
 
 set(SOURCES
         src/main.cpp
-        src/Server.cpp
+        src/ClientService.cpp
         src/Client.cpp
         )
 

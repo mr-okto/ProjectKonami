@@ -1,17 +1,17 @@
 #include <cstring>
 #include <gtest/gtest.h>
 #include "Client.hpp"
-#include "Server.hpp"
+#include "ClientService.hpp"
 
-TEST(Server, Server_NewSession_Test) {
-  auto server = Server();
+TEST(ClientService, ClientService_NewSession_Test) {
+  auto server = ClientService();
   auto client = Client(server);
   auto result = server.get_session_token("uname", "pwd");
   EXPECT_GT(result.size(), 0);
 }
 
-TEST(Server, Server_CloseSession_Valid_Test) {
-  auto server = Server();
+TEST(ClientService, ClientService_CloseSession_Valid_Test) {
+  auto server = ClientService();
   auto client = Client(server);
   auto token = server.get_session_token("uname", "pwd");
   bool result = server.close_session(token);
@@ -19,14 +19,14 @@ TEST(Server, Server_CloseSession_Valid_Test) {
 }
 
 
-TEST(Server, Server_CloseSession_invalid_Test) {
-  auto server = Server();
+TEST(ClientService, ClientService_CloseSession_invalid_Test) {
+  auto server = ClientService();
   bool result = server.close_session("InvalidToken");
   EXPECT_EQ(result, false);
 }
 
-TEST(Server, Server_SendMessage_Valid_Test) {
-  auto server = Server();
+TEST(ClientService, ClientService_SendMessage_Valid_Test) {
+  auto server = ClientService();
   auto client = Client(server);
   auto token = server.get_session_token("uname", "pwd");
   auto dialogue = server.open_dialogue(token, 1);
@@ -37,15 +37,15 @@ TEST(Server, Server_SendMessage_Valid_Test) {
   server.close_session(token);
 }
 
-TEST(Server, Server_SendMessage_Inalid_Test) {
-  auto server = Server();
+TEST(ClientService, ClientService_SendMessage_Inalid_Test) {
+  auto server = ClientService();
   auto client = Client(server);
   bool result = server.send_message("Invalid token", 1, "Some text");
   EXPECT_EQ(result, false);
 }
 
-TEST(Server, Server_GetDialogues_Test) {
-  auto server = Server();
+TEST(ClientService, ClientService_GetDialogues_Test) {
+  auto server = ClientService();
   auto client = Client(server);
   auto token = server.get_session_token("uname", "pwd");
   auto result = server.get_dialogues(token);
@@ -53,8 +53,8 @@ TEST(Server, Server_GetDialogues_Test) {
   server.close_session(token);
 }
 
-TEST(Server, Server_GetDialogues_Filled_Test) {
-  auto server = Server();
+TEST(ClientService, ClientService_GetDialogues_Filled_Test) {
+  auto server = ClientService();
   auto client = Client(server);
   auto token = server.get_session_token("uname", "pwd");
   auto dialogue = server.open_dialogue(token, 1);
