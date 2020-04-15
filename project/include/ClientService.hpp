@@ -3,9 +3,11 @@
 #include <cstdint>
 #include <string>
 #include "ChatEvent.hpp"
-#include "DataTypesStub.hpp"
+#include "DialogueService.hpp"
 
 class Client;
+using chat::Dialogue;
+using chat::Message;
 
 class ClientService {
  public:

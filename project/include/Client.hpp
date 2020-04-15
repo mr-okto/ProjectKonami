@@ -4,10 +4,11 @@
 #include <string>
 #include <vector>
 #include "ChatEvent.hpp"
-
-#include "DataTypesStub.hpp"
+#include "DialogueService.hpp"
 
 class ClientService;
+using chat::Dialogue;
+using chat::Message;
 
 class Client {
  private:
