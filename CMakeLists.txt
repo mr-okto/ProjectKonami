@@ -4,6 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories("project/include/")
 include_directories("/usr/include")
+
 link_directories("/usr/lib")
 link_directories("/usr/local/lib")
 
