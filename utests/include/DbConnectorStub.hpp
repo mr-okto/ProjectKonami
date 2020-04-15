@@ -2,7 +2,7 @@
 
 #include <string>
 
-class FakeDbConnector {
+class DbConnectorStub {
  public:
   bool connect(const std::string &db_params);
   void disconnect();
