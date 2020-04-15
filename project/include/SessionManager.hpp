@@ -2,7 +2,7 @@
 #define MESSENGER_PROJECT_SESSIONMANAGER_HPP
 
 #include <vector>
-#include <stdint-gcc.h>
+#include <stdint.h>
 #include <memory>
 
 #include "Scheduler.hpp"

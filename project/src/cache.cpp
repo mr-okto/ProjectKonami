@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "cache.hpp"
-#include "models.hpp"
 
 #define INIT_SIZE 10
 #define RESIZE_RATIO 2
