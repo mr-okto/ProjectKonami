@@ -12,18 +12,22 @@ void Client::log_out() {
 
 }
 
-void Client::get_dialogues() {
+void Client::update_dialogues() {
 
 }
 
-void Client::get_messages(uint32_t dialogue_id) {
+bool Client::update_messages(uint32_t dialogue_id) {
+  return false;
+}
+
+void Client::handle_event(const ChatEvent &event) {
 
 }
 
-void Client::processChatEvent(const ChatEvent &event) {
-
+bool Client::send_message(const std::string &text) {
+  return false;
 }
 
-void Client::send_message(const std::string &text) {
-
+bool Client::open_dialogue(uint32_t) {
+  return false;
 }

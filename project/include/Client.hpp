@@ -5,27 +5,29 @@
 #include <vector>
 #include "ChatEvent.hpp"
 
+#include "DataTypesStub.hpp"
+
 class Server;
-struct Message;
-struct Dialogue;
 
 class Client {
  private:
   Server &server_;
-  bool logged_in_;
   std::string session_token_;
  public:
-  uint32_t user_id_;
+  bool logged_in_;
   std::vector<Dialogue> dialogues_;
   uint32_t active_dialogue_;
   std::vector<Message> messages_;
-  Client(Server &server);
+  explicit Client(Server &server);
+  Client(const Client&) = delete;
+  Client &operator=(const Client&) = delete;
   ~Client();
   bool log_in(const std::string &username, const std::string &password);
   void log_out();
-  void get_dialogues();
-  void get_messages(uint32_t dialogue_id);
-  void send_message(const std::string &text);
-  void processChatEvent(const ChatEvent& event);
+  void update_dialogues();
+  bool update_messages(uint32_t dialogue_id);
+  bool open_dialogue(uint32_t);
+  bool send_message(const std::string &text);
+  void handle_event(const ChatEvent& event);
 };
 

@@ -1,8 +1,8 @@
 #include <string.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <DialogueManager.hpp>
-#include <MessageManager.hpp>
+#include "DialogueManager.hpp"
+#include "MessageManager.hpp"
 #include "DbSession.hpp"
 #include "UserManager.hpp"
 #include "DbConnectorStub.hpp"
