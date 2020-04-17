@@ -69,6 +69,10 @@ public:
         token_generator_(generator),
         session_manager_(session_manager) {};
 
+    explicit Auth(UserManager& user_manager, SessionManager* session_manager) :
+            user_manager_(user_manager),
+            session_manager_(session_manager) {};
+
     std::string sign_in(const AuthData& data) override; // запрос в бд, генерация токена, создание Session и вызов SessionManager.add_session
     bool sign_out(std::string sessionToken) override;
 
