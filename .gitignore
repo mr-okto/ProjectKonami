@@ -1,6 +1,4 @@
-
-# Created by https://www.gitignore.io/api/cmake
-# Edit at https://www.gitignore.io/?templates=cmake
+build/*
 
 ### CMake ###
 CMakeLists.txt.user
@@ -18,5 +16,3 @@ _deps
 ### CMake Patch ###
 # External projects
 *-prefix/
-
-# End of https://www.gitignore.io/api/cmake
