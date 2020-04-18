@@ -26,6 +26,11 @@ int main(int argc, char **argv) {
     server.addEntryPoint(Wt::EntryPointType::Application,
                         std::bind(create_application, std::placeholders::_1, std::ref(chatServer)));
 
+    if (server.start()) {
+        int sig = Wt::WServer::waitForShutdown();
+        std::cerr << "Shutting down: (signal = " << sig << ")" << std::endl;
+        server.stop();
+    }
 
     return 0;
 }

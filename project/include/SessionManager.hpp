@@ -6,14 +6,17 @@
 #include <memory>
 
 #include "Scheduler.hpp"
+#include "Session.hpp"
 
-class Session;
+class Client;
 
 class SessionManager {
 private:
-    std::vector<std::unique_ptr<Session>> active_sessions_;
-    std::vector<std::unique_ptr<Session>> inactive_sessions_;
-    std::vector<std::unique_ptr<Session>> recently_closed_sessions_;
+    typedef std::map<Client *, Session> client_map;
+
+    std::vector<Session> active_sessions_;
+    std::vector<Session> inactive_sessions_;
+    std::vector<Session> recently_closed_sessions_;
 
     Scheduler scheduler_;
 
@@ -21,6 +24,8 @@ public:
     SessionManager() = default;
     SessionManager(const SessionManager&) = default;
     ~SessionManager() = default;
+
+    bool has(Client * client);
 
     // вызывается на каждом запросе пользователя
     // обновляется time_point у сессии

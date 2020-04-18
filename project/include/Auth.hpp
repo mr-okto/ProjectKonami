@@ -6,28 +6,32 @@
 #include <memory>
 
 #include "SessionManager.hpp"
-
-class UserModelPtr {};
+#include "Models.hpp"
 
 class UserManager {
 public:
-    virtual UserModelPtr get_user(uint32_t id) = 0;
+//    virtual UserModelPtr get_user(uint32_t id) = 0;
     virtual UserModelPtr get_user(const std::string &username) = 0;
 };
 
 struct AuthData {
-    std::string login;
+    std::string username;
     std::string password;
+    uint32_t id;
 
 public:
-    explicit AuthData(std::string  login_, std::string  password_) :
-        login(std::move(login_)),
+    AuthData() = default;
+
+     AuthData(std::string  login_, std::string  password_) :
+        username(std::move(login_)),
         password(std::move(password_)) {};
 };
 
 class IAuth {
 public:
-    virtual std::string sign_in(const AuthData& data) = 0;
+    virtual bool sign_in(const std::string& username,
+                         const std::string& password,
+                         AuthData& data) = 0;
     virtual bool sign_out(std::string sessionToken) = 0;
 
     virtual bool sign_up(const AuthData& newData) = 0;
@@ -73,7 +77,9 @@ public:
             user_manager_(user_manager),
             session_manager_(session_manager) {};
 
-    std::string sign_in(const AuthData& data) override; // запрос в бд, генерация токена, создание Session и вызов SessionManager.add_session
+    bool sign_in(const std::string& username,
+                 const std::string& password,
+                 AuthData& data) override; // запрос в бд, генерация токена, создание Session и вызов SessionManager.add_session
     bool sign_out(std::string sessionToken) override;
 
     bool sign_up(const AuthData& newData) override;

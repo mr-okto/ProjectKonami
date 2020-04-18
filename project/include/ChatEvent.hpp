@@ -4,16 +4,31 @@
 #include <string>
 #include <functional>
 
-enum CallbackAction {
-  NEW_MSG,
-  NEW_DIALOGUE,
+class ChatEvent {
+public:
+    // types
+    enum CallbackAction {
+      SIGN_UP,
+      SIGN_IN,
+      SIGN_OUT,
+      NEW_MSG,
+      NEW_DIALOGUE,
+    };
+
+    ChatEvent(CallbackAction action, uint32_t user_id, std::string data = std::string())
+        : action_(action),
+          user_id_(user_id),
+          data_(data)
+          { }
+
+    CallbackAction action() const { return action_; }
+
+
+private:
+  CallbackAction action_;
+  uint32_t object_id_;
+  uint32_t user_id_;
+  std::string data_;
 };
 
-struct ChatEvent {
-  CallbackAction action;
-  uint32_t object_id;
-  uint32_t user_id;
-  std::string data;
-};
-
-typedef std::function<void (const ChatEvent&) > ChatEventCallback;
+typedef std::function<void (const ChatEvent&)> ChatEventCallback;

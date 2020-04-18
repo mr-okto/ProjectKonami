@@ -6,11 +6,15 @@
 
 #include "Auth.hpp"
 #include "SessionManager.hpp"
+#include "ChatEvent.hpp"
+
+// a reference to client
+class Client {};
 
 class ChatServer : public Wt::WServer {
 public:
     // a reference to client
-    class Client {};
+//    class Client {};
 
     ChatServer(Wt::WServer& server);
 
@@ -18,7 +22,14 @@ public:
     ChatServer(const ChatServer&) = delete;
     ChatServer& operator=(const ChatServer&) = delete;
 
+    // The passed callback method is posted to when a new chat event is received
+    // Return false if the client was already connected
+    bool connect(Client *client, const ChatEventCallback& handle_event);
+    bool disconnect(Client *client);
 
+    // Try to sign in with given username and password.
+    // Returns false if the login was not successful;
+    bool sign_in(const Wt::WString& username, const Wt::WString& password);
 
 private:
     Wt::WServer& server_;

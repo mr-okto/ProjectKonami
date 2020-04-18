@@ -1,4 +1,5 @@
 #include "ChatApplication.hpp"
+#include "ChatWidget.hpp"
 
 ChatApplication::ChatApplication(const Wt::WEnvironment &env, ChatServer &server)
     : Wt::WApplication(env),
@@ -6,7 +7,10 @@ ChatApplication::ChatApplication(const Wt::WEnvironment &env, ChatServer &server
       env_(env)
 {
     setTitle("KonamiChat");
-    useStyleSheet("chatapp");
+    useStyleSheet("chatapp.css");
 
-//    root()->add
+    ChatWidget *chatWidget =
+            root()->addWidget(Wt::cpp14::make_unique<ChatWidget>(server_));
+    chatWidget->setStyleClass("chat");
+    chatWidget->setMaximumSize(Wt::WLength(400), Wt::WLength(500));
 }

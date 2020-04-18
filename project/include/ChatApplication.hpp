@@ -3,7 +3,7 @@
 
 #include <Wt/WApplication.h>
 
-#include <ChatServer.hpp>>
+#include <ChatServer.hpp>
 
 class ChatApplication : public Wt::WApplication {
 public:
