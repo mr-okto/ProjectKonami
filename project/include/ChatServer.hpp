@@ -9,13 +9,19 @@
 #include "ChatEvent.hpp"
 
 // a reference to client
-class Client {};
+class Client {
+public:
+    virtual void connect() = 0;
+    virtual void disconnect() = 0;
+
+    virtual void sign_in() = 0;
+    virtual void sign_out() = 0;
+
+    virtual void sign_up() = 0;
+};
 
 class ChatServer : public Wt::WServer {
 public:
-    // a reference to client
-//    class Client {};
-
     ChatServer(Wt::WServer& server);
 
     // delete

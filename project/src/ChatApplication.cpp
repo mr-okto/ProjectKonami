@@ -1,5 +1,5 @@
 #include "ChatApplication.hpp"
-#include "ChatWidget.hpp"
+#include "AuthWidget.hpp"
 
 ChatApplication::ChatApplication(const Wt::WEnvironment &env, ChatServer &server)
     : Wt::WApplication(env),
@@ -9,8 +9,10 @@ ChatApplication::ChatApplication(const Wt::WEnvironment &env, ChatServer &server
     setTitle("KonamiChat");
     useStyleSheet("chatapp.css");
 
-    ChatWidget *chatWidget =
-            root()->addWidget(Wt::cpp14::make_unique<ChatWidget>(server_));
+    messageResourceBundle().use(appRoot() + "simplechat");
+
+    AuthWidget *chatWidget =
+            root()->addWidget(Wt::cpp14::make_unique<AuthWidget>(server_));
     chatWidget->setStyleClass("chat");
-    chatWidget->setMaximumSize(Wt::WLength(400), Wt::WLength(500));
+//    chatWidget->setMaximumSize(Wt::WLength(400), Wt::WLength(500));
 }

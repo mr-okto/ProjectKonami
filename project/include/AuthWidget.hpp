@@ -1,22 +1,25 @@
-#ifndef PROJECTKONAMI_CHATWIDGET_HPP
-#define PROJECTKONAMI_CHATWIDGET_HPP
+#ifndef PROJECTKONAMI_AUTHWIDGET_HPP
+#define PROJECTKONAMI_AUTHWIDGET_HPP
 
 #include <Wt/WContainerWidget.h>
+#include <Wt/WMessageBox.h>
 
 #include "ChatServer.hpp"
 
 class ChatEvent;
 
-class ChatWidget : public Wt::WContainerWidget, public Client {
+class AuthWidget : public Wt::WContainerWidget, public Client {
 public:
-    ChatWidget(ChatServer& server);
-    ~ChatWidget();
+    AuthWidget(ChatServer& server);
+    ~AuthWidget();
 
-    void connect();
-    void disconnect();
+    void connect() override ;
+    void disconnect() override ;
 
     // show sign_in screen
     void let_sign_in();
+
+    void sign_out() override {};
 
     bool start_chat(const Wt::WString& username, const Wt::WString& password);
 
@@ -37,9 +40,11 @@ private:
 
     Wt::WText *status_msg_;
 
-    void sign_in();
+    void sign_in() override;
+    void show_registration();
+    void sign_up() override;
 
 };
 
 
-#endif //PROJECTKONAMI_CHATWIDGET_HPP
+#endif //PROJECTKONAMI_AUTHWIDGET_HPP
