@@ -19,6 +19,34 @@ class UserModel;
 #define UserModelPtr dbo::ptr<UserModel>
 #define IdType long long
 
+namespace Wt::Dbo {
+  // Auto-increment id fields
+  template<>
+  struct dbo_traits<DialogueModel> : public dbo_default_traits {
+    static const char *surrogateIdField() {
+      return "id";
+    }
+  };
+  template<>
+  struct dbo_traits<MessageModel> : public dbo_default_traits {
+    static const char *surrogateIdField() {
+      return "id";
+    }
+  };
+  template<>
+  struct dbo_traits<PictureModel> : public dbo_default_traits {
+    static const char *surrogateIdField() {
+      return "id";
+    }
+  };
+  template<>
+  struct dbo_traits<UserModel> : public dbo_default_traits {
+    static const char *surrogateIdField() {
+      return "id";
+    }
+  };
+}
+
 
 class DialogueModel {
  public:
