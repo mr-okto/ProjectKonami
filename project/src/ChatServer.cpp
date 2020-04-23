@@ -4,6 +4,8 @@
 
 class UserManagerStub : public UserManager {
 public:
+    UserManagerStub() : stubUsers() {}
+
     UserModelPtr get_user(const std::string &username) override {
         stubUser.username_ = "login";
         stubUser.pwd_hash_ = "pass";
@@ -11,8 +13,25 @@ public:
 
         return &stubUser;
     }
+    UserModelPtr create_user(const std::string &username, const std::string &pwd_hash) {
+
+        if (stubUsers.find(username) != stubUsers.end()) {
+            return nullptr;
+        }
+
+        UserModel um;
+        um.username_ = username;
+        um.pwd_hash_ = pwd_hash;
+        um.id_ = stubUsers.size();
+
+        stubUsers[username] = um;
+
+        return &stubUsers[username];
+    }
+
 
     UserModel stubUser;
+    std::map<std::string , UserModel> stubUsers;
 };
 
 UserManagerStub userManagerStub;
@@ -47,5 +66,14 @@ bool ChatServer::connect(Client *client, const ChatEventCallback &handle_event) 
 //    }
 
 
+}
+
+bool ChatServer::sign_up(const Wt::WString& username, const Wt::WString& password) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    if (authService_.sign_up(username.toUTF8(), password.toUTF8())) {
+        return true;
+    } else
+        return false;
 }
 

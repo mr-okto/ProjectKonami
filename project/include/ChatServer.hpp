@@ -37,6 +37,8 @@ public:
     // Returns false if the login was not successful;
     bool sign_in(const Wt::WString& username, const Wt::WString& password);
 
+    bool sign_up(const Wt::WString& username, const Wt::WString& password);
+
 private:
     Wt::WServer& server_;
     std::recursive_mutex mutex_;

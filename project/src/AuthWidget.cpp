@@ -13,7 +13,6 @@
 #include <Wt/WCheckBox.h>
 
 #include "AuthWidget.hpp"
-#include "RegistrationForm.hpp"
 
 AuthWidget::AuthWidget(ChatServer &server)
     : WContainerWidget(),
@@ -84,8 +83,8 @@ void AuthWidget::sign_in() {
 }
 
 bool AuthWidget::start_chat(const Wt::WString& username, const Wt::WString& password) {
-    //(TODO) There will be creating and start point of ChatWidget
-
+    //(TODO) There will be created start point of ChatWidget
+    // connect to server, create session, pass callbackFunc, manage session
     if (server_.sign_in(username, password)) {
         signed_in_ = true;
 
@@ -109,24 +108,46 @@ void AuthWidget::disconnect() {
 }
 
 void AuthWidget::show_registration() {
-    clear();
-
     Wt::WDialog dialog("Registration");
     dialog.setClosable(true);
     dialog.rejectWhenEscapePressed(true);
     dialog.contents()->setStyleClass("registration");
 
-    RegistrationForm *registrationWidget = dialog.contents()->addWidget(std::make_unique<RegistrationForm>());
-    registrationWidget->setStyleClass("registration-form");
+    registration_form_ = dialog.contents()->addWidget(std::make_unique<RegistrationForm>());
+    registration_form_->setStyleClass("registration-form");
     Wt::WPushButton *signUpbButton = dialog.footer()->addWidget(std::make_unique<Wt::WPushButton>("Sign up"));
+    Wt::WText *statusMsg = dialog.footer()->addWidget(std::make_unique<Wt::WText>());
+    statusMsg->setTextFormat(Wt::TextFormat::Plain);
+
+//    registration_form_->validate();
+    auto s = registration_form_->get_username().toUTF8();
+    if (s == "123") {
+        std::cout << 123;
+    }
     signUpbButton->clicked().connect(this, &AuthWidget::sign_up);
+    signUpbButton->clicked().connect(std::bind(&AuthWidget::validate_reg_dialog, this, std::ref(dialog), statusMsg));
+    //    signUpbButton->clicked().connect(&dialog, &Wt::WDialog::accept);
 
     dialog.exec();
-
-//    auto registrationWidget = this->addWidget(std::make_unique<RegistrationForm>());
-//    registrationWidget->setStyleClass("registration");
 }
 
 void AuthWidget::sign_up() {
+    if (registration_form_->validate()) {
+        if (!server_.sign_up(registration_form_->get_username(), registration_form_->get_password_first())) {
+            registration_form_->set_user_exists_error();
+        }
+    }
 
+}
+
+void AuthWidget::validate_reg_dialog(Wt::WDialog &dialog, Wt::WText* status_msg) {
+    if (registration_form_->is_valid()) {
+        dialog.accept();
+    } else if (registration_form_->error() == RegistrationForm::ErrorType::PasswordsMismatch) {
+        status_msg->setText("Passwords do not match.");
+    } else if (registration_form_->error() == RegistrationForm::ErrorType::ShortPassword) {
+        status_msg->setText("Passwords is too short.");
+    } else if (registration_form_->error() == RegistrationForm::ErrorType::UsernameExists) {
+        status_msg->setText("Username '" + escapeText(registration_form_->get_username()) + "' is already taken");
+    }
 }

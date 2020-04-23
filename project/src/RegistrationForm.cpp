@@ -7,7 +7,9 @@
 #include "RegistrationForm.hpp"
 
 RegistrationForm::RegistrationForm()
-    :Wt::WContainerWidget()
+    :Wt::WContainerWidget(),
+    is_valid_(false),
+    error_(ErrorType::None)
 {
     setFloatSide(Wt::Side::CenterX);
     create_UI();
@@ -26,14 +28,26 @@ void RegistrationForm::create_UI() {
     line->addWidget(std::make_unique<Wt::WText>("Choose password: "));
     password_edit_first_ = line->addWidget(std::make_unique<Wt::WLineEdit>());
     password_edit_first_->setFloatSide(Wt::Side::Right);
+    password_edit_first_->setAttributeValue("type", "password");
 
     line = vLayout->addWidget(std::make_unique<Wt::WContainerWidget>(), 0,  Wt::AlignmentFlag::Middle);
     line->addWidget(std::make_unique<Wt::WText>("Repeat password: "));
     password_edit_second_ = line->addWidget(std::make_unique<Wt::WLineEdit>());
     password_edit_second_->setFloatSide(Wt::Side::Right);
+    password_edit_first_->setAttributeValue("type", "password");
 
-//    auto text = vLayout->addWidget(std::make_unique<Wt::WText>("User name: "));
-//    username_edit_ = vLayout->addWidget(std::make_unique<Wt::WLineEdit>(),0,  Wt::AlignmentFlag::Middle);
-//    password_edit_first_ = vLayout->addWidget(std::make_unique<Wt::WLineEdit>());
-//    password_edit_second_ = vLayout->addWidget(std::make_unique<Wt::WLineEdit>());
+}
+
+bool RegistrationForm::validate() {
+    auto s = username_edit_->text().toUTF8();
+//    if (s == "123") {
+//        is_valid_ = true;
+//    }
+    is_valid_ = true;
+    return true;
+}
+
+void RegistrationForm::set_user_exists_error() {
+    error_ = ErrorType::UsernameExists;
+    is_valid_ = false;
 }

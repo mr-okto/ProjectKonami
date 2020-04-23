@@ -5,6 +5,8 @@
 #include <Wt/WMessageBox.h>
 
 #include "ChatServer.hpp"
+#include "RegistrationForm.hpp"
+
 
 class ChatEvent;
 
@@ -36,6 +38,8 @@ private:
     Wt::WString password_;
     Wt::WLineEdit *password_edit_field_;
 
+    RegistrationForm *registration_form_;
+
     uint32_t  user_id_;
 
     Wt::WText *status_msg_;
@@ -43,6 +47,8 @@ private:
     void sign_in() override;
     void show_registration();
     void sign_up() override;
+
+    void validate_reg_dialog(Wt::WDialog& dialog, Wt::WText* status_msg);
 
 };
 

@@ -22,6 +22,14 @@ bool Auth::sign_out(std::string sessionToken) {
     return false;
 }
 
-bool Auth::sign_up(const AuthData &newData) {
-    return false;
+bool Auth::sign_up(const std::string& username, const std::string& password) {
+    //(TODO) добавить фейк логику
+
+    UserModelPtr storaged_user = user_manager_.create_user(username, password);
+
+    if (storaged_user) {
+        return true;
+    } else
+        return false;
+
 }

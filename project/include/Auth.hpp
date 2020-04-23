@@ -12,6 +12,8 @@ class UserManager {
 public:
 //    virtual UserModelPtr get_user(uint32_t id) = 0;
     virtual UserModelPtr get_user(const std::string &username) = 0;
+    virtual UserModelPtr create_user(const std::string &username, const std::string &pwd_hash) = 0;
+
 };
 
 struct AuthData {
@@ -34,7 +36,7 @@ public:
                          AuthData& data) = 0;
     virtual bool sign_out(std::string sessionToken) = 0;
 
-    virtual bool sign_up(const AuthData& newData) = 0;
+    virtual bool sign_up(const std::string& username, const std::string& password) = 0;
 };
 
 class ITokenGenerator {
@@ -82,7 +84,7 @@ public:
                  AuthData& data) override; // запрос в бд, генерация токена, создание Session и вызов SessionManager.add_session
     bool sign_out(std::string sessionToken) override;
 
-    bool sign_up(const AuthData& newData) override;
+    bool sign_up(const std::string& username, const std::string& password) override;
 
 private:
     bool check_data_from_db();
