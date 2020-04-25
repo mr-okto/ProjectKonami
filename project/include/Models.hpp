@@ -13,11 +13,15 @@ class MessageModel;
 class PictureModel;
 class UserModel;
 
-#define DialogueModelPtr dbo::ptr<DialogueModel>
-#define MessageModelPtr dbo::ptr<MessageModel>
-#define PictureModelPtr dbo::ptr<PictureModel>
-#define UserModelPtr dbo::ptr<UserModel>
-#define IdType long long
+typedef dbo::ptr<DialogueModel> DialogueModelPtr;
+typedef dbo::ptr<MessageModel> MessageModelPtr;
+typedef dbo::ptr<PictureModel> PictureModelPtr;
+typedef dbo::ptr<UserModel> UserModelPtr;
+typedef long long IdType;
+typedef dbo::collection<dbo::ptr<DialogueModel>> Dialogues;
+typedef dbo::collection<dbo::ptr<MessageModel>> Messages;
+typedef dbo::collection<dbo::ptr<PictureModel>> Pictures;
+typedef dbo::collection<dbo::ptr<UserModel>> Users;
 
 namespace Wt::Dbo {
   // Auto-increment id fields
