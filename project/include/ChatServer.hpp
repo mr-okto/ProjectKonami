@@ -14,10 +14,10 @@ public:
     virtual void connect() = 0;
     virtual void disconnect() = 0;
 
-    virtual void sign_in() = 0;
     virtual void sign_out() = 0;
 
-    virtual void sign_up() = 0;
+    virtual std::string username() = 0;
+//    virtual ~Client() = default;
 };
 
 class ChatServer : public Wt::WServer {
@@ -36,8 +36,9 @@ public:
     // Try to sign in with given username and password.
     // Returns false if the login was not successful;
     bool sign_in(const Wt::WString& username, const Wt::WString& password);
-
     bool sign_up(const Wt::WString& username, const Wt::WString& password);
+
+    bool sign_out(const Wt::WString& username);
 
 private:
     Wt::WServer& server_;
@@ -46,6 +47,9 @@ private:
     SessionManager sessionManager_;
     Auth           authService_;
 
+    std::set<Wt::WString> online_users_;
+
+    void post_chat_event(const ChatEvent& event);
 };
 
 

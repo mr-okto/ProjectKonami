@@ -7,16 +7,16 @@
 
 #include "ChatEvent.hpp"
 
-class Session {
+struct Session {
 public:
     enum Status {
         Active,
         Inactive,
     };
 
-private:
-//    std::string token_;
-    uint32_t userID_;
+    std::string username_;
+    std::string session_id_;
+    uint32_t user_id_;
     std::chrono::time_point<std::chrono::system_clock> time_point_;
     Status status_;
 
@@ -27,17 +27,15 @@ public:
     Session(const Session& s) = default;
     ~Session() = default;
 
-    Session(Session&& s) {};
-
     explicit Session(uint32_t id, std::string&& token) :
 //        token_(token),
-        userID_(id),
+        user_id_(id),
         time_point_(std::chrono::system_clock::now()),
         status_(Status::Active) {};
 
     explicit Session(uint32_t id) :
 //            token_(token),
-            userID_(id),
+            user_id_(id),
             time_point_(std::chrono::system_clock::now()),
             status_(Status::Active) {};
 
@@ -49,7 +47,7 @@ public:
     void deactivate() { status_ = Status::Inactive; };
 
 //    std::string token() const { return token_;};
-    uint32_t id() const { return userID_;};
+    uint32_t id() const { return user_id_;};
     Status status() const { return status_;};
     std::chrono::time_point<std::chrono::system_clock> time_point() const { return time_point_;};
 

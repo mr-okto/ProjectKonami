@@ -34,7 +34,7 @@ public:
     virtual bool sign_in(const std::string& username,
                          const std::string& password,
                          AuthData& data) = 0;
-    virtual bool sign_out(std::string sessionToken) = 0;
+    virtual bool sign_out(std::string username) = 0;
 
     virtual bool sign_up(const std::string& username, const std::string& password) = 0;
 };
@@ -82,7 +82,7 @@ public:
     bool sign_in(const std::string& username,
                  const std::string& password,
                  AuthData& data) override; // запрос в бд, генерация токена, создание Session и вызов SessionManager.add_session
-    bool sign_out(std::string sessionToken) override;
+    bool sign_out(std::string username) override;
 
     bool sign_up(const std::string& username, const std::string& password) override;
 

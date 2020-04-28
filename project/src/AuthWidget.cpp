@@ -1,7 +1,5 @@
-#include <Wt/WApplication.h>
 #include <Wt/WContainerWidget.h>
 #include <Wt/WEnvironment.h>
-#include <Wt/WInPlaceEdit.h>
 #include <Wt/WHBoxLayout.h>
 #include <Wt/WVBoxLayout.h>
 #include <Wt/WLabel.h>
@@ -88,22 +86,12 @@ bool AuthWidget::start_chat(const Wt::WString& username, const Wt::WString& pass
     if (server_.sign_in(username, password)) {
         signed_in_ = true;
 
-        clear();
-        auto layout = setLayout(std::make_unique<Wt::WVBoxLayout>());
-        layout->addWidget(std::make_unique<Wt::WText>("LOGINED"));
+        session_signal_.emit(username);
 
         return true;
     } else {
         return false;
     }
-
-}
-
-void AuthWidget::connect() {
-
-}
-
-void AuthWidget::disconnect() {
 
 }
 

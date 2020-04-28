@@ -3,27 +3,26 @@
 
 #include <Wt/WContainerWidget.h>
 #include <Wt/WMessageBox.h>
+#include <Wt/WSignal.h>
 
 #include "ChatServer.hpp"
 #include "RegistrationForm.hpp"
 
-
+struct Session;
 class ChatEvent;
 
-class AuthWidget : public Wt::WContainerWidget, public Client {
+class AuthWidget : public Wt::WContainerWidget {
 public:
     AuthWidget(ChatServer& server);
     ~AuthWidget();
 
-    void connect() override ;
-    void disconnect() override ;
 
     // show sign_in screen
     void let_sign_in();
 
-    void sign_out() override {};
-
     bool start_chat(const Wt::WString& username, const Wt::WString& password);
+
+    Wt::Signal<Wt::WString>& session_signal() { return session_signal_; }
 
 protected:
     bool signed_in() const { return signed_in_; }
@@ -31,6 +30,7 @@ protected:
 private:
     ChatServer& server_;
     bool signed_in_;
+    Wt::Signal<Wt::WString> session_signal_;
 
     Wt::WString username_;
     Wt::WLineEdit *username_edit_field_;
@@ -44,9 +44,9 @@ private:
 
     Wt::WText *status_msg_;
 
-    void sign_in() override;
+    void sign_in() ;
     void show_registration();
-    void sign_up() override;
+    void sign_up() ;
 
     void validate_reg_dialog(Wt::WDialog& dialog, Wt::WText* status_msg);
 

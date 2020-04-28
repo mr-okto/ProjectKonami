@@ -13,7 +13,7 @@ private:
     ChatServer& server_;
     const Wt::WEnvironment& env_;
 
-
+    void start_chat(const Wt::WString& username);
 
 };
 
