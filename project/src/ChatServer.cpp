@@ -131,3 +131,10 @@ void ChatServer::post_chat_event(const ChatEvent& event) {
 
     }
 }
+
+std::set<Wt::WString> ChatServer::online_users() {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    auto usrs = online_users_;
+    return usrs;
+}

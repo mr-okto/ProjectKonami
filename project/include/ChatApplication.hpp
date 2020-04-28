@@ -9,6 +9,8 @@ class ChatApplication : public Wt::WApplication {
 public:
     ChatApplication(const Wt::WEnvironment& env, ChatServer& server);
 
+protected:
+
 private:
     ChatServer& server_;
     const Wt::WEnvironment& env_;

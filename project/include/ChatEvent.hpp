@@ -23,7 +23,7 @@ public:
           data_(data)
           { }
 
-    Type action() const { return type_; }
+    Type type() const { return type_; }
 
 
 private:

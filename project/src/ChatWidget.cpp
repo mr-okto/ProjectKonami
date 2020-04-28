@@ -11,6 +11,7 @@
 #include <Wt/WTextArea.h>
 #include <Wt/WPushButton.h>
 #include <Wt/WCheckBox.h>
+#include <Wt/Utils.h>
 
 #include "ChatWidget.hpp"
 
@@ -183,8 +184,34 @@ void ChatWidget::sign_out() {
 void ChatWidget::process_chat_event(const ChatEvent& event) {
     Wt::WApplication *app = Wt::WApplication::instance();
 
+    if (event.type() != ChatEvent::Type::NEW_MSG) {
+        update_users_list();
+    }
+
+    app->triggerUpdate();
+
+    bool display = event.type() != ChatEvent::Type::NEW_MSG
+        || !userList_;
+
+    if (display) {
+
+    }
 }
 
 void ChatWidget::update_users_list() {
+    if (userList_) {
+        userList_->clear();
 
+        std::set<Wt::WString> users = server_.online_users();
+
+        for (auto i = users.begin(); i != users.end(); ++i) {
+            Wt::WText *w = userList_->addWidget(std::make_unique<Wt::WText>(Wt::Utils::htmlEncode(*i)));
+            w->setInline(false);
+
+            if (*i == username_) {
+                w->setStyleClass("chat-self");
+            }
+        }
+
+    }
 }

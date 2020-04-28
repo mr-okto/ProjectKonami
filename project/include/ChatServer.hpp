@@ -17,7 +17,6 @@ public:
     virtual void sign_out() = 0;
 
     virtual std::string username() = 0;
-//    virtual ~Client() = default;
 };
 
 class ChatServer : public Wt::WServer {
@@ -39,6 +38,8 @@ public:
     bool sign_up(const Wt::WString& username, const Wt::WString& password);
 
     bool sign_out(const Wt::WString& username);
+
+    std::set<Wt::WString> online_users();
 
 private:
     Wt::WServer& server_;
