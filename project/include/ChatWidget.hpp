@@ -21,9 +21,9 @@ public:
 private:
     ChatServer& server_;
     Wt::WString username_;
-    Session session_;
 
-    uint32_t  user_id_;
+//    Session session_;
+//    uint32_t  user_id_;
 
     Wt::JSlot                  clearInput_;
 

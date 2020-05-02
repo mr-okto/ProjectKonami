@@ -38,3 +38,7 @@ bool SessionManager::add_session(Client *client, const Session &s) {
 bool SessionManager::close_session(Client *client) {
     return active_sessions_.erase(client) == 1;
 }
+
+SessionManager::SessionManager() : scheduler_() {
+
+}

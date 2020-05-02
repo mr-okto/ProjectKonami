@@ -10,13 +10,16 @@ public:
     ChatApplication(const Wt::WEnvironment& env, ChatServer& server);
 
 protected:
+//    virtual void idleTimeout() override;
 
 private:
     ChatServer& server_;
     const Wt::WEnvironment& env_;
 
+    bool logged_in_;
     void start_chat(const Wt::WString& username);
 
+    Wt::Core::observing_ptr<Wt::WDialog> idle_timeout_dialog_;
 };
 
 

@@ -6,5 +6,6 @@ file(GLOB sources ${PROJECT_SOURCE_DIR}/project/src/*.cpp)
 include_directories(${PROJECT_SOURCE_DIR}/project/include)
 
 add_executable(${PROJECT_NAME} ${sources})
-#target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
-target_link_libraries(${PROJECT_NAME} wthttp wt)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
+target_link_libraries(${PROJECT_NAME} wthttp wt Threads::Threads)
+#target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/Scheduler)

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Wt/WString.h>
+#include <Wt/WEvent.h>
+#include <Wt/WSignal.h>
 
 #include <cstdint>
 #include <string>
@@ -37,10 +39,10 @@ private:
                   const Wt::WString& username,
                   uint32_t user_id,
                   const Wt::WString& data = Wt::WString::Empty)
-            : type_(type),
-              username_(username),
-              data_(data),
-              user_id_(user_id)
+        : type_(type),
+          username_(username),
+          data_(data),
+          user_id_(user_id)
     { }
 
   friend class ChatServer;

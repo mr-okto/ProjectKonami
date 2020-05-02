@@ -48,7 +48,6 @@ ChatServer::ChatServer(Wt::WServer& server)
       sessionManager_(),
       authService_(userManagerStub, &sessionManager_)
 {
-
 }
 
 bool ChatServer::sign_in(const Wt::WString& username, const Wt::WString& password) {
@@ -59,7 +58,7 @@ bool ChatServer::sign_in(const Wt::WString& username, const Wt::WString& passwor
         online_users_.insert(username);
 
         post_chat_event(ChatEvent(ChatEvent::SIGN_IN, username,
-                                    sessionManager_.reserved_user_id(username.toUTF8())));
+                                  sessionManager_.user_id(username.toUTF8())));
 
         return true;
     } else
@@ -74,15 +73,13 @@ bool ChatServer::connect(Client *client, const ChatEventCallback &handle_event) 
     if (sessionManager_.has_reserved(username)) {
         Session s;
         s.username_ = username;
-        s.user_id_ = sessionManager_.reserved_user_id(username);
+        s.user_id_ = sessionManager_.user_id(username);
         s.session_id_ = Wt::WApplication::instance()->sessionId();
         s.time_point_ = std::chrono::system_clock::now();
         s.status_ = Session::Status::Active;
         s.callback_ = handle_event;
 
-        sessionManager_.add_session(client, s);
-
-        return true;
+        return sessionManager_.add_session(client, s);
     } else
         return false;
 
@@ -111,7 +108,7 @@ bool ChatServer::sign_out(const Wt::WString &username_) {
 bool ChatServer::disconnect(Client *client) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
 
-    sessionManager_.close_session(client);
+    return sessionManager_.close_session(client);
 }
 
 void ChatServer::post_chat_event(const ChatEvent& event) {
@@ -122,7 +119,6 @@ void ChatServer::post_chat_event(const ChatEvent& event) {
     auto clients = sessionManager_.active_sessions();
     for (auto iter = clients.begin(); iter != clients.end(); ++iter) {
         if (app && app->sessionId() == iter->second.session_id_) {
-            iter->second.time_point_ = std::chrono::system_clock::now();
             iter->second.callback_(event);
         } else {
             server_.post(iter->second.session_id_,

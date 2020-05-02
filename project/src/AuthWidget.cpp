@@ -9,6 +9,7 @@
 #include <Wt/WTextArea.h>
 #include <Wt/WPushButton.h>
 #include <Wt/WCheckBox.h>
+#include <Wt/WEvent.h>
 
 #include "AuthWidget.hpp"
 
@@ -62,7 +63,6 @@ void AuthWidget::let_sign_in() {
 
     auto signUpButton = buttons->addWidget(std::make_unique<Wt::WPushButton>("Sign up"));
     signUpButton->clicked().connect(this, &AuthWidget::show_registration);
-
 
     status_msg_ = vLayout->addWidget(Wt::cpp14::make_unique<Wt::WText>(), 0);
     status_msg_->setTextFormat(Wt::TextFormat::Plain);

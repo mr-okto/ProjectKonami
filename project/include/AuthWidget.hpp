@@ -40,8 +40,6 @@ private:
 
     RegistrationForm *registration_form_;
 
-    uint32_t  user_id_;
-
     Wt::WText *status_msg_;
 
     void sign_in() ;

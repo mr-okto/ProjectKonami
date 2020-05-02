@@ -17,8 +17,8 @@
 
 ChatWidget::ChatWidget(const Wt::WString& username, ChatServer& server)
     : Wt::WContainerWidget(),
-      username_(username),
-      server_(server)
+      server_(server),
+      username_(username)
 
 {
     // (TODO) add_session
