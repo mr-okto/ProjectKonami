@@ -37,9 +37,9 @@ public:
 
     std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
     std::vector<chat::Message> get_messages(uint dialogue_id);
-    chat::Message send_msg(const Wt::WString& username, 
-                                        uint dialogue_id, 
-                                        const Wt::WString& message);
+    chat::Message send_msg(uint dialogue_id, 
+                            const Wt::WString& username,
+                            const Wt::WString& message);
 
     uint get_user_id(const Wt::WString& username);
 
@@ -52,6 +52,8 @@ public:
 
     std::set<Wt::WString> online_users();
     std::vector<Wt::WString> get_all_users();
+
+    void notify_user(uint dialogue_id, const Wt::WString& username);
 
 private:
     Wt::WServer& server_;

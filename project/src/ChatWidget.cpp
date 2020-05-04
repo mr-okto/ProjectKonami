@@ -115,6 +115,13 @@ void ChatWidget::create_UI() {
                                       "}"
     );
 
+    if (sendButton_) {
+      sendButton_->clicked().connect(this, &ChatWidget::send);
+      sendButton_->clicked().connect(clearInput_);
+      sendButton_->clicked().connect((WWidget *)messageEdit_,
+				     &WWidget::setFocus);
+    }
+
     update_users_list();
 }
 
@@ -201,8 +208,12 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
     bool display = event.type() != ChatEvent::Type::NEW_MSG
         || !userList_;
 
-    if (display) {
+    display = true;
 
+    if (event.username_ == current_dialogue_) {
+        Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
+        w->setText(event.username_ + " " + event.data_);
+        w->setInline(false);
     }
 }
 
@@ -229,30 +240,33 @@ void ChatWidget::update_messages(Wt::WString username) {
             // TODO
         }
         w->setText(item.username + "   " + item.content);
+        w->setInline(false);
     }
+}
+
+void ChatWidget::send() {
+    if (!messageEdit_->text().empty()) {
+        server_.send_msg(dialogue_id_[current_dialogue_], username_, messageEdit_->text());
+    }
+    Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
+    w->setText(username_ + "   " + messageEdit_->text());
+    w->setInline(false);
 }
 
 void ChatWidget::update_users_list() {
     if (userList_) {
         userList_->clear();
-        dialoguesList_->clear();
 
         std::set<Wt::WString> users = server_.online_users();
 
-        auto *l = dialoguesList_->addWidget(std::make_unique<Wt::WSelectionBox>());
         for (auto i = users.begin(); i != users.end(); ++i) {
             if (*i != username_) {
                 Wt::WText *w = userList_->addWidget(std::make_unique<Wt::WText>(Wt::Utils::htmlEncode(*i)));
                 w->setInline(false);
-                l->addItem(i->toUTF8());
             }
         }
         Wt::WText* user_box_text = dialoguesList_->addNew<Wt::WText>("");
         // TODO dialog window for user
-        l->activated().connect([=] {
-            user_box_text->setText(Wt::WString("You selected {1}.").arg(l->currentText()));
-            current_dialogue_ = l->currentText();
-        });
         update_dialogue_list();
     }
 }

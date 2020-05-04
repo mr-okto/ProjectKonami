@@ -129,6 +129,10 @@ void ChatServer::post_chat_event(const ChatEvent& event) {
     }
 }
 
+void ChatServer::notify_user(uint dialogue_id, const Wt::WString& username) {
+    // TODO
+}
+
 std::set<Wt::WString> ChatServer::online_users() {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
     return online_users_;
@@ -136,41 +140,23 @@ std::set<Wt::WString> ChatServer::online_users() {
 
 std::vector<chat::Dialogue> ChatServer::get_dialogues(const Wt::WString& username) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-
-    std::vector<chat::Dialogue> vec = {{1, "bob"},
-                                       {2, "lel"}, 
-                                       {3, "kek"}};
-    return vec;
-    /*uint user_id = sessionManager_.user_id(username.toUTF8());
-
-    return dialogue_service_.get_dialogues(user_id);*/
+    return dialogue_service_.get_dialogues(username.toUTF8());
 }
 
 std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    if (dialogue_id == 1) {
-        std::vector<chat::Message> vec = {{dialogue_id, "bob", "first msg", time(NULL)}};
-        return vec;
-    } else if (dialogue_id == 2) {
-        std::vector<chat::Message> vec = {{dialogue_id, "lel", "seconde msg", time(NULL)}};
-        return vec;
-    } else {
-        std::vector<chat::Message> vec = {{dialogue_id, "kek", "third msg", time(NULL)}};
-        return vec;
-    }
-
-    //return dialogue_service_.get_messages(dialogue_id);
+    return dialogue_service_.get_messages(dialogue_id);
 }
 
-chat::Message ChatServer::send_msg(const Wt::WString& username, 
-                                   uint dialogue_id, 
-                                   const Wt::WString& message) {
-                    
-    /*std::unique_lock<std::recursive_mutex> lock(mutex_);
-    uint user_id = sessionManager_.user_id(username.toUTF8());*/
-    chat::Message new_message = {dialogue_id, username.toUTF8(), message.toUTF8(), time(NULL)};
-    return new_message;
-    //return dialogue_service_.post_message(new_message);
+chat::Message ChatServer::send_msg(uint dialogue_id, 
+                                   const Wt::WString& username,
+                                   const Wt::WString& message_content) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    chat::Message message = dialogue_service_.post_message(dialogue_id, username.toUTF8(), message_content.toUTF8());
+    if (online_users_.count(username)) {
+        notify_user(dialogue_id, username);
+    }         
+    return message;
 }
 
 uint ChatServer::get_user_id(const Wt::WString& username) {

@@ -3,6 +3,9 @@
 #include <time.h>
 #include <vector>
 #include <string>
+#include <map>
+
+typedef unsigned int uint;
 
 namespace chat {
 class Cache {};
@@ -10,12 +13,12 @@ class Cache {};
 typedef std::string Content;
 
 struct Dialogue {
-    unsigned int dialog_id;
+    uint dialog_id;
     std::string username;
 };
 
 struct Message {
-    unsigned int dialog_id;
+    uint dialog_id;
     std::string username;
     Content content;
     time_t time;
@@ -31,12 +34,23 @@ static bool operator==(const Message& lhs, const Message& rhs) {
 class DialogueService {
  public:
     DialogueService(Cache& cache);
-    DialogueService() {}
-    std::vector<Dialogue> get_dialogues(unsigned int user_id);
-    Dialogue get_dealogue(unsigned int dialog_id);
-    std::vector<Message> get_messages(unsigned int dialog_id);
-    Message post_message(const Message& message);
+    DialogueService() : dialogues_({{"bob", {{2, "lel"}, {3, "kek"}}},
+                                    {"lel",  {{1, "kek"}, {2, "bob"}}}, 
+                                    {"kek", {{1, "lel"}, {3, "bob"}}}
+                                   }),
+                        messages_({{1, {{1, "kek", "message for lel", time(NULL)}, 
+                                        {1, "lel", "message for kek", time(NULL)}}},
+                                   {2, {{2, "bob", "message for lel", time(NULL)}}},
+                                   {3, {{3, "kek", "message for bob", time(NULL)}}}
+                                  }) {}
+    std::vector<Dialogue> get_dialogues(const std::string& username);
+    std::vector<Message> get_messages(uint dialog_id);
+    Message post_message(uint dialogue_id,
+                         const std::string& username, 
+                         const std::string& message_content);
  private:
+    std::map<std::string, std::vector<Dialogue>> dialogues_;
+    std::map<uint, std::vector<Message>> messages_;
     //Cache& cache_;
     //FIXME
 };

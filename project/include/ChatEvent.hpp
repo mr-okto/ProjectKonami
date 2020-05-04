@@ -46,6 +46,7 @@ private:
     { }
 
   friend class ChatServer;
+  friend class ChatWidget;
 };
 
 typedef std::function<void (const ChatEvent&)> ChatEventCallback;

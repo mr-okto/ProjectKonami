@@ -20,6 +20,7 @@ public:
 
     void update_dialogue_list();
     void update_messages(Wt::WString username);
+    void send();
 
 private:
     ChatServer& server_;
