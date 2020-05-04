@@ -121,6 +121,14 @@ void ChatWidget::create_UI() {
       sendButton_->clicked().connect((WWidget *)messageEdit_,
 				     &WWidget::setFocus);
     }
+    messageEdit_->enterPressed().connect(this, &ChatWidget::send);
+    messageEdit_->enterPressed().connect(clearInput_);
+    messageEdit_->enterPressed().connect((WWidget *)messageEdit_,
+					 &WWidget::setFocus);
+
+    // Prevent the enter from generating a new line, which is its default
+    // action
+    messageEdit_->enterPressed().preventDefaultAction();
 
     update_users_list();
 }
@@ -210,8 +218,13 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 
     display = true;
 
-    std::cout << username_ << "  " << event.dialogue_id_ << "  " << dialogue_id_[current_dialogue_] << std::endl;
-    if (event.dialogue_id_ == dialogue_id_[current_dialogue_]) {
+    if (event.type_ == ChatEvent::NEW_DIALOGUE) {
+        update_dialogue_list();
+    }
+
+    if (event.type_ == ChatEvent::NEW_MSG &&
+        dialogue_id_.count(current_dialogue_) && 
+        event.dialogue_id_ == dialogue_id_[current_dialogue_]) {
 
         update_messages(current_dialogue_);
     }
@@ -230,7 +243,7 @@ void ChatWidget::update_dialogue_list() {
     });
 }
 
-void ChatWidget::update_messages(Wt::WString username) {
+void ChatWidget::update_messages(const Wt::WString& username) {
     messages_->clear();
     for (const auto& item : server_.get_messages(dialogue_id_[username])) {
         Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
@@ -242,6 +255,14 @@ void ChatWidget::update_messages(Wt::WString username) {
         w->setText(item.username + "   " + item.content);
         w->setInline(false);
     }
+}
+
+bool ChatWidget::create_dialogue(const Wt::WString& username) {
+    if (server_.create_dialogue(username_, username)) {
+        update_dialogue_list();
+        return true;
+    }
+    return false;
 }
 
 void ChatWidget::send() {
@@ -258,14 +279,15 @@ void ChatWidget::update_users_list() {
         userList_->clear();
 
         std::set<Wt::WString> users = server_.online_users();
-
+        auto *l = userList_->addWidget(std::make_unique<Wt::WSelectionBox>());
         for (auto i = users.begin(); i != users.end(); ++i) {
             if (*i != username_) {
-                Wt::WText *w = userList_->addWidget(std::make_unique<Wt::WText>(Wt::Utils::htmlEncode(*i)));
-                w->setInline(false);
+                l->addItem(*i);
             }
         }
-        Wt::WText* user_box_text = dialoguesList_->addNew<Wt::WText>("");
+        l->activated().connect([this, l] {
+            this->create_dialogue(l->currentText());
+        });
         // TODO dialog window for user
         update_dialogue_list();
     }

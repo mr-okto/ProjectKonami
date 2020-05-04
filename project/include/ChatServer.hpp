@@ -42,6 +42,8 @@ public:
                             const Wt::WString& receiver_name,
                             const Wt::WString& message);
 
+    bool create_dialogue(const Wt::WString& first_username, const Wt::WString& second_username);
+
     uint get_user_id(const Wt::WString& username);
 
     // Try to sign in with given username and password.
@@ -54,7 +56,7 @@ public:
     std::set<Wt::WString> online_users();
     std::vector<Wt::WString> get_all_users();
 
-    void notify_user(uint dialogue_id, const Wt::WString& username);
+    void notify_user(const ChatEvent& event);
 
 private:
     Wt::WServer& server_;

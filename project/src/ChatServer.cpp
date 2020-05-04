@@ -129,13 +129,14 @@ void ChatServer::post_chat_event(const ChatEvent& event) {
     }
 }
 
-void ChatServer::notify_user(uint dialogue_id, const Wt::WString& username) {
+void ChatServer::notify_user(const ChatEvent& event) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
     auto clients = sessionManager_.active_sessions();
     for (auto iter = clients.begin(); iter != clients.end(); ++iter) {
-        if (iter->second.username_ == username.toUTF8()) {
+        if (iter->second.username_ == event.username_.toUTF8()) {
             auto callback = iter->second.callback_;
             auto session_id = iter->second.session_id_;
-            server_.post(session_id, std::bind(callback, ChatEvent(dialogue_id)));
+            server_.post(session_id, std::bind(callback, event));
             return;
         }
     }
@@ -163,9 +164,18 @@ chat::Message ChatServer::send_msg(uint dialogue_id,
     std::unique_lock<std::recursive_mutex> lock(mutex_);
     chat::Message message = dialogue_service_.post_message(dialogue_id, username.toUTF8(), message_content.toUTF8());
     if (online_users_.count(username)) {
-        notify_user(dialogue_id, receiver_name);
+        notify_user(ChatEvent(dialogue_id, receiver_name));
     }         
     return message;
+}
+
+bool ChatServer::create_dialogue(const Wt::WString& creater, const Wt::WString& receiver) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    if (dialogue_service_.create_dialogue(creater.toUTF8(), receiver.toUTF8())) {
+        notify_user(ChatEvent(ChatEvent::NEW_DIALOGUE, receiver));
+        return true;
+    }
+    return false;
 }
 
 uint ChatServer::get_user_id(const Wt::WString& username) {

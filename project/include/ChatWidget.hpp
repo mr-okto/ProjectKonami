@@ -19,7 +19,8 @@ public:
     std::string username() override { return username_.toUTF8(); }
 
     void update_dialogue_list();
-    void update_messages(Wt::WString username);
+    void update_messages(const Wt::WString& username);
+    bool create_dialogue(const Wt::WString& username);
     void send();
 
 private:
