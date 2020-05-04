@@ -49,7 +49,7 @@ void ChatWidget::create_UI() {
 
     auto messagesPtr = Wt::cpp14::make_unique<WContainerWidget>();
     auto userListPtr = Wt::cpp14::make_unique<WContainerWidget>();
-    auto chatUserListPtr = Wt::cpp14::make_unique<Wt::WContainerWidget>();
+    auto dialoguesListPtr = Wt::cpp14::make_unique<Wt::WContainerWidget>();
     auto messageEditPtr = Wt::cpp14::make_unique<Wt::WTextArea>();
     auto sendButtonPtr = Wt::cpp14::make_unique<Wt::WPushButton>("Send");
     auto logoutButtonPtr = Wt::cpp14::make_unique<Wt::WPushButton>("Logout");
@@ -58,10 +58,10 @@ void ChatWidget::create_UI() {
     userList_ = userListPtr.get();
     messageEdit_ = messageEditPtr.get();
     sendButton_ = sendButtonPtr.get();
-    chat_user_list_ = chatUserListPtr.get();
+    dialoguesList_ = dialoguesListPtr.get();
     Wt::Core::observing_ptr<Wt::WPushButton> logoutButton = logoutButtonPtr.get();
 
-    sendButton_->clicked().connect(this, [this]() {std::cout << this->current_choose_ << std::endl;});
+    sendButton_->clicked().connect(this, [this]() {std::cout << this->current_dialogue_<< std::endl;});
     messageEdit_->setRows(2);
     messageEdit_->setFocus();
 
@@ -72,7 +72,7 @@ void ChatWidget::create_UI() {
     create_layout(std::move(messagesPtr), std::move(userListPtr),
                  std::move(messageEditPtr),
                  std::move(sendButtonPtr), std::move(logoutButtonPtr),
-                 std::move(chatUserListPtr));
+                 std::move(dialoguesListPtr));
 
     /*
      * Connect event handlers:
@@ -206,14 +206,40 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
     }
 }
 
+void ChatWidget::update_dialogue_list() {
+    dialoguesList_->clear();
+    auto *l = dialoguesList_->addWidget(std::make_unique<Wt::WSelectionBox>());
+    for (const auto& item : server_.get_dialogues(username_)) {
+        dialogue_id_[item.username] = item.dialog_id;
+        l->addItem(item.username);
+    }
+    l->activated().connect([this, l] {
+        this->update_messages(l->currentText());
+        current_dialogue_ = l->currentText();
+    });
+}
+
+void ChatWidget::update_messages(Wt::WString username) {
+    messages_->clear();
+    for (const auto& item : server_.get_messages(dialogue_id_[username])) {
+        Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
+        if (item.username != username_) {
+            // TODO
+        } else {
+            // TODO
+        }
+        w->setText(item.username + "   " + item.content);
+    }
+}
+
 void ChatWidget::update_users_list() {
     if (userList_) {
         userList_->clear();
-        chat_user_list_->clear();
+        dialoguesList_->clear();
 
         std::set<Wt::WString> users = server_.online_users();
 
-        auto *l = chat_user_list_->addWidget(std::make_unique<Wt::WSelectionBox>());
+        auto *l = dialoguesList_->addWidget(std::make_unique<Wt::WSelectionBox>());
         for (auto i = users.begin(); i != users.end(); ++i) {
             if (*i != username_) {
                 Wt::WText *w = userList_->addWidget(std::make_unique<Wt::WText>(Wt::Utils::htmlEncode(*i)));
@@ -221,12 +247,12 @@ void ChatWidget::update_users_list() {
                 l->addItem(i->toUTF8());
             }
         }
-        Wt::WText* user_box_text = chat_user_list_->addNew<Wt::WText>("");
+        Wt::WText* user_box_text = dialoguesList_->addNew<Wt::WText>("");
         // TODO dialog window for user
         l->activated().connect([=] {
             user_box_text->setText(Wt::WString("You selected {1}.").arg(l->currentText()));
-            current_choose_ = l->currentText();
+            current_dialogue_ = l->currentText();
         });
-
+        update_dialogue_list();
     }
 }

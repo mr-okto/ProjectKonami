@@ -18,6 +18,9 @@ public:
 
     std::string username() override { return username_.toUTF8(); }
 
+    void update_dialogue_list();
+    void update_messages(Wt::WString username);
+
 private:
     ChatServer& server_;
     Wt::WString username_;
@@ -33,9 +36,10 @@ private:
     Wt::Core::observing_ptr<Wt::WPushButton> sendButton_;
 
     Wt::Core::observing_ptr<Wt::WContainerWidget> userList_;
-    Wt::Core::observing_ptr<Wt::WContainerWidget> chat_user_list_;
+    Wt::Core::observing_ptr<Wt::WContainerWidget> dialoguesList_;
 
-    Wt::WString current_choose_;
+    std::map<Wt::WString, uint> dialogue_id_;
+    Wt::WString current_dialogue_;
 
 
     void create_UI();

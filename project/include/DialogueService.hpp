@@ -11,13 +11,12 @@ typedef std::string Content;
 
 struct Dialogue {
     unsigned int dialog_id;
-    unsigned int sender_id;
-    unsigned int receiver_id;
+    std::string username;
 };
 
 struct Message {
     unsigned int dialog_id;
-    unsigned int user_id;
+    std::string username;
     Content content;
     time_t time;
 };

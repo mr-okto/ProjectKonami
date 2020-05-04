@@ -136,24 +136,41 @@ std::set<Wt::WString> ChatServer::online_users() {
 
 std::vector<chat::Dialogue> ChatServer::get_dialogues(const Wt::WString& username) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    uint user_id = sessionManager_.user_id(username.toUTF8());
 
-    return dialogue_service_.get_dialogues(user_id);
+    std::vector<chat::Dialogue> vec = {{1, "bob"},
+                                       {2, "lel"}, 
+                                       {3, "kek"}};
+    return vec;
+    /*uint user_id = sessionManager_.user_id(username.toUTF8());
+
+    return dialogue_service_.get_dialogues(user_id);*/
 }
 
 std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    return dialogue_service_.get_messages(dialogue_id);
+    if (dialogue_id == 1) {
+        std::vector<chat::Message> vec = {{dialogue_id, "bob", "first msg", time(NULL)}};
+        return vec;
+    } else if (dialogue_id == 2) {
+        std::vector<chat::Message> vec = {{dialogue_id, "lel", "seconde msg", time(NULL)}};
+        return vec;
+    } else {
+        std::vector<chat::Message> vec = {{dialogue_id, "kek", "third msg", time(NULL)}};
+        return vec;
+    }
+
+    //return dialogue_service_.get_messages(dialogue_id);
 }
 
 chat::Message ChatServer::send_msg(const Wt::WString& username, 
                                    uint dialogue_id, 
                                    const Wt::WString& message) {
-    std::unique_lock<std::recursive_mutex> lock(mutex_);
-    uint user_id = sessionManager_.user_id(username.toUTF8());
-    chat::Message new_message = {dialogue_id, user_id, message.toUTF8(), time(NULL)};
-
-    return dialogue_service_.post_message(new_message);
+                    
+    /*std::unique_lock<std::recursive_mutex> lock(mutex_);
+    uint user_id = sessionManager_.user_id(username.toUTF8());*/
+    chat::Message new_message = {dialogue_id, username.toUTF8(), message.toUTF8(), time(NULL)};
+    return new_message;
+    //return dialogue_service_.post_message(new_message);
 }
 
 uint ChatServer::get_user_id(const Wt::WString& username) {
