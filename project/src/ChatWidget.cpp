@@ -3,6 +3,7 @@
 #include <Wt/WEnvironment.h>
 #include <Wt/WInPlaceEdit.h>
 #include <Wt/WHBoxLayout.h>
+#include <Wt/WSelectionBox.h>
 #include <Wt/WVBoxLayout.h>
 #include <Wt/WLabel.h>
 #include <Wt/WLineEdit.h>
@@ -48,6 +49,7 @@ void ChatWidget::create_UI() {
 
     auto messagesPtr = Wt::cpp14::make_unique<WContainerWidget>();
     auto userListPtr = Wt::cpp14::make_unique<WContainerWidget>();
+    auto chatUserListPtr = Wt::cpp14::make_unique<Wt::WContainerWidget>();
     auto messageEditPtr = Wt::cpp14::make_unique<Wt::WTextArea>();
     auto sendButtonPtr = Wt::cpp14::make_unique<Wt::WPushButton>("Send");
     auto logoutButtonPtr = Wt::cpp14::make_unique<Wt::WPushButton>("Logout");
@@ -56,8 +58,10 @@ void ChatWidget::create_UI() {
     userList_ = userListPtr.get();
     messageEdit_ = messageEditPtr.get();
     sendButton_ = sendButtonPtr.get();
+    chat_user_list_ = chatUserListPtr.get();
     Wt::Core::observing_ptr<Wt::WPushButton> logoutButton = logoutButtonPtr.get();
 
+    sendButton_->clicked().connect(this, [this]() {std::cout << this->current_choose_ << std::endl;});
     messageEdit_->setRows(2);
     messageEdit_->setFocus();
 
@@ -67,7 +71,8 @@ void ChatWidget::create_UI() {
 
     create_layout(std::move(messagesPtr), std::move(userListPtr),
                  std::move(messageEditPtr),
-                 std::move(sendButtonPtr), std::move(logoutButtonPtr));
+                 std::move(sendButtonPtr), std::move(logoutButtonPtr),
+                 std::move(chatUserListPtr));
 
     /*
      * Connect event handlers:
@@ -115,7 +120,7 @@ void ChatWidget::create_UI() {
 
 void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::unique_ptr<Wt::WWidget> userList,
                               std::unique_ptr<Wt::WWidget> messageEdit, std::unique_ptr<Wt::WWidget> sendButton,
-                              std::unique_ptr<Wt::WWidget> logoutButton) {
+                              std::unique_ptr<Wt::WWidget> logoutButton, std::unique_ptr<Wt::WWidget> chatUserList) {
 
     /*
   * Create a vertical layout, which will hold 3 rows,
@@ -142,6 +147,9 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
 
     // Choose JavaScript implementation explicitly to avoid log warning (needed for resizable layout)
     hLayout->setPreferredImplementation(Wt::LayoutImplementation::JavaScript);
+
+    chatUserList->setStyleClass("chat-users");
+    hLayout->addWidget(std::move(chatUserList));
 
     // Add widget to horizontal layout with stretch = 1
     messages->setStyleClass("chat-msgs");
@@ -201,17 +209,24 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 void ChatWidget::update_users_list() {
     if (userList_) {
         userList_->clear();
+        chat_user_list_->clear();
 
         std::set<Wt::WString> users = server_.online_users();
 
+        auto *l = chat_user_list_->addWidget(std::make_unique<Wt::WSelectionBox>());
         for (auto i = users.begin(); i != users.end(); ++i) {
-            Wt::WText *w = userList_->addWidget(std::make_unique<Wt::WText>(Wt::Utils::htmlEncode(*i)));
-            w->setInline(false);
-
-            if (*i == username_) {
-                w->setStyleClass("chat-self");
+            if (*i != username_) {
+                Wt::WText *w = userList_->addWidget(std::make_unique<Wt::WText>(Wt::Utils::htmlEncode(*i)));
+                w->setInline(false);
+                l->addItem(i->toUTF8());
             }
         }
+        Wt::WText* user_box_text = chat_user_list_->addNew<Wt::WText>("");
+        // TODO dialog window for user
+        l->activated().connect([=] {
+            user_box_text->setText(Wt::WString("You selected {1}.").arg(l->currentText()));
+            current_choose_ = l->currentText();
+        });
 
     }
 }

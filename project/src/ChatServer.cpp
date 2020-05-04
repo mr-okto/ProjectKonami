@@ -46,7 +46,8 @@ UserManagerStub userManagerStub;
 ChatServer::ChatServer(Wt::WServer& server)
     : server_(server),
       sessionManager_(),
-      authService_(userManagerStub, &sessionManager_)
+      authService_(userManagerStub, &sessionManager_),
+      dialogue_service_()
 {
 }
 
@@ -130,7 +131,31 @@ void ChatServer::post_chat_event(const ChatEvent& event) {
 
 std::set<Wt::WString> ChatServer::online_users() {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
+    return online_users_;
+}
 
-    auto usrs = online_users_;
-    return usrs;
+std::vector<chat::Dialogue> ChatServer::get_dialogues(const Wt::WString& username) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    uint user_id = sessionManager_.user_id(username.toUTF8());
+
+    return dialogue_service_.get_dialogues(user_id);
+}
+
+std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    return dialogue_service_.get_messages(dialogue_id);
+}
+
+chat::Message ChatServer::send_msg(const Wt::WString& username, 
+                                   uint dialogue_id, 
+                                   const Wt::WString& message) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    uint user_id = sessionManager_.user_id(username.toUTF8());
+    chat::Message new_message = {dialogue_id, user_id, message.toUTF8(), time(NULL)};
+
+    return dialogue_service_.post_message(new_message);
+}
+
+uint ChatServer::get_user_id(const Wt::WString& username) {
+    return sessionManager_.user_id(username.toUTF8());
 }
