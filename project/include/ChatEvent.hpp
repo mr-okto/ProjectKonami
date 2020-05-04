@@ -25,6 +25,10 @@ public:
           data_(data)
           { }
 
+    ChatEvent(uint32_t dialogue_id, Type type = Type::NEW_MSG)
+        : type_(type),
+          dialogue_id_(dialogue_id) {}
+
     Type type() const { return type_; }
 
 
@@ -32,6 +36,7 @@ private:
   Type type_;
   uint32_t object_id_;
   uint32_t user_id_;
+  uint32_t dialogue_id_;
   Wt::WString data_;
   Wt::WString username_;
 

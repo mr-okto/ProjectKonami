@@ -39,6 +39,7 @@ public:
     std::vector<chat::Message> get_messages(uint dialogue_id);
     chat::Message send_msg(uint dialogue_id, 
                             const Wt::WString& username,
+                            const Wt::WString& receiver_name,
                             const Wt::WString& message);
 
     uint get_user_id(const Wt::WString& username);

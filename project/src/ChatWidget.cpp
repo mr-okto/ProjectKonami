@@ -210,10 +210,10 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 
     display = true;
 
-    if (event.username_ == current_dialogue_) {
-        Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-        w->setText(event.username_ + " " + event.data_);
-        w->setInline(false);
+    std::cout << username_ << "  " << event.dialogue_id_ << "  " << dialogue_id_[current_dialogue_] << std::endl;
+    if (event.dialogue_id_ == dialogue_id_[current_dialogue_]) {
+
+        update_messages(current_dialogue_);
     }
 }
 
@@ -246,7 +246,7 @@ void ChatWidget::update_messages(Wt::WString username) {
 
 void ChatWidget::send() {
     if (!messageEdit_->text().empty()) {
-        server_.send_msg(dialogue_id_[current_dialogue_], username_, messageEdit_->text());
+        server_.send_msg(dialogue_id_[current_dialogue_], username_, current_dialogue_, messageEdit_->text());
     }
     Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
     w->setText(username_ + "   " + messageEdit_->text());

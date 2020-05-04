@@ -130,7 +130,15 @@ void ChatServer::post_chat_event(const ChatEvent& event) {
 }
 
 void ChatServer::notify_user(uint dialogue_id, const Wt::WString& username) {
-    // TODO
+    auto clients = sessionManager_.active_sessions();
+    for (auto iter = clients.begin(); iter != clients.end(); ++iter) {
+        if (iter->second.username_ == username.toUTF8()) {
+            auto callback = iter->second.callback_;
+            auto session_id = iter->second.session_id_;
+            server_.post(session_id, std::bind(callback, ChatEvent(dialogue_id)));
+            return;
+        }
+    }
 }
 
 std::set<Wt::WString> ChatServer::online_users() {
@@ -150,11 +158,12 @@ std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id) {
 
 chat::Message ChatServer::send_msg(uint dialogue_id, 
                                    const Wt::WString& username,
+                                   const Wt::WString& receiver_name,
                                    const Wt::WString& message_content) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
     chat::Message message = dialogue_service_.post_message(dialogue_id, username.toUTF8(), message_content.toUTF8());
     if (online_users_.count(username)) {
-        notify_user(dialogue_id, username);
+        notify_user(dialogue_id, receiver_name);
     }         
     return message;
 }
