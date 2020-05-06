@@ -18,7 +18,7 @@ public:
 
 
     // show sign_in screen
-    void let_sign_in();
+    void create_UI();
 
     bool start_chat(const Wt::WString& username, const Wt::WString& password);
 
@@ -41,6 +41,8 @@ private:
     RegistrationForm *registration_form_;
 
     Wt::WText *status_msg_;
+
+    std::unique_ptr<Wt::WVBoxLayout> create_input_forms_layout();
 
     void sign_in() ;
     void show_registration();

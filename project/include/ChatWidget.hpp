@@ -13,6 +13,7 @@ public:
 
     void connect() override;
     void disconnect() override;
+    Wt::Signal<Wt::WString>& logout_signal() { return logout_signal_; }
 
     void sign_out() override;
 
@@ -44,12 +45,16 @@ private:
     Wt::WString current_dialogue_;
 
 
+    Wt::Signal<Wt::WString> logout_signal_;
+
     void create_UI();
     void create_layout(std::unique_ptr<Wt::WWidget> messages, std::unique_ptr<Wt::WWidget> userList,
                               std::unique_ptr<Wt::WWidget> messageEdit,
                               std::unique_ptr<Wt::WWidget> sendButton, 
                               std::unique_ptr<Wt::WWidget> logoutButton,
                               std::unique_ptr<Wt::WWidget> chatUserList);
+    std::unique_ptr<Wt::WText> create_title(const Wt::WString& title);
+
 
     void update_users_list();
 

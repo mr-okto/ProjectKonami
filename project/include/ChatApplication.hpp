@@ -18,6 +18,7 @@ private:
 
     bool logged_in_;
     void start_chat(const Wt::WString& username);
+    void start_auth();
 
     Wt::Core::observing_ptr<Wt::WDialog> idle_timeout_dialog_;
 };

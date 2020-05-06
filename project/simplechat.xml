@@ -39,4 +39,30 @@ the current session, but also of all other sessions is updated and
    <span class='chat-info'>You are joining as ${name}.</span>
  </message>
 
+<message id="loginForm.template">
+    <form class="form-horizontal">
+        <div class="control-group">
+            <label class="control-label" for="${id:loginEdit}">Login</label>
+            <div class="controls">
+                <input type="text" id="inputEmail" placeholder="Login"/>
+                ${loginEdit}
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label" for="inputPassword">Password</label>
+            <div class="controls">
+                <input type="password" id="inputPassword" placeholder="Password"/>
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+<!--                <label class="checkbox">-->
+<!--                    <input type="checkbox"/> Remember me-->
+<!--                </label>-->
+                <button type="submit" class="btn">Sign in</button>
+            </div>
+        </div>
+    </form>
+</message>
+
 </messages>

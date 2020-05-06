@@ -74,6 +74,8 @@ void ChatWidget::create_UI() {
                  std::move(sendButtonPtr), std::move(logoutButtonPtr),
                  std::move(dialoguesListPtr));
 
+    logoutButton->clicked().connect(std::bind(&ChatWidget::sign_out, this));
+
     /*
      * Connect event handlers:
      *  - click on button
@@ -155,36 +157,31 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
   * | send | logout                            |
   * --------------------------------------------
   */
-    auto vLayout = Wt::cpp14::make_unique<Wt::WVBoxLayout>();
 
-    // Create a horizontal layout for the messages | userslist.
-    auto hLayout = Wt::cpp14::make_unique<Wt::WHBoxLayout>();
-
-    // Choose JavaScript implementation explicitly to avoid log warning (needed for resizable layout)
-    hLayout->setPreferredImplementation(Wt::LayoutImplementation::JavaScript);
+    // 3x3 grid layout
+    auto gridLayout = std::make_unique<Wt::WGridLayout>();
+    gridLayout->addWidget(create_title("Dialogues"), 0, 0, Wt::AlignmentFlag::Center);
+    gridLayout->addWidget(create_title("Messages"), 0, 1, Wt::AlignmentFlag::Center);
+    gridLayout->addWidget(create_title("Users"), 0, 2, Wt::AlignmentFlag::Center);
 
     chatUserList->setStyleClass("chat-users");
-    hLayout->addWidget(std::move(chatUserList));
+    chatUserList->resize(Wt::WLength::Auto, 600);
+    gridLayout->addWidget(std::move(chatUserList), 1, 0);
 
-    // Add widget to horizontal layout with stretch = 1
     messages->setStyleClass("chat-msgs");
-    hLayout->addWidget(std::move(messages), 1);
+    gridLayout->addWidget(std::move(messages), 1, 1);
 
-    // Add another widget to horizontal layout with stretch = 0
     userList->setStyleClass("chat-users");
-    hLayout->addWidget(std::move(userList));
+    gridLayout->addWidget(std::move(userList), 1, 2);
 
-    hLayout->setResizable(0, true);
 
-    // Add nested layout to vertical layout with stretch = 1
-    vLayout->addLayout(std::move(hLayout), 1);
+    auto vLayout = Wt::cpp14::make_unique<Wt::WVBoxLayout>();
 
-    // Add widget to vertical layout with stretch = 0
     messageEdit->setStyleClass("chat-noedit");
     vLayout->addWidget(std::move(messageEdit));
 
     // Create a horizontal layout for the buttons.
-    hLayout = Wt::cpp14::make_unique<Wt::WHBoxLayout>();
+    auto hLayout = Wt::cpp14::make_unique<Wt::WHBoxLayout>();
 
     // Add button to horizontal layout with stretch = 0
     hLayout->addWidget(std::move(sendButton));
@@ -195,12 +192,18 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
     // Add nested layout to vertical layout with stretch = 0
     vLayout->addLayout(std::move(hLayout), 0, Wt::AlignmentFlag::Left);
 
-    this->setLayout(std::move(vLayout));
+    gridLayout->addLayout(std::move(vLayout), 2, 1, 1, 2);
+
+    gridLayout->setRowStretch(1, 1);
+    gridLayout->setColumnStretch(1, 1);
+    this->setLayout(std::move(gridLayout));
 }
 
 void ChatWidget::sign_out() {
     if (server_.sign_out(username_)) {
         disconnect();
+
+        logout_signal_.emit(Wt::WString());
     }
 }
 
@@ -291,4 +294,11 @@ void ChatWidget::update_users_list() {
         // TODO dialog window for user
         update_dialogue_list();
     }
+}
+
+std::unique_ptr<Wt::WText> ChatWidget::create_title(const Wt::WString& title) {
+    auto text = std::make_unique<Wt::WText>(title);
+    text->setInline(false);
+    text->setStyleClass("chat-title");
+    return text;
 }

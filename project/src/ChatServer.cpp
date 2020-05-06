@@ -101,6 +101,10 @@ bool ChatServer::sign_out(const Wt::WString &username_) {
     std::string username = username_.toUTF8();
     if (sessionManager_.has_reserved(username)) {
         sessionManager_.unreserve(username);
+        online_users_.erase(username_);
+
+        post_chat_event(ChatEvent(ChatEvent::Type::SIGN_OUT, username));
+
         return true;
     } else
         return false;

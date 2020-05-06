@@ -1,4 +1,5 @@
-html {
+body, html {
+  height: 100%;
   font-family:arial,sans-serif;
   overflow-x: hidden;
 }
@@ -27,17 +28,35 @@ button {
   font-size: smaller;
 }
 
-.chat {
-  background-color: #a09f9f;
-  border: 5px solid #0e9737;
+.auth {
+  background-color: #F2F2F2;
+  font-weight: bold;
+  /*border: 5px solid #0e9737;*/
   margin-left: auto;
   margin-right: auto;
   margin-top: 10px;
   margin-bottom: 10px;
   max-width: 400px;
-  width: 400px;
-  height: 400px;
+  width: 380px;
+  height: 200px;
+}
 
+.loginForms {
+  width: 280px;
+  height: 110px;
+  max-height: 200px;
+}
+
+.chat-main {
+  background-color: #F2F2F2;
+  border: 5px solid #0e9737;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  max-width: 600px;
+  /*width: 400px;*/
+  /*height: 400px;*/
 }
 
 span.chat-info {
@@ -71,21 +90,30 @@ textarea.chat-noedit {
 
 .chat-msgs {
   margin: 0px 1px;
+  padding: 2px;
+  border: 2px solid #98B0D0;
 }
 
 .chat-users {
   width: 12ex;
 }
 
-.chat-msg {
-  padding: 2px;
-}
+/*.chat-msg {*/
+/*  padding: 2px;*/
+/*  border: 2px solid #98B0D0;*/
+/*}*/
 
-.chat-users div {
+.chat-users {
   margin: 3px 3px 3px 6px;
+  border: 2px solid #98B0D0;
+
 }
 
 .chat-users div .chat-self {
+  font-weight: bold;
+}
+
+.chat-title {
   font-weight: bold;
 }
 
@@ -104,3 +132,289 @@ textarea.chat-noedit {
   width: 500px;
   max-height: 300px;
 }
+
+
+
+/*.form-horizontal input,*/
+/*.form-horizontal textarea,*/
+/*.form-horizontal select,*/
+/*.form-horizontal .help-inline,*/
+/*.form-horizontal .uneditable-input,*/
+/*.form-horizontal .input-prepend,*/
+/*.form-horizontal .input-append {*/
+/*  display: inline-block;*/
+/*  *display: inline;*/
+/*  margin-bottom: 0;*/
+/*  vertical-align: middle;*/
+/*  *zoom: 1;*/
+/*}*/
+
+/*.form-horizontal .hide {*/
+/*  display: none;*/
+/*}*/
+
+/*.form-horizontal .control-group {*/
+/*  margin-bottom: 20px;*/
+/*  *zoom: 1;*/
+/*}*/
+
+/*.form-horizontal .control-group:before,*/
+/*.form-horizontal .control-group:after {*/
+/*  display: table;*/
+/*  line-height: 0;*/
+/*  content: "";*/
+/*}*/
+
+/*.form-horizontal .control-group {*/
+/*  margin-bottom: 20px;*/
+/*  *zoom: 1;*/
+/*}*/
+
+/*.form-horizontal .control-group:before,*/
+/*.form-horizontal .control-group:after {*/
+/*  display: table;*/
+/*  line-height: 0;*/
+/*  content: "";*/
+/*}*/
+
+/*.form-horizontal .control-group:after {*/
+/*  clear: both;*/
+/*}*/
+
+/*.form-horizontal .control-label {*/
+/*  float: left;*/
+/*  width: 160px;*/
+/*  padding-top: 5px;*/
+/*  text-align: right;*/
+/*}*/
+
+/*.form-horizontal .controls {*/
+/*  *display: inline-block;*/
+/*  *padding-left: 20px;*/
+/*  margin-left: 180px;*/
+/*  *margin-left: 0;*/
+/*}*/
+
+/*.form-horizontal .controls:first-child {*/
+/*  *padding-left: 180px;*/
+/*}*/
+
+/*.form-horizontal .help-block {*/
+/*  margin-bottom: 0;*/
+/*}*/
+
+/*.form-horizontal input + .help-block,*/
+/*.form-horizontal select + .help-block,*/
+/*.form-horizontal textarea + .help-block,*/
+/*.form-horizontal .uneditable-input + .help-block,*/
+/*.form-horizontal .input-prepend + .help-block,*/
+/*.form-horizontal .input-append + .help-block {*/
+/*  margin-top: 10px;*/
+/*}*/
+
+/*.form-horizontal .form-actions {*/
+/*  padding-left: 180px;*/
+/*}*/
+
+/*.control-group.warning .control-label,*/
+/*.control-group.warning .help-block,*/
+/*.control-group.warning .help-inline {*/
+/*  color: #c09853;*/
+/*}*/
+
+/*.control-group.warning .checkbox,*/
+/*.control-group.warning .radio,*/
+/*.control-group.warning input,*/
+/*.control-group.warning select,*/
+/*.control-group.warning textarea {*/
+/*  color: #c09853;*/
+/*}*/
+
+/*.control-group.warning input,*/
+/*.control-group.warning select,*/
+/*.control-group.warning textarea {*/
+/*  border-color: #c09853;*/
+/*  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*}*/
+
+/*.control-group.warning input:focus,*/
+/*.control-group.warning select:focus,*/
+/*.control-group.warning textarea:focus {*/
+/*  border-color: #a47e3c;*/
+/*  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #dbc59e;*/
+/*  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #dbc59e;*/
+/*  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #dbc59e;*/
+/*}*/
+
+/*.control-group.warning .input-prepend .add-on,*/
+/*.control-group.warning .input-append .add-on {*/
+/*  color: #c09853;*/
+/*  background-color: #fcf8e3;*/
+/*  border-color: #c09853;*/
+/*}*/
+
+/*.control-group.error .control-label,*/
+/*.control-group.error .help-block,*/
+/*.control-group.error .help-inline {*/
+/*  color: #b94a48;*/
+/*}*/
+
+/*.control-group.error .checkbox,*/
+/*.control-group.error .radio,*/
+/*.control-group.error input,*/
+/*.control-group.error select,*/
+/*.control-group.error textarea {*/
+/*  color: #b94a48;*/
+/*}*/
+
+/*.control-group.error input,*/
+/*.control-group.error select,*/
+/*.control-group.error textarea {*/
+/*  border-color: #b94a48;*/
+/*  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*}*/
+
+/*.control-group.error input:focus,*/
+/*.control-group.error select:focus,*/
+/*.control-group.error textarea:focus {*/
+/*  border-color: #953b39;*/
+/*  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;*/
+/*  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;*/
+/*  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #d59392;*/
+/*}*/
+
+/*.control-group.error .input-prepend .add-on,*/
+/*.control-group.error .input-append .add-on {*/
+/*  color: #b94a48;*/
+/*  background-color: #f2dede;*/
+/*  border-color: #b94a48;*/
+/*}*/
+
+/*.control-group.success .control-label,*/
+/*.control-group.success .help-block,*/
+/*.control-group.success .help-inline {*/
+/*  color: #468847;*/
+/*}*/
+
+/*.control-group.success .checkbox,*/
+/*.control-group.success .radio,*/
+/*.control-group.success input,*/
+/*.control-group.success select,*/
+/*.control-group.success textarea {*/
+/*  color: #468847;*/
+/*}*/
+
+/*.control-group.success input,*/
+/*.control-group.success select,*/
+/*.control-group.success textarea {*/
+/*  border-color: #468847;*/
+/*  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*}*/
+
+/*.control-group.success input:focus,*/
+/*.control-group.success select:focus,*/
+/*.control-group.success textarea:focus {*/
+/*  border-color: #356635;*/
+/*  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7aba7b;*/
+/*  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7aba7b;*/
+/*  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7aba7b;*/
+/*}*/
+
+/*.control-group.success .input-prepend .add-on,*/
+/*.control-group.success .input-append .add-on {*/
+/*  color: #468847;*/
+/*  background-color: #dff0d8;*/
+/*  border-color: #468847;*/
+/*}*/
+
+/*.control-group.info .control-label,*/
+/*.control-group.info .help-block,*/
+/*.control-group.info .help-inline {*/
+/*  color: #3a87ad;*/
+/*}*/
+
+/*.control-group.info .checkbox,*/
+/*.control-group.info .radio,*/
+/*.control-group.info input,*/
+/*.control-group.info select,*/
+/*.control-group.info textarea {*/
+/*  color: #3a87ad;*/
+/*}*/
+
+/*.control-group.info input,*/
+/*.control-group.info select,*/
+/*.control-group.info textarea {*/
+/*  border-color: #3a87ad;*/
+/*  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);*/
+/*}*/
+
+/*.control-group.info input:focus,*/
+/*.control-group.info select:focus,*/
+/*.control-group.info textarea:focus {*/
+/*  border-color: #2d6987;*/
+/*  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7ab5d3;*/
+/*  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7ab5d3;*/
+/*  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 6px #7ab5d3;*/
+/*}*/
+
+/*.control-group.info .input-prepend .add-on,*/
+/*.control-group.info .input-append .add-on {*/
+/*  color: #3a87ad;*/
+/*  background-color: #d9edf7;*/
+/*  border-color: #3a87ad;*/
+/*}*/
+
+/*.control-group.warning .control-label,*/
+/*.control-group.warning .help-block,*/
+/*.control-group.warning .help-inline {*/
+/*  color: #c09853;*/
+/*}*/
+
+/*.control-group.error .control-label,*/
+/*.control-group.error .help-block,*/
+/*.control-group.error .help-inline {*/
+/*  color: #b94a48;*/
+/*}*/
+
+/*.control-group.success .control-label,*/
+/*.control-group.success .help-block,*/
+/*.control-group.success .help-inline {*/
+/*  color: #468847;*/
+/*}*/
+
+/*.control-group.info .control-label,*/
+/*.control-group.info .help-block,*/
+/*.control-group.info .help-inline {*/
+/*  color: #3a87ad;*/
+/*}*/
+
+/*.form-horizontal .control-label {*/
+/*  float: left;*/
+/*  width: 160px;*/
+/*  padding-top: 5px;*/
+/*  text-align: right;*/
+/*}*/
+
+/*.controls > .radio:first-child,*/
+/*.controls > .checkbox:first-child {*/
+/*  padding-top: 5px;*/
+/*}*/
+
+/*.form-horizontal .controls {*/
+/*  *display: inline-block;*/
+/*  *padding-left: 20px;*/
+/*  margin-left: 180px;*/
+/*  *margin-left: 0;*/
+/*}*/
+
+/*.form-horizontal .controls:first-child {*/
+/*  *padding-left: 180px;*/
+/*}*/

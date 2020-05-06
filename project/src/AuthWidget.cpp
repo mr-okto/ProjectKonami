@@ -20,35 +20,28 @@ AuthWidget::AuthWidget(ChatServer &server)
 {
     //(TODO) ther're will be checking sessionId from cookie
 
-    let_sign_in();
+    create_UI();
 }
 
 AuthWidget::~AuthWidget() {
 
 }
 
-void AuthWidget::let_sign_in() {
+void AuthWidget::create_UI() {
     clear();
-
-    auto vLayout = setLayout(std::make_unique<Wt::WVBoxLayout>());
-
-    auto hLayout_(std::make_unique<Wt::WHBoxLayout>());
-    auto hLayout = hLayout_.get();
-
-    vLayout->addLayout(std::move(hLayout_), 1, Wt::AlignmentFlag::Top | Wt::AlignmentFlag::Middle);
-    hLayout->addWidget(std::make_unique<Wt::WLabel>("Login:"), 0, Wt::AlignmentFlag::Middle);
-
-    username_edit_field_ = hLayout->addWidget(std::make_unique<Wt::WLineEdit>(username_), 0, Wt::AlignmentFlag::Middle);
-    username_edit_field_->setFocus();
-
-    auto hLayout1_(std::make_unique<Wt::WHBoxLayout>());
-    auto hLayout1 = hLayout1_.get();
-
-    vLayout->addLayout(std::move(hLayout1_), 1, Wt::AlignmentFlag::Top | Wt::AlignmentFlag::Middle);
-    hLayout1->addWidget(std::make_unique<Wt::WLabel>("Password:"), 0, Wt::AlignmentFlag::Middle);
-
-    password_edit_field_ = hLayout1->addWidget(std::make_unique<Wt::WLineEdit>(password_), 0, Wt::AlignmentFlag::Middle);
-    password_edit_field_->setFocus();
+//
+//    auto authTemplate = std::make_unique<Wt::WTemplate>(Wt::WString::tr("loginForm.template"));
+//    authTemplate->addFunction("id", &Wt::WTemplate::Functions::id);
+//
+//    auto loginEdit = std::make_unique<Wt::WLineEdit>(username_);
+//    username_edit_field_ = loginEdit.get();
+//    username_edit_field_->setFocus();
+//
+//    authTemplate->bindWidget("loginEdit", std::move(loginEdit));
+//
+//    addWidget(std::move(authTemplate));
+    auto container = std::make_unique<Wt::WContainerWidget>();
+    auto vLayout = create_input_forms_layout();
 
     auto buttons_(std::make_unique<Wt::WHBoxLayout>());
     auto buttons = buttons_.get();
@@ -64,8 +57,15 @@ void AuthWidget::let_sign_in() {
     auto signUpButton = buttons->addWidget(std::make_unique<Wt::WPushButton>("Sign up"));
     signUpButton->clicked().connect(this, &AuthWidget::show_registration);
 
-    status_msg_ = vLayout->addWidget(Wt::cpp14::make_unique<Wt::WText>(), 0);
+    status_msg_ = vLayout->addWidget(std::make_unique<Wt::WText>(""));
     status_msg_->setTextFormat(Wt::TextFormat::Plain);
+    status_msg_->setInline(false);
+
+    container->setLayout(std::move(vLayout));
+    container->setStyleClass("loginForms");
+    container->setMargin(50, Wt::Side::Top);
+    addWidget(std::move(container));
+    setContentAlignment(Wt::AlignmentFlag::Center);
 }
 
 void AuthWidget::sign_in() {
@@ -138,4 +138,35 @@ void AuthWidget::validate_reg_dialog(Wt::WDialog &dialog, Wt::WText* status_msg)
     } else if (registration_form_->error() == RegistrationForm::ErrorType::UsernameExists) {
         status_msg->setText("Username '" + escapeText(registration_form_->get_username()) + "' is already taken");
     }
+}
+
+std::unique_ptr<Wt::WVBoxLayout> AuthWidget::create_input_forms_layout() {
+    auto vLayout = std::make_unique<Wt::WVBoxLayout>();
+
+    auto hLayout_(std::make_unique<Wt::WHBoxLayout>());
+    auto hLayout = hLayout_.get();
+
+    vLayout->addLayout(std::move(hLayout_), 1, Wt::AlignmentFlag::Top | Wt::AlignmentFlag::Middle);
+    auto label = hLayout->addWidget(std::make_unique<Wt::WLabel>("Login:"), 0, Wt::AlignmentFlag::Right);
+
+    username_edit_field_ = hLayout->addWidget(std::make_unique<Wt::WLineEdit>(username_), 0, Wt::AlignmentFlag::Middle);
+    username_edit_field_->setFocus();
+    username_edit_field_->setMinimumSize(140, 16);
+    username_edit_field_->setMaximumSize(140, 16);
+    label->setBuddy(username_edit_field_);
+
+    auto hLayout1_(std::make_unique<Wt::WHBoxLayout>());
+    auto hLayout1 = hLayout1_.get();
+
+    vLayout->addLayout(std::move(hLayout1_), 1, Wt::AlignmentFlag::Top | Wt::AlignmentFlag::Middle);
+    label = hLayout1->addWidget(std::make_unique<Wt::WLabel>("Password:"), 0, Wt::AlignmentFlag::Right);
+
+    password_edit_field_ = hLayout1->addWidget(std::make_unique<Wt::WLineEdit>(password_), 0, Wt::AlignmentFlag::Middle);
+    password_edit_field_->setFocus();
+    password_edit_field_->setMinimumSize(140, 16);
+    password_edit_field_->setMaximumSize(140, 16);
+    password_edit_field_->setAttributeValue("type", "password");
+    label->setBuddy(password_edit_field_);
+
+    return std::move(vLayout);
 }

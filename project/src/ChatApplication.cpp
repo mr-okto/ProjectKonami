@@ -2,6 +2,7 @@
 #include <Wt/WText.h>
 #include <Wt/WPushButton.h>
 #include <Wt/WContainerWidget.h>
+#include <Wt/WBootstrapTheme.h>
 
 #include "ChatApplication.hpp"
 #include "AuthWidget.hpp"
@@ -23,15 +24,11 @@ ChatApplication::ChatApplication(const Wt::WEnvironment &env, ChatServer &server
 {
     std::cout << "SESSION ID" << Wt::WApplication::instance()->sessionId() << "  " << this << std::endl;
     setTitle("KonamiChat");
-    useStyleSheet("chatapp.css");
 
+    useStyleSheet("chatapp.css");
     messageResourceBundle().use(appRoot() + "simplechat");
 
-    AuthWidget *authWidget =
-            root()->addWidget(Wt::cpp14::make_unique<AuthWidget>(server_));
-    authWidget->setStyleClass("chat");
-    authWidget->session_signal().connect(this, &ChatApplication::start_chat);
-
+    start_auth();
 }
 
 void ChatApplication::start_chat(const Wt::WString& username) {
@@ -40,7 +37,18 @@ void ChatApplication::start_chat(const Wt::WString& username) {
     logged_in_ = true;
     ChatWidget* chatWidget =
             root()->addWidget(std::make_unique<ChatWidget>(username, server_));
-    chatWidget->setStyleClass("chat");
+    chatWidget->setStyleClass("chat-main");
+    chatWidget->logout_signal().connect(this, &ChatApplication::start_auth);
+}
+
+void ChatApplication::start_auth() {
+    root()->clear();
+
+    logged_in_ = false;
+    AuthWidget *authWidget =
+            root()->addWidget(Wt::cpp14::make_unique<AuthWidget>(server_));
+    authWidget->setStyleClass("auth");
+    authWidget->session_signal().connect(this, &ChatApplication::start_chat);
 }
 
 //void ChatApplication::idleTimeout() {
