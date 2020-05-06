@@ -55,7 +55,7 @@ bool DialogueService::create_dialogue(const std::string& first_username, const s
 Message DialogueService::post_message(uint dialogue_id,
                                       const std::string& username, 
                                       const std::string& message_content) {
-    Message message = {dialogue_id, username, message_content, time(NULL)};
+    Message message = {dialogue_id, username, message_content, std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
     messages_[dialogue_id].push_back(message);
     return message;
 }

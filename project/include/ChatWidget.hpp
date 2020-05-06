@@ -18,11 +18,6 @@ public:
 
     std::string username() override { return username_.toUTF8(); }
 
-    void update_dialogue_list();
-    void update_messages(const Wt::WString& username);
-    bool create_dialogue(const Wt::WString& username);
-    void send();
-
 private:
     ChatServer& server_;
     Wt::WString username_;
@@ -45,15 +40,23 @@ private:
 
 
     void create_UI();
-    void create_layout(std::unique_ptr<Wt::WWidget> messages, std::unique_ptr<Wt::WWidget> userList,
-                              std::unique_ptr<Wt::WWidget> messageEdit,
-                              std::unique_ptr<Wt::WWidget> sendButton, 
-                              std::unique_ptr<Wt::WWidget> logoutButton,
-                              std::unique_ptr<Wt::WWidget> chatUserList);
-
-    void update_users_list();
+    void create_layout(std::unique_ptr<Wt::WWidget> messages, 
+                    std::unique_ptr<Wt::WWidget> userList,
+                    std::unique_ptr<Wt::WWidget> messageEdit,
+                    std::unique_ptr<Wt::WWidget> sendButton, 
+                    std::unique_ptr<Wt::WWidget> logoutButton,
+                    std::unique_ptr<Wt::WWidget> chatUserList);
 
     void process_chat_event(const ChatEvent& event);
+
+    uint get_dialogue_id(const Wt::WString& dialogue_name) {return dialogue_id_[dialogue_name];}
+    std::string get_message_format(const std::string& username, const std::string& message_content, const time_t& time);
+
+    void update_users_list();
+    void update_dialogue_list();
+    void update_messages(const Wt::WString& username);
+    bool create_dialogue(const Wt::WString& username);
+    void send_message();
 
 };
 

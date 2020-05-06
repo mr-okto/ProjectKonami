@@ -1,6 +1,7 @@
 #pragma once
 
-#include <time.h>
+#include <ctime>
+#include <chrono>
 #include <vector>
 #include <string>
 #include <map>
@@ -21,7 +22,7 @@ struct Message {
     uint dialog_id;
     std::string username;
     Content content;
-    time_t time;
+    std::time_t time;
 };
 
 static bool operator==(const Message& lhs, const Message& rhs) {
@@ -40,10 +41,10 @@ class DialogueService {
                                     {"kek", {{1, "lel"}, {3, "bob"}}}
                                    }),
                         messages_({  
-                                   {1, {{1, "kek", "message for lel", time(NULL)}, 
-                                        {1, "lel", "message for kek", time(NULL)}}},
-                                   {2, {{2, "bob", "message for lel", time(NULL)}}},
-                                   {3, {{3, "kek", "message for bob", time(NULL)}}}
+                                   {1, {{1, "kek", "message for lel", std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())}, 
+                                        {1, "lel", "message for kek", std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())}}},
+                                   {2, {{2, "bob", "message for lel", std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())}}},
+                                   {3, {{3, "kek", "message for bob", std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())}}}
                                   }),
                         unique_dialogue_id(4) {}
     std::vector<Dialogue> get_dialogues(const std::string& username);

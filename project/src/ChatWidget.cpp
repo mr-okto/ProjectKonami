@@ -116,12 +116,12 @@ void ChatWidget::create_UI() {
     );
 
     if (sendButton_) {
-      sendButton_->clicked().connect(this, &ChatWidget::send);
+      sendButton_->clicked().connect(this, &ChatWidget::send_message);
       sendButton_->clicked().connect(clearInput_);
       sendButton_->clicked().connect((WWidget *)messageEdit_,
 				     &WWidget::setFocus);
     }
-    messageEdit_->enterPressed().connect(this, &ChatWidget::send);
+    messageEdit_->enterPressed().connect(this, &ChatWidget::send_message);
     messageEdit_->enterPressed().connect(clearInput_);
     messageEdit_->enterPressed().connect((WWidget *)messageEdit_,
 					 &WWidget::setFocus);
@@ -216,8 +216,6 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
     bool display = event.type() != ChatEvent::Type::NEW_MSG
         || !userList_;
 
-    display = true;
-
     if (event.type_ == ChatEvent::NEW_DIALOGUE) {
         update_dialogue_list();
     }
@@ -243,6 +241,14 @@ void ChatWidget::update_dialogue_list() {
     });
 }
 
+std::string ChatWidget::get_message_format(const std::string& username, const std::string& message_content, const time_t& time) {
+    struct tm *ts;
+    char       buf[80];
+    ts = localtime(&time);
+    strftime(buf, sizeof(buf), "%H:%M", ts);
+    return username + ": " + message_content + " " + std::string(buf);
+}
+
 void ChatWidget::update_messages(const Wt::WString& username) {
     messages_->clear();
     for (const auto& item : server_.get_messages(dialogue_id_[username])) {
@@ -252,7 +258,7 @@ void ChatWidget::update_messages(const Wt::WString& username) {
         } else {
             // TODO
         }
-        w->setText(item.username + "   " + item.content);
+        w->setText(get_message_format(item.username, item.content, item.time));
         w->setInline(false);
     }
 }
@@ -265,13 +271,13 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
     return false;
 }
 
-void ChatWidget::send() {
+void ChatWidget::send_message() {
     if (!messageEdit_->text().empty()) {
-        server_.send_msg(dialogue_id_[current_dialogue_], username_, current_dialogue_, messageEdit_->text());
+        chat::Message message = server_.send_msg(dialogue_id_[current_dialogue_], username_, current_dialogue_, messageEdit_->text());
+        Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
+        w->setText(get_message_format(message.username, message.content, message.time));
+        w->setInline(false);
     }
-    Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-    w->setText(username_ + "   " + messageEdit_->text());
-    w->setInline(false);
 }
 
 void ChatWidget::update_users_list() {
@@ -288,7 +294,6 @@ void ChatWidget::update_users_list() {
         l->activated().connect([this, l] {
             this->create_dialogue(l->currentText());
         });
-        // TODO dialog window for user
         update_dialogue_list();
     }
 }
