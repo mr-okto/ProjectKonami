@@ -21,42 +21,45 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id) {
     }
 }
 
-bool DialogueService::create_dialogue(const std::string& first_username, const std::string& second_username) {
-    std::cout << std::endl << "in create dealogue: " << first_username << " " << second_username << std::endl;
-    if (dialogues_.count(first_username)) {
-        for (const auto& item : dialogues_[first_username]) {
-            if (item.username == second_username) {
+bool DialogueService::create_dialogue(const chat::User& first_user, const chat::User& second_user) {
+    if (dialogues_.count(first_user.username)) {
+        for (const auto& dialogue: dialogues_[first_user.username]) {
+            if (dialogue.first_user.username == first_user.username &&
+                    dialogue.second_user.username == second_user.username) {
+                return false;
+            } else if (dialogue.first_user.username == second_user.username && 
+                    dialogue.second_user.username == first_user.username) {
                 return false;
             }
         }
-        Dialogue tmp = {unique_dialogue_id, second_username};
-        dialogues_[first_username].push_back(tmp);
+        Dialogue tmp = {unique_dialogue_id, first_user, second_user};
+        dialogues_[first_user.username].push_back(tmp);
     } else {
-        std::vector<Dialogue> vec = {{unique_dialogue_id, second_username}};
-        dialogues_[first_username] = vec;
+        std::vector<Dialogue> vec = {{unique_dialogue_id, first_user, second_user}};
+        dialogues_[first_user.username] = vec;
     }
 
-    if (dialogues_.count(second_username)) {
-        for (const auto& item : dialogues_[second_username]) {
-            if (item.username == first_username) {
+    if (dialogues_.count(second_user.username)) {
+        for (const auto& dialogue : dialogues_[second_user.username]) {
+            if (dialogue.first_user.username == first_user.username &&
+                    dialogue.second_user.username == second_user.username) {
+                return false;
+            } else if (dialogue.first_user.username == second_user.username &&
+                     dialogue.second_user.username == first_user.username) {
                 return false;
             }
         }
-        Dialogue tmp = {unique_dialogue_id, first_username};
-        dialogues_[second_username].push_back(tmp);
+        Dialogue tmp = {unique_dialogue_id, first_user, second_user};
+        dialogues_[second_user.username].push_back(tmp);
     } else {
-        std::vector<Dialogue> vec = {{unique_dialogue_id, first_username}};
-        dialogues_[second_username] = vec;
+        std::vector<Dialogue> vec = {{unique_dialogue_id, first_user, second_user}};
+        dialogues_[second_user.username] = vec;
     }
     unique_dialogue_id++;
     return true;
 }
 
-Message DialogueService::post_message(uint dialogue_id,
-                                      const std::string& username, 
-                                      const std::string& message_content) {
-    Message message = {dialogue_id, username, message_content, std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
-    messages_[dialogue_id].push_back(message);
-    return message;
+void DialogueService::post_message(const Message& message) {
+    messages_[message.dialogue_id].push_back(message);
 }
 }

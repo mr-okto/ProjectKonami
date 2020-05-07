@@ -37,12 +37,9 @@ public:
 
     std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
     std::vector<chat::Message> get_messages(uint dialogue_id);
-    chat::Message send_msg(uint dialogue_id, 
-                            const Wt::WString& username,
-                            const Wt::WString& receiver_name,
-                            const Wt::WString& message);
+    void send_msg(const chat::Message& message, const chat::User& user);
 
-    bool create_dialogue(const Wt::WString& first_username, const Wt::WString& second_username);
+    bool create_dialogue(const Wt::WString& creater, const Wt::WString& receiver);
 
     uint get_user_id(const Wt::WString& username);
 

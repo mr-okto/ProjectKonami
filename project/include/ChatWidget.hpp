@@ -24,7 +24,7 @@ private:
 
 
 //    Session session_;
-//    uint32_t  user_id_;
+    uint32_t  user_id_;
 
     Wt::JSlot                  clearInput_;
 
@@ -35,7 +35,7 @@ private:
     Wt::Core::observing_ptr<Wt::WContainerWidget> userList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> dialoguesList_;
 
-    std::map<Wt::WString, uint> dialogue_id_;
+    std::map<Wt::WString, chat::Dialogue> dialogue_id_;
     Wt::WString current_dialogue_;
 
 
@@ -49,7 +49,7 @@ private:
 
     void process_chat_event(const ChatEvent& event);
 
-    uint get_dialogue_id(const Wt::WString& dialogue_name) {return dialogue_id_[dialogue_name];}
+    chat::Dialogue get_dialogue_id(const Wt::WString& dialogue_name) {return dialogue_id_[dialogue_name];}
     std::string get_message_format(const std::string& username, const std::string& message_content, const time_t& time);
 
     void update_users_list();

@@ -222,7 +222,7 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 
     if (event.type_ == ChatEvent::NEW_MSG &&
         dialogue_id_.count(current_dialogue_) && 
-        event.dialogue_id_ == dialogue_id_[current_dialogue_]) {
+        event.dialogue_id_ == dialogue_id_[current_dialogue_].dialogue_id) {
 
         update_messages(current_dialogue_);
     }
@@ -231,9 +231,15 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
     auto *l = dialoguesList_->addWidget(std::make_unique<Wt::WSelectionBox>());
-    for (const auto& item : server_.get_dialogues(username_)) {
-        dialogue_id_[item.username] = item.dialog_id;
-        l->addItem(item.username);
+    for (const auto& dialogue : server_.get_dialogues(username_)) {
+        std::string username;
+        if (dialogue.first_user.username != username_) {
+            username = dialogue.first_user.username;
+        } else {
+            username = dialogue.second_user.username;
+        }
+        dialogue_id_[username] = dialogue;
+        l->addItem(username);
     }
     l->activated().connect([this, l] {
         this->update_messages(l->currentText());
@@ -251,14 +257,14 @@ std::string ChatWidget::get_message_format(const std::string& username, const st
 
 void ChatWidget::update_messages(const Wt::WString& username) {
     messages_->clear();
-    for (const auto& item : server_.get_messages(dialogue_id_[username])) {
+    for (const auto& message : server_.get_messages(dialogue_id_[username].dialogue_id)) {
         Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-        if (item.username != username_) {
+        if (message.user.username != username_) {
             // TODO
         } else {
             // TODO
         }
-        w->setText(get_message_format(item.username, item.content, item.time));
+        w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
     }
 }
@@ -273,9 +279,23 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
 
 void ChatWidget::send_message() {
     if (!messageEdit_->text().empty()) {
-        chat::Message message = server_.send_msg(dialogue_id_[current_dialogue_], username_, current_dialogue_, messageEdit_->text());
+        chat::Dialogue dialogue = dialogue_id_[current_dialogue_];
+        chat::Content content = {chat::Content::WITHOUTFILE, 
+                                 messageEdit_->text().toUTF8(), 
+                                 "NULL"};
+        chat::Message message = {dialogue.dialogue_id, 
+                                 {user_id_, username_.toUTF8()}, 
+                                 content, 
+                                 std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
+        chat::User receiver;
+        if (dialogue_id_[current_dialogue_].first_user.username != username_) {
+            receiver = dialogue_id_[current_dialogue_].first_user;
+        } else {
+            receiver = dialogue_id_[current_dialogue_].second_user;
+        }
+        server_.send_msg(message, receiver);
         Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-        w->setText(get_message_format(message.username, message.content, message.time));
+        w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
     }
 }
