@@ -1,5 +1,6 @@
 #include "DialogueService.hpp"
 #include <iostream>
+#include <algorithm>
 
 namespace chat {
 DialogueService::DialogueService(Cache& cache) {}
@@ -7,7 +8,9 @@ DialogueService::DialogueService(Cache& cache) {}
 
 std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username) {
     if (dialogues_.count(username)) {
-        return dialogues_[username];
+        auto dialogues = dialogues_[username];
+        sort(dialogues.begin(), dialogues.end());
+        return dialogues;
     } else {
         return std::vector<Dialogue>();
     }
@@ -32,10 +35,16 @@ bool DialogueService::create_dialogue(const chat::User& first_user, const chat::
                 return false;
             }
         }
-        Dialogue tmp = {unique_dialogue_id, first_user, second_user};
+        Dialogue tmp = {unique_dialogue_id,
+                        first_user, 
+                        second_user, 
+                        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
         dialogues_[first_user.username].push_back(tmp);
     } else {
-        std::vector<Dialogue> vec = {{unique_dialogue_id, first_user, second_user}};
+        std::vector<Dialogue> vec = {{unique_dialogue_id, 
+                                      first_user, 
+                                      second_user, 
+                                      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())}};
         dialogues_[first_user.username] = vec;
     }
 
@@ -49,10 +58,16 @@ bool DialogueService::create_dialogue(const chat::User& first_user, const chat::
                 return false;
             }
         }
-        Dialogue tmp = {unique_dialogue_id, first_user, second_user};
+        Dialogue tmp = {unique_dialogue_id, 
+                        first_user, 
+                        second_user, 
+                        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
         dialogues_[second_user.username].push_back(tmp);
     } else {
-        std::vector<Dialogue> vec = {{unique_dialogue_id, first_user, second_user}};
+        std::vector<Dialogue> vec = {{unique_dialogue_id, 
+                                      first_user, 
+                                      second_user, 
+                                      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())}};
         dialogues_[second_user.username] = vec;
     }
     unique_dialogue_id++;
@@ -61,5 +76,13 @@ bool DialogueService::create_dialogue(const chat::User& first_user, const chat::
 
 void DialogueService::post_message(const Message& message) {
     messages_[message.dialogue_id].push_back(message);
+    std::time_t current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    for (auto& pairs : dialogues_) {
+        for (auto& dialogue : pairs.second) {
+            if (dialogue.dialogue_id == message.dialogue_id) {
+                dialogue.last_msg_time = current_time;
+            }
+        }
+    }
 }
 }

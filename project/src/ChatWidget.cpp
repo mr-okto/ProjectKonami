@@ -220,11 +220,12 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
         update_dialogue_list();
     }
 
-    if (event.type_ == ChatEvent::NEW_MSG &&
-        dialogue_id_.count(current_dialogue_) && 
-        event.dialogue_id_ == dialogue_id_[current_dialogue_].dialogue_id) {
-
-        update_messages(current_dialogue_);
+    if (event.type_ == ChatEvent::NEW_MSG ) {
+        update_dialogue_list();
+        if (dialogue_id_.count(current_dialogue_) &&
+                event.dialogue_id_ == dialogue_id_[current_dialogue_].dialogue_id) {
+            update_messages(current_dialogue_);
+        }
     }
 }
 
@@ -287,13 +288,16 @@ void ChatWidget::send_message() {
                                  {user_id_, username_.toUTF8()}, 
                                  content, 
                                  std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
+                                 
         chat::User receiver;
         if (dialogue_id_[current_dialogue_].first_user.username != username_) {
             receiver = dialogue_id_[current_dialogue_].first_user;
         } else {
             receiver = dialogue_id_[current_dialogue_].second_user;
         }
+
         server_.send_msg(message, receiver);
+
         Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
         w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
