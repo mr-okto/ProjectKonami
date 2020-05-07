@@ -4,6 +4,7 @@
 #include <Wt/WContainerWidget.h>
 #include <Wt/WMessageBox.h>
 #include <Wt/WSignal.h>
+#include <Wt/WCheckBox.h>
 
 #include "ChatServer.hpp"
 #include "RegistrationForm.hpp"
@@ -22,7 +23,7 @@ public:
 
     bool start_chat(const Wt::WString& username, const Wt::WString& password);
 
-    Wt::Signal<Wt::WString>& session_signal() { return session_signal_; }
+    Wt::Signal<Wt::WString, std::optional<std::string>>& session_signal() { return session_signal_; }
 
 protected:
     bool signed_in() const { return signed_in_; }
@@ -30,7 +31,7 @@ protected:
 private:
     ChatServer& server_;
     bool signed_in_;
-    Wt::Signal<Wt::WString> session_signal_;
+    Wt::Signal<Wt::WString, std::optional<std::string>> session_signal_;
 
     Wt::WString username_;
     Wt::WLineEdit *username_edit_field_;
@@ -39,6 +40,7 @@ private:
     Wt::WLineEdit *password_edit_field_;
 
     RegistrationForm *registration_form_;
+    Wt::WCheckBox *remember_me_box_;
 
     Wt::WText *status_msg_;
 

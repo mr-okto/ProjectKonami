@@ -43,8 +43,13 @@ button {
 
 .loginForms {
   width: 280px;
-  height: 110px;
-  max-height: 200px;
+  height: 130px;
+  max-height: 260px;
+}
+
+.rememberMe {
+  font-weight: normal;
+  font-size: smaller;
 }
 
 .chat-main {

@@ -35,6 +35,9 @@ public:
     bool connect(Client *client, const ChatEventCallback& handle_event);
     bool disconnect(Client *client);
 
+    void set_cookie(const std::string& username, const std::string& cookie);
+    std::string check_cookie(const std::string& cookie);
+
     std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
     std::vector<chat::Message> get_messages(uint dialogue_id);
     chat::Message send_msg(uint dialogue_id, 

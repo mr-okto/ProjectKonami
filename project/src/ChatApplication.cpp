@@ -3,6 +3,7 @@
 #include <Wt/WPushButton.h>
 #include <Wt/WContainerWidget.h>
 #include <Wt/WBootstrapTheme.h>
+#include <Wt/WEnvironment.h>
 
 #include "ChatApplication.hpp"
 #include "AuthWidget.hpp"
@@ -28,15 +29,27 @@ ChatApplication::ChatApplication(const Wt::WEnvironment &env, ChatServer &server
     useStyleSheet("chatapp.css");
     messageResourceBundle().use(appRoot() + "simplechat");
 
+    for (auto& i : env_.cookies()) {
+        std::cout << i.first << " : " << i.second << std::endl;
+    }
+
     start_auth();
 }
 
-void ChatApplication::start_chat(const Wt::WString& username) {
+void ChatApplication::start_chat(const Wt::WString& username, const std::optional<std::string>& cookie) {
     root()->clear();
 
     logged_in_ = true;
-    ChatWidget* chatWidget =
-            root()->addWidget(std::make_unique<ChatWidget>(username, server_));
+    ChatWidget *chatWidget = nullptr;
+    if (!cookie.has_value()) {
+        std::cout << "without cookie" << std::endl;
+        chatWidget =
+                root()->addWidget(std::make_unique<ChatWidget>(username, server_));
+    } else {
+        std::cout << "with cookie" << std::endl;
+        chatWidget =
+                root()->addWidget(std::make_unique<ChatWidget>(username, cookie, server_));
+    }
     chatWidget->setStyleClass("chat-main");
     chatWidget->logout_signal().connect(this, &ChatApplication::start_auth);
 }
@@ -44,11 +57,23 @@ void ChatApplication::start_chat(const Wt::WString& username) {
 void ChatApplication::start_auth() {
     root()->clear();
 
+    auto cookie = env_.getCookie("username");
+    if (cookie && !cookie->empty()) {
+        std::string username = server_.check_cookie(*cookie);
+        if (!username.empty()) {
+            std::cout << username << " : " << *cookie << std::endl;
+            start_chat(username, *cookie);
+            return;
+        }
+    }
+
     logged_in_ = false;
     AuthWidget *authWidget =
             root()->addWidget(Wt::cpp14::make_unique<AuthWidget>(server_));
     authWidget->setStyleClass("auth");
-    authWidget->session_signal().connect(this, &ChatApplication::start_chat);
+    authWidget->session_signal().connect([this](const Wt::WString& username, const std::optional<std::string>& cookie) {
+        start_chat(username, cookie);
+    });
 }
 
 //void ChatApplication::idleTimeout() {

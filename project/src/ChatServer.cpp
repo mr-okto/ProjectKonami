@@ -1,4 +1,5 @@
 #include <Wt/WServer.h>
+#include <Wt/WEnvironment.h>
 
 #include "ChatServer.hpp"
 
@@ -69,6 +70,9 @@ bool ChatServer::sign_in(const Wt::WString& username, const Wt::WString& passwor
 
 bool ChatServer::connect(Client *client, const ChatEventCallback &handle_event) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    std::cout << "ACTIVE_SESSIONS : " << sessionManager_.active_sessions().size() << std::endl;
+    std::cout << "ONLINE USERS : " << online_users_.size() << std::endl;
 
     std::string username = client->username();
     if (sessionManager_.has_reserved(username)) {
@@ -184,4 +188,21 @@ bool ChatServer::create_dialogue(const Wt::WString& creater, const Wt::WString& 
 
 uint ChatServer::get_user_id(const Wt::WString& username) {
     return sessionManager_.user_id(username.toUTF8());
+}
+
+void ChatServer::set_cookie(const std::string& username, const std::string& cookie) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    sessionManager_.set_cookie(username, cookie);
+}
+
+std::string ChatServer::check_cookie(const std::string& cookie) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    for (auto& session : sessionManager_.active_sessions()) {
+        if (session.second.cookie_ == cookie) {
+            return session.second.username_;
+        }
+    }
+    return std::string{};
 }

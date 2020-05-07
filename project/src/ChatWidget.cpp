@@ -22,12 +22,15 @@ ChatWidget::ChatWidget(const Wt::WString& username, ChatServer& server)
       username_(username)
 
 {
-    // (TODO) add_session
     connect();
     create_UI();
 }
 
 ChatWidget::~ChatWidget() {
+    //(TODO) split 'sign out' by pressing the button (delete session cookie) and 'sign out' by closing the tab (not delete session cookie)
+//    if (Wt::WApplication::instance()->environment().getCookie("username")) {
+//        server_.sign_out(username_);
+//    }
     sign_out();
 }
 
@@ -74,7 +77,10 @@ void ChatWidget::create_UI() {
                  std::move(sendButtonPtr), std::move(logoutButtonPtr),
                  std::move(dialoguesListPtr));
 
-    logoutButton->clicked().connect(std::bind(&ChatWidget::sign_out, this));
+    logoutButton->clicked().connect([this]() {
+        Wt::WApplication::instance()->setCookie("username", std::string{}, 0);
+        sign_out();
+    });
 
     /*
      * Connect event handlers:
@@ -301,4 +307,16 @@ std::unique_ptr<Wt::WText> ChatWidget::create_title(const Wt::WString& title) {
     text->setInline(false);
     text->setStyleClass("chat-title");
     return text;
+}
+
+ChatWidget::ChatWidget(const Wt::WString &username, const std::optional<std::string> &cookie, ChatServer &server)
+        : Wt::WContainerWidget(),
+          server_(server),
+          username_(username)
+
+{
+    // (TODO) add_session
+    connect();
+    server_.set_cookie(username_.toUTF8(), cookie.value());
+    create_UI();
 }

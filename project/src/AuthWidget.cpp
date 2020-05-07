@@ -16,10 +16,23 @@
 AuthWidget::AuthWidget(ChatServer &server)
     : WContainerWidget(),
       server_(server),
-      signed_in_(false)
+      signed_in_(false),
+      session_signal_()
 {
     //(TODO) ther're will be checking sessionId from cookie
 
+//    auto cookie = Wt::WApplication::instance()->environment().getCookie("username");
+//    if (!cookie->empty()) {
+//        std::string username = server_.check_cookie(*cookie);
+//        if (!username.empty()) {
+//            std::cout << username << " : " << *cookie << std::endl;
+//            session_signal_.emit(Wt::WString(username), *cookie);
+//        } else {
+//            create_UI();
+//        }
+//    } else {
+//        create_UI();
+//    }
     create_UI();
 }
 
@@ -29,17 +42,15 @@ AuthWidget::~AuthWidget() {
 
 void AuthWidget::create_UI() {
     clear();
+//    auto cookie = Wt::WApplication::instance()->environment().getCookie("username");
+//    if (!cookie->empty()) {
+//        std::string username = server_.check_cookie(*cookie);
+//        if (!username.empty()) {
+//            std::cout << username << " : " << *cookie << std::endl;
+//            session_signal_.emit(Wt::WString(username), *cookie);
+//        }
+//    }
 //
-//    auto authTemplate = std::make_unique<Wt::WTemplate>(Wt::WString::tr("loginForm.template"));
-//    authTemplate->addFunction("id", &Wt::WTemplate::Functions::id);
-//
-//    auto loginEdit = std::make_unique<Wt::WLineEdit>(username_);
-//    username_edit_field_ = loginEdit.get();
-//    username_edit_field_->setFocus();
-//
-//    authTemplate->bindWidget("loginEdit", std::move(loginEdit));
-//
-//    addWidget(std::move(authTemplate));
     auto container = std::make_unique<Wt::WContainerWidget>();
     auto vLayout = create_input_forms_layout();
 
@@ -86,7 +97,12 @@ bool AuthWidget::start_chat(const Wt::WString& username, const Wt::WString& pass
     if (server_.sign_in(username, password)) {
         signed_in_ = true;
 
-        session_signal_.emit(username);
+        if (remember_me_box_->isChecked()) {
+            Wt::WApplication::instance()->setCookie("username", username.toUTF8(), 3600);
+            session_signal_.emit(username, username.toUTF8());
+        } else {
+            session_signal_.emit(username, std::nullopt);
+        }
 
         return true;
     } else {
@@ -167,6 +183,15 @@ std::unique_ptr<Wt::WVBoxLayout> AuthWidget::create_input_forms_layout() {
     password_edit_field_->setMaximumSize(140, 16);
     password_edit_field_->setAttributeValue("type", "password");
     label->setBuddy(password_edit_field_);
+
+    hLayout1_ = std::make_unique<Wt::WHBoxLayout>();
+    hLayout1 = hLayout1_.get();
+    vLayout->addLayout(std::move(hLayout1_), 1, Wt::AlignmentFlag::Middle);
+    label = hLayout1->addWidget(std::make_unique<Wt::WLabel>("Remember me (for a one hour):"), 0, Wt::AlignmentFlag::Right);
+
+    remember_me_box_ = hLayout1->addWidget(std::make_unique<Wt::WCheckBox>());
+    label->setBuddy(remember_me_box_);
+    label->setStyleClass("rememberMe");
 
     return std::move(vLayout);
 }

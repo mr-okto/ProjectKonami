@@ -9,6 +9,8 @@
 class ChatWidget : public Wt::WContainerWidget, public Client {
 public:
     ChatWidget(const Wt::WString& username, ChatServer& server);
+    ChatWidget(const Wt::WString& username, const std::optional<std::string>& cookie, ChatServer& server);
+
     ~ChatWidget();
 
     void connect() override;
