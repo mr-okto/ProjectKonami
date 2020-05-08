@@ -32,6 +32,10 @@ private:
     Wt::WTextArea                *messageEdit_;
     Wt::Core::observing_ptr<Wt::WPushButton> sendButton_;
 
+    Wt::WFileUpload* fileUploader_;
+
+    bool is_uploaded;
+
     Wt::Core::observing_ptr<Wt::WContainerWidget> userList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> dialoguesList_;
 
@@ -45,7 +49,8 @@ private:
                     std::unique_ptr<Wt::WWidget> messageEdit,
                     std::unique_ptr<Wt::WWidget> sendButton, 
                     std::unique_ptr<Wt::WWidget> logoutButton,
-                    std::unique_ptr<Wt::WWidget> chatUserList);
+                    std::unique_ptr<Wt::WWidget> chatUserList,
+                    std::unique_ptr<Wt::WWidget> fileUploader);
 
     void process_chat_event(const ChatEvent& event);
 

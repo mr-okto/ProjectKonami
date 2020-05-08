@@ -13,6 +13,8 @@
 #include <Wt/WPushButton.h>
 #include <Wt/WCheckBox.h>
 #include <Wt/Utils.h>
+#include <Wt/WFileUpload.h>
+#include <Wt/WProgressBar.h>
 
 #include "ChatWidget.hpp"
 
@@ -53,15 +55,34 @@ void ChatWidget::create_UI() {
     auto messageEditPtr = Wt::cpp14::make_unique<Wt::WTextArea>();
     auto sendButtonPtr = Wt::cpp14::make_unique<Wt::WPushButton>("Send");
     auto logoutButtonPtr = Wt::cpp14::make_unique<Wt::WPushButton>("Logout");
+    auto fileUploaderPtr = Wt::cpp14::make_unique<Wt::WFileUpload>();
 
     messages_ = messagesPtr.get();
     userList_ = userListPtr.get();
     messageEdit_ = messageEditPtr.get();
     sendButton_ = sendButtonPtr.get();
     dialoguesList_ = dialoguesListPtr.get();
+    fileUploader_ = fileUploaderPtr.get();
     Wt::Core::observing_ptr<Wt::WPushButton> logoutButton = logoutButtonPtr.get();
 
-    sendButton_->clicked().connect(this, [this]() {std::cout << this->current_dialogue_<< std::endl;});
+    fileUploader_->setFileTextSize(50); // Set the maximum file size to 50 kB.
+    fileUploader_->setProgressBar(Wt::cpp14::make_unique<Wt::WProgressBar>());
+
+    fileUploader_->changed().connect([=] {
+        fileUploader_->upload();
+        std::cout << "File upload is changed." << std::endl;;
+    });
+
+    // React to a succesfull upload.
+    fileUploader_->uploaded().connect([=] {
+        this->is_uploaded = true;
+    });
+
+    // React to a file upload problem.
+    fileUploader_->fileTooLarge().connect([=] {
+        std::cout << "File is too large." << std::endl;
+    });
+
     messageEdit_->setRows(2);
     messageEdit_->setFocus();
 
@@ -72,7 +93,8 @@ void ChatWidget::create_UI() {
     create_layout(std::move(messagesPtr), std::move(userListPtr),
                  std::move(messageEditPtr),
                  std::move(sendButtonPtr), std::move(logoutButtonPtr),
-                 std::move(dialoguesListPtr));
+                 std::move(dialoguesListPtr),
+                 std::move(fileUploaderPtr));
 
     /*
      * Connect event handlers:
@@ -116,10 +138,11 @@ void ChatWidget::create_UI() {
     );
 
     if (sendButton_) {
-      sendButton_->clicked().connect(this, &ChatWidget::send_message);
-      sendButton_->clicked().connect(clearInput_);
-      sendButton_->clicked().connect((WWidget *)messageEdit_,
-				     &WWidget::setFocus);
+        sendButton_->clicked().connect(this, &ChatWidget::send_message);
+        sendButton_->clicked().connect(clearInput_);
+        sendButton_->clicked().connect((WWidget *)messageEdit_,
+                        &WWidget::setFocus);
+                     
     }
     messageEdit_->enterPressed().connect(this, &ChatWidget::send_message);
     messageEdit_->enterPressed().connect(clearInput_);
@@ -135,7 +158,8 @@ void ChatWidget::create_UI() {
 
 void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::unique_ptr<Wt::WWidget> userList,
                               std::unique_ptr<Wt::WWidget> messageEdit, std::unique_ptr<Wt::WWidget> sendButton,
-                              std::unique_ptr<Wt::WWidget> logoutButton, std::unique_ptr<Wt::WWidget> chatUserList) {
+                              std::unique_ptr<Wt::WWidget> logoutButton, std::unique_ptr<Wt::WWidget> chatUserList,
+                              std::unique_ptr<Wt::WWidget> fileUploader) {
 
     /*
   * Create a vertical layout, which will hold 3 rows,
@@ -182,6 +206,8 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
     // Add widget to vertical layout with stretch = 0
     messageEdit->setStyleClass("chat-noedit");
     vLayout->addWidget(std::move(messageEdit));
+
+    vLayout->addWidget(std::move(fileUploader));
 
     // Create a horizontal layout for the buttons.
     hLayout = Wt::cpp14::make_unique<Wt::WHBoxLayout>();
@@ -267,6 +293,9 @@ void ChatWidget::update_messages(const Wt::WString& username) {
         }
         w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
+        if (message.content.type == chat::Content::IMAGE) {
+            Wt::WImage *image = messages_->addNew<Wt::WImage>(Wt::WLink(message.content.file_path));
+        }
     }
 }
 
@@ -281,13 +310,25 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
 void ChatWidget::send_message() {
     if (!messageEdit_->text().empty()) {
         chat::Dialogue dialogue = dialogue_id_[current_dialogue_];
-        chat::Content content = {chat::Content::WITHOUTFILE, 
-                                 messageEdit_->text().toUTF8(), 
-                                 "NULL"};
-        chat::Message message = {dialogue.dialogue_id, 
-                                 {user_id_, username_.toUTF8()}, 
-                                 content, 
-                                 std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
+        
+
+        chat::Message message;
+        message.dialogue_id = dialogue.dialogue_id;
+        message.user = {user_id_, username_.toUTF8()};
+        message.time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        chat::Content content;
+        if (is_uploaded) {
+            content = {chat::Content::IMAGE, // FIXME
+                       messageEdit_->text().toUTF8(), 
+                       fileUploader_->spoolFileName()};
+            std::cout << "file path: " << fileUploader_->spoolFileName() << std::endl;
+        } else {
+            content = {chat::Content::WITHOUTFILE, 
+                       messageEdit_->text().toUTF8(), 
+                       "NULL"};
+        }
+        message.content = content;
+        is_uploaded = false;
                                  
         chat::User receiver;
         if (dialogue_id_[current_dialogue_].first_user.username != username_) {
@@ -301,6 +342,7 @@ void ChatWidget::send_message() {
         Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
         w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
+        Wt::WImage *image = messages_->addNew<Wt::WImage>(Wt::WLink(fileUploader_->spoolFileName()));
     }
 }
 
