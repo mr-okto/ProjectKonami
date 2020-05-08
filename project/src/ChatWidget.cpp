@@ -59,7 +59,7 @@ void ChatWidget::create_UI() {
     auto messageEditPtr = Wt::cpp14::make_unique<Wt::WTextArea>();
     auto sendButtonPtr = Wt::cpp14::make_unique<Wt::WPushButton>("Send");
     auto logoutButtonPtr = Wt::cpp14::make_unique<Wt::WPushButton>("Logout");
-    auto fileUploaderPtr = Wt::cpp14::make_unique<Wt::WFileUpload>();
+    auto fileUploaderPtr = Wt::cpp14::make_unique<Wt::WContainerWidget>();
 
     messages_ = messagesPtr.get();
     userList_ = userListPtr.get();
@@ -69,23 +69,7 @@ void ChatWidget::create_UI() {
     fileUploader_ = fileUploaderPtr.get();
     Wt::Core::observing_ptr<Wt::WPushButton> logoutButton = logoutButtonPtr.get();
 
-    fileUploader_->setFileTextSize(50); // Set the maximum file size to 50 kB.
-    fileUploader_->setProgressBar(Wt::cpp14::make_unique<Wt::WProgressBar>());
-
-    fileUploader_->changed().connect([=] {
-        fileUploader_->upload();
-        std::cout << "File upload is changed." << std::endl;;
-    });
-
-    // React to a succesfull upload.
-    fileUploader_->uploaded().connect([=] {
-        this->is_uploaded = true;
-    });
-
-    // React to a file upload problem.
-    fileUploader_->fileTooLarge().connect([=] {
-        std::cout << "File is too large." << std::endl;
-    });
+    fill_fileuploader();
 
     messageEdit_->setRows(2);
     messageEdit_->setFocus();
@@ -259,6 +243,37 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
     }
 }
 
+void ChatWidget::fill_fileuploader() {
+    fileUploader_->clear();
+    Wt::WFileUpload *fu = fileUploader_->addNew<Wt::WFileUpload>();
+    Wt::WText *out = fileUploader_->addNew<Wt::WText>();
+
+    fu->setFileTextSize(100); // Set the maximum file size to 100 kB.
+    fu->setProgressBar(Wt::cpp14::make_unique<Wt::WProgressBar>());
+
+    // File upload automatically
+    fu->changed().connect([=] {
+        fu->upload();
+        this->sendButton_->disable();
+    });
+
+    // React to a succesfull upload.
+    fu->uploaded().connect([=] {
+        this->is_uploaded = true;
+        this->sendButton_->enable();
+        out->setText("File upload is finished.");
+    });
+
+    // React to a file upload problem.
+    fu->fileTooLarge().connect([=] {
+        out->setText("File is too large.");
+        this->sendButton_->enable();
+        this->fill_fileuploader();
+    });
+
+    fileUploaderPtr_ = fu;
+}
+
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
     auto *l = dialoguesList_->addWidget(std::make_unique<Wt::WSelectionBox>());
@@ -278,7 +293,9 @@ void ChatWidget::update_dialogue_list() {
     });
 }
 
-std::string ChatWidget::get_message_format(const std::string& username, const std::string& message_content, const time_t& time) {
+std::string ChatWidget::get_message_format(const std::string& username,
+                                           const std::string& message_content, 
+                                           const time_t& time) {
     struct tm *ts;
     char       buf[80];
     ts = localtime(&time);
@@ -289,6 +306,8 @@ std::string ChatWidget::get_message_format(const std::string& username, const st
 void ChatWidget::update_messages(const Wt::WString& username) {
     messages_->clear();
     for (const auto& message : server_.get_messages(dialogue_id_[username].dialogue_id)) {
+
+        // Message text
         Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
         if (message.user.username != username_) {
             // TODO
@@ -297,9 +316,10 @@ void ChatWidget::update_messages(const Wt::WString& username) {
         }
         w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
+
+        // Message media
         if (message.content.type == chat::Content::IMAGE) {
             auto imageFile = std::make_shared<Wt::WFileResource>("image", message.content.file_path);
-            //Wt::WImage *image = messages_->addNew<Wt::WImage>(Wt::WLink(imageFile));
             messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(imageFile)));
         }
     }
@@ -314,21 +334,25 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
 }
 
 void ChatWidget::send_message() {
-    if (!messageEdit_->text().empty()) {
+    if (!messageEdit_->text().empty() || is_uploaded) {
         chat::Message message;
         message.dialogue_id = dialogue_id_[current_dialogue_].dialogue_id;
         message.user = {user_id_, username_.toUTF8()};
         message.time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+        std::string filename = "NULL";
         if (is_uploaded) {
+            filename = copy_file(fileUploaderPtr_->spoolFileName(), 
+                                 fileUploaderPtr_->clientFileName().toUTF8());
             message.content = {chat::Content::IMAGE, // FIXME
                                messageEdit_->text().toUTF8(), 
-                               fileUploader_->spoolFileName()};
+                               filename};
+            is_uploaded = false;
         } else {
             message.content = {chat::Content::WITHOUTFILE, 
                                messageEdit_->text().toUTF8(), 
                                "NULL"};
         }
-        is_uploaded = false;
                                  
         chat::User receiver;
         if (dialogue_id_[current_dialogue_].first_user.username != username_) {
@@ -344,22 +368,11 @@ void ChatWidget::send_message() {
         w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
 
-        // Media
-        if (message.content.type == chat::Content::IMAGE) {  // TODO add more...
-            Wt::WString filename = fileUploader_->clientFileName();
-            std::stringstream ss;
-            bool flag = false;
-            for (const auto& symbol : filename.toUTF8()) {
-                if (flag) {
-                    ss << symbol;
-                }
-                if (symbol == '.') {
-                    flag = true;
-                }
-            }
-            auto imageFile = std::make_shared<Wt::WFileResource>("image/" + ss.str(), fileUploader_->spoolFileName());
-            imageFile->suggestFileName(filename);
+        // Message media
+        if (message.content.type == chat::Content::IMAGE) {  // TODO
+            auto imageFile = std::make_shared<Wt::WFileResource>("image", filename);
             messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(imageFile)));
+            fill_fileuploader();
         }
     }
 }
@@ -381,3 +394,17 @@ void ChatWidget::update_users_list() {
         update_dialogue_list();
     }
 }
+
+std::string ChatWidget::copy_file(const std::string& file_path, const std::string& filename) {
+    std::string result_filename = "./photo/" + filename;
+    std::ifstream in(file_path, std::ios::binary | std::ios::in);
+    std::ofstream out(result_filename, std::ios::binary | std::ios::out);
+    char byte;
+    while (in.read(&byte, sizeof(char))) {
+        out.write(&byte, sizeof(char));
+    }
+    in.close();
+    out.close();
+
+    return result_filename;
+}   
