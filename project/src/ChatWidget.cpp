@@ -14,7 +14,11 @@
 #include <Wt/WCheckBox.h>
 #include <Wt/Utils.h>
 #include <Wt/WFileUpload.h>
+#include <Wt/WFileResource.h>
 #include <Wt/WProgressBar.h>
+#include <Wt/WRasterImage.h>
+#include <fstream>
+
 
 #include "ChatWidget.hpp"
 
@@ -294,7 +298,9 @@ void ChatWidget::update_messages(const Wt::WString& username) {
         w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
         if (message.content.type == chat::Content::IMAGE) {
-            Wt::WImage *image = messages_->addNew<Wt::WImage>(Wt::WLink(message.content.file_path));
+            auto imageFile = std::make_shared<Wt::WFileResource>("image", message.content.file_path);
+            //Wt::WImage *image = messages_->addNew<Wt::WImage>(Wt::WLink(imageFile));
+            messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(imageFile)));
         }
     }
 }
@@ -309,25 +315,19 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
 
 void ChatWidget::send_message() {
     if (!messageEdit_->text().empty()) {
-        chat::Dialogue dialogue = dialogue_id_[current_dialogue_];
-        
-
         chat::Message message;
-        message.dialogue_id = dialogue.dialogue_id;
+        message.dialogue_id = dialogue_id_[current_dialogue_].dialogue_id;
         message.user = {user_id_, username_.toUTF8()};
         message.time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        chat::Content content;
         if (is_uploaded) {
-            content = {chat::Content::IMAGE, // FIXME
-                       messageEdit_->text().toUTF8(), 
-                       fileUploader_->spoolFileName()};
-            std::cout << "file path: " << fileUploader_->spoolFileName() << std::endl;
+            message.content = {chat::Content::IMAGE, // FIXME
+                               messageEdit_->text().toUTF8(), 
+                               fileUploader_->spoolFileName()};
         } else {
-            content = {chat::Content::WITHOUTFILE, 
-                       messageEdit_->text().toUTF8(), 
-                       "NULL"};
+            message.content = {chat::Content::WITHOUTFILE, 
+                               messageEdit_->text().toUTF8(), 
+                               "NULL"};
         }
-        message.content = content;
         is_uploaded = false;
                                  
         chat::User receiver;
@@ -339,10 +339,28 @@ void ChatWidget::send_message() {
 
         server_.send_msg(message, receiver);
 
+        // Message text
         Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
         w->setText(get_message_format(message.user.username, message.content.message, message.time));
         w->setInline(false);
-        Wt::WImage *image = messages_->addNew<Wt::WImage>(Wt::WLink(fileUploader_->spoolFileName()));
+
+        // Media
+        if (message.content.type == chat::Content::IMAGE) {  // TODO add more...
+            Wt::WString filename = fileUploader_->clientFileName();
+            std::stringstream ss;
+            bool flag = false;
+            for (const auto& symbol : filename.toUTF8()) {
+                if (flag) {
+                    ss << symbol;
+                }
+                if (symbol == '.') {
+                    flag = true;
+                }
+            }
+            auto imageFile = std::make_shared<Wt::WFileResource>("image/" + ss.str(), fileUploader_->spoolFileName());
+            imageFile->suggestFileName(filename);
+            messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(imageFile)));
+        }
     }
 }
 
