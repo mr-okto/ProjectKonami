@@ -23,7 +23,9 @@ UserManager<DBConnector>::UserManager(DbSession<DBConnector> &db_session)
 
 template< class DBConnector >
 Users UserManager<DBConnector>::get_all_users() {
+  db_session_.start_transaction();
   Users result = db_session_.template find<UserModel>().orderBy("username");
+  db_session_.end_transaction();
   return result;
 }
 
@@ -42,7 +44,10 @@ UserModelPtr UserManager<DBConnector>::get_user(IdType id) {
 
 template< class DBConnector >
 UserModelPtr UserManager<DBConnector>::get_user(const std::string &username) {
-  return db_session_.template find<UserModel>().where("username = ?").bind(username);
+  db_session_.start_transaction();
+  UserModelPtr user = db_session_.template find<UserModel>().where("username = ?").bind(username);
+  db_session_.end_transaction();
+  return user;
 }
 
 template< class DBConnector >
@@ -50,7 +55,7 @@ void UserManager<DBConnector>::update_username(IdType user_id, const std::string
   db_session_.start_transaction();
   UserModelPtr user = get_user(user_id);
   user.modify()->username_ = username;
-  db_session_.commit_transaction();
+  db_session_.end_transaction();
 }
 
 template< class DBConnector >
@@ -58,7 +63,7 @@ void UserManager<DBConnector>::update_password(IdType user_id, const std::string
   db_session_.start_transaction();
   UserModelPtr user = get_user(user_id);
   user.modify()->pwd_hash_ = pwd_hash;
-  db_session_.commit_transaction();
+  db_session_.end_transaction();
 }
 
 template< class DBConnector >
@@ -70,6 +75,6 @@ PictureModelPtr UserManager<DBConnector>::add_picture(IdType user_id, const std:
   db_session_.start_transaction();
   new_picture->user_ = db_session_.template get_by_id<UserModel>(user_id);
   PictureModelPtr result = db_session_.add(std::move(new_picture));
-  db_session_.commit_transaction();
+  db_session_.end_transaction();
   return result;
 }

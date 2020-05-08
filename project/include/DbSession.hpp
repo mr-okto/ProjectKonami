@@ -16,13 +16,15 @@ class DbSession {
   DbSession(const DbSession &) = delete;
   ~DbSession();
   void start_transaction();
-  bool commit_transaction();
+  bool end_transaction();
   template<class C>
   dbo::ptr<C> add(std::unique_ptr<C> ptr);
   template<class C>
   dbo::ptr<C> get_by_id(long long int id);
-  template<class C, typename BindStrategy>
-  dbo::Query<dbo::ptr<C>, BindStrategy> find();
+  template<class C>
+  dbo::Query<dbo::ptr<C>> find();
+  template<class C>
+  dbo::Query<C> raw_query(const std::string & sql);
 };
 
 template<class DBConnector>
@@ -56,6 +58,7 @@ dbo::ptr<C> DbSession<DBConnector>::add(std::unique_ptr<C> ptr) {
   if (not transaction_) {
     // Disposable transaction
     dbo::Transaction transaction(db_session_);
+    return transaction.session().add(std::move(ptr));
   }
   auto result = db_session_.add(std::move(ptr));
   return result;
@@ -67,6 +70,7 @@ dbo::ptr<C> DbSession<DBConnector>::get_by_id(IdType id) {
   if (not transaction_) {
     // Disposable transaction
     dbo::Transaction transaction(db_session_);
+    return transaction.session().find<C>().where("id = ?").bind(id);
   }
   return db_session_.find<C>().where("id = ?").bind(id);
 }
@@ -74,12 +78,12 @@ dbo::ptr<C> DbSession<DBConnector>::get_by_id(IdType id) {
 template<class DBConnector>
 void DbSession<DBConnector>::start_transaction() {
   if (not transaction_) {
-    transaction_ = std::make_unique<dbo::Transaction>(dbo::Transaction(db_session_));
+    transaction_ = std::make_unique<dbo::Transaction>(db_session_);
   }
 }
 
 template<class DBConnector>
-bool DbSession<DBConnector>::commit_transaction() {
+bool DbSession<DBConnector>::end_transaction() {
   if (transaction_) {
     transaction_->commit();
     transaction_.reset();
@@ -89,11 +93,22 @@ bool DbSession<DBConnector>::commit_transaction() {
 }
 
 template<class DBConnector>
-template<class C, typename BindStrategy>
-dbo::Query<dbo::ptr<C>, BindStrategy>  DbSession<DBConnector>::find() {
+template<class C>
+dbo::Query<dbo::ptr<C>>  DbSession<DBConnector>::find() {
   if (not transaction_) {
     dbo::Transaction transaction(db_session_);
+    return transaction.session().find<C>();
   }
-  return db_session_.find<C>;
+  return db_session_.find<C>();
+}
+
+template<class DBConnector>
+template<class C>
+dbo::Query<C> DbSession<DBConnector>::raw_query(const std::string &sql) {
+  if (not transaction_) {
+    dbo::Transaction transaction(db_session_);
+    return transaction.session().query<C>(sql);
+  }
+  return db_session_.query<C>(sql);
 }
 
