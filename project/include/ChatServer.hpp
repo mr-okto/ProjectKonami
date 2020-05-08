@@ -37,6 +37,7 @@ public:
 
     void set_cookie(const std::string& username, const std::string& cookie);
     std::string check_cookie(const std::string& cookie);
+    void close_same_session(const Wt::WString& username_);
 
     std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
     std::vector<chat::Message> get_messages(uint dialogue_id);
@@ -55,6 +56,7 @@ public:
     bool sign_up(const Wt::WString& username, const Wt::WString& password);
 
     bool sign_out(const Wt::WString& username);
+    void weak_sign_out(Client * client, const Wt::WString& username_);
 
     std::set<Wt::WString> online_users();
     std::vector<Wt::WString> get_all_users();

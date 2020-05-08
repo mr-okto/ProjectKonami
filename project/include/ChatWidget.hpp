@@ -62,6 +62,7 @@ private:
 
     void process_chat_event(const ChatEvent& event);
 
+    void close_same_session();
 };
 
 

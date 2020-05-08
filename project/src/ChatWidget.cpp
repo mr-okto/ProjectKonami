@@ -28,10 +28,17 @@ ChatWidget::ChatWidget(const Wt::WString& username, ChatServer& server)
 
 ChatWidget::~ChatWidget() {
     //(TODO) split 'sign out' by pressing the button (delete session cookie) and 'sign out' by closing the tab (not delete session cookie)
-//    if (Wt::WApplication::instance()->environment().getCookie("username")) {
-//        server_.sign_out(username_);
-//    }
-    sign_out();
+    auto cookie = Wt::WApplication::instance()->environment().getCookie("username");
+    if (!cookie || cookie->empty()) {
+        sign_out();
+    } else {
+        std::string username = server_.check_cookie(*cookie);
+        if (!username.empty() && username == username_) {
+            std::cout << "CLOSE WINDOW DISCONECT: " << *cookie << std::endl;
+            server_.weak_sign_out(this, username);
+        }
+    }
+
 }
 
 void ChatWidget::connect() {
@@ -79,6 +86,7 @@ void ChatWidget::create_UI() {
 
     logoutButton->clicked().connect([this]() {
         Wt::WApplication::instance()->setCookie("username", std::string{}, 0);
+        Wt::WApplication::instance()->removeCookie("username");
         sign_out();
     });
 
@@ -315,8 +323,13 @@ ChatWidget::ChatWidget(const Wt::WString &username, const std::optional<std::str
           username_(username)
 
 {
-    // (TODO) add_session
+    //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
+    close_same_session();
     connect();
     server_.set_cookie(username_.toUTF8(), cookie.value());
     create_UI();
+}
+
+void ChatWidget::close_same_session() {
+    server_.close_same_session(username_);
 }

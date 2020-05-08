@@ -103,15 +103,12 @@ bool ChatServer::sign_out(const Wt::WString &username_) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
 
     std::string username = username_.toUTF8();
-    if (sessionManager_.has_reserved(username)) {
-        sessionManager_.unreserve(username);
-        online_users_.erase(username_);
+    sessionManager_.unreserve(username);
+    online_users_.erase(username_);
 
-        post_chat_event(ChatEvent(ChatEvent::Type::SIGN_OUT, username));
+    post_chat_event(ChatEvent(ChatEvent::Type::SIGN_OUT, username));
 
-        return true;
-    } else
-        return false;
+    return true;
 }
 
 bool ChatServer::disconnect(Client *client) {
@@ -193,7 +190,10 @@ uint ChatServer::get_user_id(const Wt::WString& username) {
 void ChatServer::set_cookie(const std::string& username, const std::string& cookie) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
 
+    online_users_.insert(username);
     sessionManager_.set_cookie(username, cookie);
+
+    post_chat_event(ChatEvent(ChatEvent::SIGN_IN, username));
 }
 
 std::string ChatServer::check_cookie(const std::string& cookie) {
@@ -205,4 +205,34 @@ std::string ChatServer::check_cookie(const std::string& cookie) {
         }
     }
     return std::string{};
+}
+
+void ChatServer::weak_sign_out(Client *client , const Wt::WString& username_) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    std::string username = username_.toUTF8();
+    if (sessionManager_.has_reserved(username)) {
+//        auto count = std::count_if(
+//                sessionManager_.active_sessions().begin(), sessionManager_.active_sessions().end(),
+//                [&username](auto& s) {
+//                    return s.second.username_ == username;
+//                });
+//        std::cout << "COUNT: " << count << std::endl;
+        if (sessionManager_.active_sessions().find(client) != sessionManager_.active_sessions().end()) {
+            online_users_.erase(username_);
+            post_chat_event(ChatEvent(ChatEvent::Type::SIGN_OUT, username));
+        }
+    }
+}
+
+void ChatServer::close_same_session(const Wt::WString& username_) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    std::string username = username_.toUTF8();
+    for (auto& session : sessionManager_.active_sessions()) {
+        if (session.second.username_ == username) {
+            sessionManager_.close_session(session.first);
+            return;
+        }
+    }
 }
