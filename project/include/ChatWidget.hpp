@@ -41,7 +41,7 @@ private:
     Wt::WFileUpload* fileUploaderPtr_;
 
 
-    std::map<Wt::WString, chat::Dialogue> dialogue_id_;
+    std::map<Wt::WString, chat::Dialogue> dialogues_;
     Wt::WString current_dialogue_;
 
     void fill_fileuploader();
@@ -56,7 +56,7 @@ private:
 
     void process_chat_event(const ChatEvent& event);
 
-    chat::Dialogue get_dialogue_id(const Wt::WString& dialogue_name) {return dialogue_id_[dialogue_name];}
+    chat::Dialogue get_dialogue(const Wt::WString& dialogue_name) {return dialogues_[dialogue_name];}
     std::string get_message_format(const std::string& username, 
                                    const std::string& message_content, 
                                    const time_t& time);

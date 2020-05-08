@@ -129,13 +129,15 @@ void ChatWidget::create_UI() {
         sendButton_->clicked().connect(this, &ChatWidget::send_message);
         sendButton_->clicked().connect(clearInput_);
         sendButton_->clicked().connect((WWidget *)messageEdit_,
-                        &WWidget::setFocus);
-                     
+                        &WWidget::setFocus);   
+        sendButton_->disable();  
     }
     messageEdit_->enterPressed().connect(this, &ChatWidget::send_message);
     messageEdit_->enterPressed().connect(clearInput_);
     messageEdit_->enterPressed().connect((WWidget *)messageEdit_,
 					 &WWidget::setFocus);
+    messageEdit_->disable();
+
 
     // Prevent the enter from generating a new line, which is its default
     // action
@@ -236,8 +238,8 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 
     if (event.type_ == ChatEvent::NEW_MSG ) {
         update_dialogue_list();
-        if (dialogue_id_.count(current_dialogue_) &&
-                event.dialogue_id_ == dialogue_id_[current_dialogue_].dialogue_id) {
+        if (dialogues_.count(current_dialogue_) &&
+                event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
             update_messages(current_dialogue_);
         }
     }
@@ -284,12 +286,14 @@ void ChatWidget::update_dialogue_list() {
         } else {
             username = dialogue.second_user.username;
         }
-        dialogue_id_[username] = dialogue;
+        dialogues_[username] = dialogue;
         l->addItem(username);
     }
     l->activated().connect([this, l] {
         this->update_messages(l->currentText());
         current_dialogue_ = l->currentText();
+        this->sendButton_->enable();
+        this->messageEdit_->enable();
     });
 }
 
@@ -305,7 +309,7 @@ std::string ChatWidget::get_message_format(const std::string& username,
 
 void ChatWidget::update_messages(const Wt::WString& username) {
     messages_->clear();
-    for (const auto& message : server_.get_messages(dialogue_id_[username].dialogue_id)) {
+    for (const auto& message : server_.get_messages(dialogues_[username].dialogue_id)) {
 
         // Message text
         Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
@@ -336,7 +340,7 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
 void ChatWidget::send_message() {
     if (!messageEdit_->text().empty() || is_uploaded) {
         chat::Message message;
-        message.dialogue_id = dialogue_id_[current_dialogue_].dialogue_id;
+        message.dialogue_id = dialogues_[current_dialogue_].dialogue_id;
         message.user = {user_id_, username_.toUTF8()};
         message.time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
@@ -355,10 +359,10 @@ void ChatWidget::send_message() {
         }
                                  
         chat::User receiver;
-        if (dialogue_id_[current_dialogue_].first_user.username != username_) {
-            receiver = dialogue_id_[current_dialogue_].first_user;
+        if (dialogues_[current_dialogue_].first_user.username != username_) {
+            receiver = dialogues_[current_dialogue_].first_user;
         } else {
-            receiver = dialogue_id_[current_dialogue_].second_user;
+            receiver = dialogues_[current_dialogue_].second_user;
         }
 
         server_.send_msg(message, receiver);
@@ -399,6 +403,7 @@ std::string ChatWidget::copy_file(const std::string& file_path, const std::strin
     std::string result_filename = "./photo/" + filename;
     std::ifstream in(file_path, std::ios::binary | std::ios::in);
     std::ofstream out(result_filename, std::ios::binary | std::ios::out);
+
     char byte;
     while (in.read(&byte, sizeof(char))) {
         out.write(&byte, sizeof(char));
@@ -407,4 +412,4 @@ std::string ChatWidget::copy_file(const std::string& file_path, const std::strin
     out.close();
 
     return result_filename;
-}   
+}
