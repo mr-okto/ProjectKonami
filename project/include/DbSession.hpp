@@ -1,6 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <istream>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <Models.hpp>
 
 namespace dbo = Wt::Dbo;
@@ -8,11 +11,15 @@ namespace dbo = Wt::Dbo;
 template< class DBConnector >
 class DbSession {
  private:
+  bool is_connected_{};
   dbo::Session db_session_;
   std::unique_ptr<dbo::Transaction> transaction_;
  public:
-  DbSession(const std::string &host, uint32_t port, const std::string &user,
+  DbSession() = default;
+  void connect(const std::string &host, uint32_t port, const std::string &user,
             const std::string &password, const std::string &db_name);
+  void connect(std::basic_istream<boost::property_tree::ptree::key_type::value_type> &json_config);
+  void disconnect();
   DbSession(const DbSession &) = delete;
   ~DbSession();
   void start_transaction();
@@ -29,15 +36,17 @@ class DbSession {
 
 template<class DBConnector>
 DbSession<DBConnector>::~DbSession() {
-    db_session_.flush();
+  if (is_connected_) {
+    disconnect();
+  }
 }
 
 template<class DBConnector>
-DbSession<DBConnector>::DbSession(const std::string &host,
-                                  uint32_t port,
-                                  const std::string &user,
-                                  const std::string &password,
-                                  const std::string &db_name) {
+void DbSession<DBConnector>::connect(const std::string &host,
+                                     uint32_t port,
+                                     const std::string &user,
+                                     const std::string &password,
+                                     const std::string &db_name) {
   unsigned long len_limit = host.size() + user.size() + password.size() + db_name.size() + 64;
   auto buf = new char[len_limit];
   snprintf(buf, len_limit, "host=%s user=%s password=%s port=%u dbname=%s",
@@ -45,12 +54,38 @@ DbSession<DBConnector>::DbSession(const std::string &host,
   std::unique_ptr<DBConnector> db_connector{new DBConnector()};
   db_connector->connect(buf);
   delete[] buf;
+  if (is_connected_) {
+    disconnect();
+  }
   db_session_.setConnection(std::move(db_connector));
+  is_connected_ = true;
   db_session_.mapClass<DialogueModel>("dialogue");
   db_session_.mapClass<MessageModel>("message");
   db_session_.mapClass<UserModel>("user");
   db_session_.mapClass<PictureModel>("picture");
 }
+
+template<class DBConnector>
+void DbSession<DBConnector>::connect(std::basic_istream<boost::property_tree::ptree::key_type::value_type> &json_config) {
+  boost::property_tree::ptree pt;
+  boost::property_tree::read_json(json_config, pt);
+  auto host = pt.get<std::string>("host");
+  auto port = pt.get<uint32_t>("port");
+  auto user = pt.get<std::string>("db_user");
+  auto password = pt.get<std::string>("db_password");
+  auto db_name = pt.get<std::string>("db_name");
+
+  connect(host, port, user, password, db_name);
+}
+
+template<class DBConnector>
+void DbSession<DBConnector>::disconnect() {
+  if (transaction_) {
+    transaction_->commit();
+    transaction_.reset();
+  }
+  db_session_.flush();
+};
 
 template<class DBConnector>
 template<class C>
