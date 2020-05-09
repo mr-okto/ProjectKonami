@@ -22,8 +22,17 @@ public:
     ChatEvent(Type type, uint32_t user_id, std::string data = std::string())
         : type_(type),
           user_id_(user_id),
-          data_(data)
-          { }
+          data_(data),
+          dialogue_id_(-1) { }
+
+    ChatEvent(uint32_t dialogue_id, const Wt::WString& username, Type type = Type::NEW_MSG)
+        : type_(type),
+          username_(username),
+          dialogue_id_(dialogue_id) {}
+
+    ChatEvent(Type type, const Wt::WString& username)
+        : type_(type),
+          username_(username) {}
 
     Type type() const { return type_; }
 
@@ -32,6 +41,7 @@ private:
   Type type_;
   uint32_t object_id_;
   uint32_t user_id_;
+  int dialogue_id_;
   Wt::WString data_;
   Wt::WString username_;
 
@@ -42,10 +52,11 @@ private:
         : type_(type),
           username_(username),
           data_(data),
-          user_id_(user_id)
-    { }
+          user_id_(user_id),
+          dialogue_id_(-1) { }
 
   friend class ChatServer;
+  friend class ChatWidget;
 };
 
 typedef std::function<void (const ChatEvent&)> ChatEventCallback;

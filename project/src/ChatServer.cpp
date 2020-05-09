@@ -46,7 +46,8 @@ UserManagerStub userManagerStub;
 ChatServer::ChatServer(Wt::WServer& server)
     : server_(server),
       sessionManager_(),
-      authService_(userManagerStub, &sessionManager_)
+      authService_(userManagerStub, &sessionManager_),
+      dialogue_service_()
 {
 }
 
@@ -128,9 +129,53 @@ void ChatServer::post_chat_event(const ChatEvent& event) {
     }
 }
 
+void ChatServer::notify_user(const ChatEvent& event) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    auto clients = sessionManager_.active_sessions();
+    for (auto iter = clients.begin(); iter != clients.end(); ++iter) {
+        if (iter->second.username_ == event.username_.toUTF8()) {
+            auto callback = iter->second.callback_;
+            auto session_id = iter->second.session_id_;
+            server_.post(session_id, std::bind(callback, event));
+            return;
+        }
+    }
+}
+
 std::set<Wt::WString> ChatServer::online_users() {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
+    return online_users_;
+}
 
-    auto usrs = online_users_;
-    return usrs;
+std::vector<chat::Dialogue> ChatServer::get_dialogues(const Wt::WString& username) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    return dialogue_service_.get_dialogues(username.toUTF8());
+}
+
+std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    return dialogue_service_.get_messages(dialogue_id);
+}
+
+void ChatServer::send_msg(const chat::Message& message, const chat::User& user) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    dialogue_service_.post_message(message);
+    if (online_users_.count(user.username)) {
+        notify_user(ChatEvent(message.dialogue_id, Wt::WString(user.username)));
+    }
+}
+
+bool ChatServer::create_dialogue(const Wt::WString& creater, const Wt::WString& receiver) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    chat::User creater_ = {get_user_id(creater.toUTF8()), creater.toUTF8()};
+    chat::User receiver_ = {get_user_id(receiver.toUTF8()), receiver.toUTF8()};
+    if (dialogue_service_.create_dialogue(creater_, receiver_)) {
+        notify_user(ChatEvent(ChatEvent::NEW_DIALOGUE, receiver));
+        return true;
+    }
+    return false;
+}
+
+uint ChatServer::get_user_id(const Wt::WString& username) {
+    return sessionManager_.user_id(username.toUTF8());
 }

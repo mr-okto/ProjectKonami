@@ -3,10 +3,13 @@
 
 #include <Wt/WServer.h>
 #include <mutex>
+#include <ctime>
+#include <utility>
 
 #include "Auth.hpp"
 #include "SessionManager.hpp"
 #include "ChatEvent.hpp"
+#include "DialogueService.hpp"
 
 // a reference to client
 class Client {
@@ -32,6 +35,14 @@ public:
     bool connect(Client *client, const ChatEventCallback& handle_event);
     bool disconnect(Client *client);
 
+    std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
+    std::vector<chat::Message> get_messages(uint dialogue_id);
+    void send_msg(const chat::Message& message, const chat::User& user);
+
+    bool create_dialogue(const Wt::WString& creater, const Wt::WString& receiver);
+
+    uint get_user_id(const Wt::WString& username);
+
     // Try to sign in with given username and password.
     // Returns false if the login was not successful;
     bool sign_in(const Wt::WString& username, const Wt::WString& password);
@@ -40,13 +51,18 @@ public:
     bool sign_out(const Wt::WString& username);
 
     std::set<Wt::WString> online_users();
+    std::vector<Wt::WString> get_all_users();
+
+    void notify_user(const ChatEvent& event);
 
 private:
     Wt::WServer& server_;
     std::recursive_mutex mutex_;
 
-    SessionManager sessionManager_;
-    Auth           authService_;
+    SessionManager        sessionManager_;
+    Auth                  authService_;
+    chat::DialogueService dialogue_service_;
+    // chat::UserService     user_service_;
 
     std::set<Wt::WString> online_users_;
 

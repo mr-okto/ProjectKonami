@@ -51,7 +51,6 @@ public:
 private:
     void check_inactive_sessions(); // пробегается по списку автивных сессий, если (time::now - s.time_point) > 5 min ---> s.deactivate
     void delete_inactive_sessions();  //
-
 };
 
 
