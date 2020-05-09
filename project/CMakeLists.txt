@@ -1,11 +1,12 @@
-set(CMAKE_CXX_STANDARD 17)
+include_directories("include")
 
 find_package(Wt REQUIRED)
 
-file(GLOB sources ${PROJECT_SOURCE_DIR}/project/src/*.cpp)
 include_directories(${PROJECT_SOURCE_DIR}/project/include)
 
-add_executable(${PROJECT_NAME} ${sources})
+file(GLOB SOURCES ${PROJECT_SOURCE_DIR}/project/src/*.cpp)
+
+add_executable(${PROJECT_NAME} ${SOURCES})
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
-target_link_libraries(${PROJECT_NAME} wthttp wt Threads::Threads)
-#target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/3rdparty/Scheduler)
+target_link_libraries(${PROJECT_NAME} wthttp wt wtdbo wtdbopostgres Threads::Threads)
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DPOSTGRES")
