@@ -1,21 +1,20 @@
 #include <ImageProcessing.hpp>
 #include <vector>
-
+#include <tuple>
+#include <boost/filesystem.hpp>
+using boost::filesystem::path;
+using boost::filesystem::create_directory;
 using namespace cv;
 
-// Blur levels 0-5
-bool process_image(const char *input_path, const char *output_path, int blur_lvl) {
+void process_image(const std::string &input_path, const std::string &output_path, unsigned int blur_lvl) {
   Mat image = imread(input_path, IMREAD_UNCHANGED);
-  if (blur_lvl > 5 || blur_lvl < 0) {
-    return false;
-  }
   //check whether the image is loaded or not
   if (image.data == nullptr) {
-    return false;
+    throw std::runtime_error("Image could not be loaded");
   }
   if (!blur_lvl) {
     imwrite(output_path, image);
-    return true;
+    return;
   }
   // Blur matrix size
   int m_x = image.cols * blur_lvl / 20;
@@ -29,7 +28,6 @@ bool process_image(const char *input_path, const char *output_path, int blur_lvl
   Mat result;
   GaussianBlur(image, result, Size(m_x, m_y), 0, 0);
   imwrite(output_path, result);
-  return true;
 }
 
 Mat gaussian_blur(const Mat &image, int m_dim) {
@@ -71,3 +69,22 @@ Mat gaussian_blur(const Mat &image, int m_dim) {
     return result;
 }
 
+std::vector<std::string> create_blurred_copies(const std::string &image_path, const std::string &dest_dir,
+                                               long long user_id) {
+  std::vector<std::string> filenames;
+  int copies_count = 5;
+  time_t seed = std::time(nullptr);
+  path p_base(dest_dir);
+  // Images are stored in folders
+  p_base /= std::to_string(user_id % 100);
+  create_directory(p_base);
+  p_base /= "img_";
+  std::stringstream final_path;
+  for (int i = 0; i < copies_count; i++) {
+    final_path.clear();
+    final_path << p_base.string() << user_id << "_" << seed << "_" << i << ".jpg";
+    process_image(image_path, final_path.str(), i);
+    filenames.emplace_back(final_path.str());
+  }
+  return filenames;
+}
