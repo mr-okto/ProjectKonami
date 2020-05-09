@@ -52,7 +52,7 @@ public:
 
     // Try to sign in with given username and password.
     // Returns false if the login was not successful;
-    bool sign_in(const Wt::WString& username, const Wt::WString& password);
+    std::optional<uint32_t> sign_in(const Wt::WString& username, const Wt::WString& password);
     bool sign_up(const Wt::WString& username, const Wt::WString& password);
 
     bool sign_out(const Wt::WString& username);

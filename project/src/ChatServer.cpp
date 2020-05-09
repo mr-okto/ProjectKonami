@@ -52,26 +52,25 @@ ChatServer::ChatServer(Wt::WServer& server)
 {
 }
 
-bool ChatServer::sign_in(const Wt::WString& username, const Wt::WString& password) {
+std::optional<uint32_t> ChatServer::sign_in(const Wt::WString& username, const Wt::WString& password) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
 
-    AuthData data;
-    if (authService_.sign_in(username.toUTF8(), password.toUTF8(), std::ref(data))) {
+    uint32_t id = 0;
+    if (authService_.sign_in(username.toUTF8(), password.toUTF8(), &id)) {
         online_users_.insert(username);
 
-        post_chat_event(ChatEvent(ChatEvent::SIGN_IN, username,
-                                  sessionManager_.user_id(username.toUTF8())));
+        post_chat_event(ChatEvent(ChatEvent::SIGN_IN, username, id));
 
-        return true;
+        return id;
     } else
-        return false;
+        return std::nullopt;
 
 }
 
 bool ChatServer::connect(Client *client, const ChatEventCallback &handle_event) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
 
-    std::cout << "ACTIVE_SESSIONS : " << sessionManager_.active_sessions().size() << std::endl;
+    std::cout << "ACTIVE SESSIONS : " << sessionManager_.active_sessions().size() << std::endl;
     std::cout << "ONLINE USERS : " << online_users_.size() << std::endl;
 
     std::string username = client->username();
@@ -105,6 +104,7 @@ bool ChatServer::sign_out(const Wt::WString &username_) {
     std::string username = username_.toUTF8();
     sessionManager_.unreserve(username);
     online_users_.erase(username_);
+    std::cout << "SIGN OUT"<< std::endl;
 
     post_chat_event(ChatEvent(ChatEvent::Type::SIGN_OUT, username));
 
@@ -211,18 +211,21 @@ void ChatServer::weak_sign_out(Client *client , const Wt::WString& username_) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
 
     std::string username = username_.toUTF8();
-    if (sessionManager_.has_reserved(username)) {
+    //(FIXME) maybe delete 'has_reserved'
+//    if (sessionManager_.has_reserved(username)) {
 //        auto count = std::count_if(
 //                sessionManager_.active_sessions().begin(), sessionManager_.active_sessions().end(),
 //                [&username](auto& s) {
 //                    return s.second.username_ == username;
 //                });
 //        std::cout << "COUNT: " << count << std::endl;
+        // if there was no 'close_same_session' call
         if (sessionManager_.active_sessions().find(client) != sessionManager_.active_sessions().end()) {
+            std::cout << "WEAK SIGN OUT"<< std::endl;
             online_users_.erase(username_);
             post_chat_event(ChatEvent(ChatEvent::Type::SIGN_OUT, username));
         }
-    }
+//    }
 }
 
 void ChatServer::close_same_session(const Wt::WString& username_) {

@@ -23,7 +23,8 @@ public:
 
     bool start_chat(const Wt::WString& username, const Wt::WString& password);
 
-    Wt::Signal<Wt::WString, std::optional<std::string>>& session_signal() { return session_signal_; }
+    Wt::Signal
+    <std::pair<Wt::WString, uint32_t>, std::optional<std::string>>& session_signal() { return session_signal_; }
 
 protected:
     bool signed_in() const { return signed_in_; }
@@ -31,7 +32,9 @@ protected:
 private:
     ChatServer& server_;
     bool signed_in_;
-    Wt::Signal<Wt::WString, std::optional<std::string>> session_signal_;
+
+    Wt::Signal
+    <std::pair<Wt::WString, uint32_t>, std::optional<std::string>> session_signal_;
 
     Wt::WString username_;
     Wt::WLineEdit *username_edit_field_;

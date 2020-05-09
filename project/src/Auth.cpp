@@ -3,21 +3,24 @@
 
 bool Auth::sign_in(const std::string& username,
                    const std::string& password,
-                   AuthData& data)
+                   uint32_t* id)
+
 {
-    UserModelPtr storaged_user = user_manager_.get_user(username);
+    if (!id) {
+        throw std::runtime_error ("nullptr passed in an argument");
+    }
+
     if (session_manager_->has_reserved(username)) {
         return false;
     }
+    UserModelPtr storaged_user = user_manager_.get_user(username);
 
     if (storaged_user &&
             storaged_user->username_ == username &&
             storaged_user->pwd_hash_ == password)
     {
-//        data.id = storaged_user->id_;
-//        data.username = username;
-//        data.password = password;
 
+        *id = storaged_user->id_;
         session_manager_->reserve(storaged_user->username_, storaged_user->id_);
 
         return true;

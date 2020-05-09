@@ -16,13 +16,29 @@
 
 #include "ChatWidget.hpp"
 
-ChatWidget::ChatWidget(const Wt::WString& username, ChatServer& server)
+ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& server)
     : Wt::WContainerWidget(),
       server_(server),
-      username_(username)
+      username_(username),
+      user_id_(id)
 
 {
     connect();
+    create_UI();
+}
+
+ChatWidget::ChatWidget(const Wt::WString &username, uint32_t id,
+                        const std::optional<std::string> &cookie, ChatServer &server)
+        : Wt::WContainerWidget(),
+          server_(server),
+          username_(username),
+          user_id_(id)
+
+{
+    //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
+    close_same_session();
+    connect();
+    server_.set_cookie(username_.toUTF8(), cookie.value());
     create_UI();
 }
 
@@ -30,15 +46,17 @@ ChatWidget::~ChatWidget() {
     //(TODO) split 'sign out' by pressing the button (delete session cookie) and 'sign out' by closing the tab (not delete session cookie)
     auto cookie = Wt::WApplication::instance()->environment().getCookie("username");
     if (!cookie || cookie->empty()) {
+        std::cout << "SIGN OUT DISCONECT: " <<  std::endl;
         sign_out();
     } else {
         std::string username = server_.check_cookie(*cookie);
         if (!username.empty() && username == username_) {
             std::cout << "CLOSE WINDOW DISCONECT: " << *cookie << std::endl;
             server_.weak_sign_out(this, username);
+        } else {
+            sign_out();
         }
     }
-
 }
 
 void ChatWidget::connect() {
@@ -55,6 +73,7 @@ void ChatWidget::disconnect() {
 }
 
 void ChatWidget::create_UI() {
+    std::cout << username_ << " : " << user_id_ << std::endl;
     clear();
 
     auto messagesPtr = Wt::cpp14::make_unique<WContainerWidget>();
@@ -315,19 +334,6 @@ std::unique_ptr<Wt::WText> ChatWidget::create_title(const Wt::WString& title) {
     text->setInline(false);
     text->setStyleClass("chat-title");
     return text;
-}
-
-ChatWidget::ChatWidget(const Wt::WString &username, const std::optional<std::string> &cookie, ChatServer &server)
-        : Wt::WContainerWidget(),
-          server_(server),
-          username_(username)
-
-{
-    //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
-    close_same_session();
-    connect();
-    server_.set_cookie(username_.toUTF8(), cookie.value());
-    create_UI();
 }
 
 void ChatWidget::close_same_session() {

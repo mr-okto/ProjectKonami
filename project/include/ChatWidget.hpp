@@ -8,8 +8,9 @@
 
 class ChatWidget : public Wt::WContainerWidget, public Client {
 public:
-    ChatWidget(const Wt::WString& username, ChatServer& server);
-    ChatWidget(const Wt::WString& username, const std::optional<std::string>& cookie, ChatServer& server);
+    ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& server);
+    ChatWidget(const Wt::WString& username, uint32_t id,
+                const std::optional<std::string>& cookie, ChatServer& server);
 
     ~ChatWidget();
 
@@ -29,10 +30,10 @@ public:
 private:
     ChatServer& server_;
     Wt::WString username_;
+    uint32_t  user_id_;
 
 
 //    Session session_;
-//    uint32_t  user_id_;
 
     Wt::JSlot                  clearInput_;
 

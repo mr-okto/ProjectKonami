@@ -23,7 +23,7 @@ ChatApplication::ChatApplication(const Wt::WEnvironment &env, ChatServer &server
       env_(env),
       logged_in_(false)
 {
-    std::cout << "SESSION ID" << Wt::WApplication::instance()->sessionId() << "  " << this << std::endl;
+//    std::cout << "SESSION ID" << Wt::WApplication::instance()->sessionId() << "  " << this << std::endl;
     setTitle("KonamiChat");
 
     useStyleSheet("chatapp.css");
@@ -36,7 +36,9 @@ ChatApplication::ChatApplication(const Wt::WEnvironment &env, ChatServer &server
     start_auth();
 }
 
-void ChatApplication::start_chat(const Wt::WString& username, const std::optional<std::string>& cookie) {
+void ChatApplication::start_chat(const Wt::WString& username, uint32_t id,
+                                const std::optional<std::string>& cookie)
+{
     root()->clear();
 
     logged_in_ = true;
@@ -44,11 +46,11 @@ void ChatApplication::start_chat(const Wt::WString& username, const std::optiona
     if (!cookie.has_value()) {
         std::cout << "without cookie" << std::endl;
         chatWidget =
-                root()->addWidget(std::make_unique<ChatWidget>(username, server_));
+                root()->addWidget(std::make_unique<ChatWidget>(username, id, server_));
     } else {
         std::cout << "with cookie" << std::endl;
         chatWidget =
-                root()->addWidget(std::make_unique<ChatWidget>(username, cookie, server_));
+                root()->addWidget(std::make_unique<ChatWidget>(username, id, cookie, server_));
     }
     chatWidget->setStyleClass("chat-main");
     chatWidget->logout_signal().connect(this, &ChatApplication::start_auth);
@@ -62,7 +64,7 @@ void ChatApplication::start_auth() {
         std::string username = server_.check_cookie(*cookie);
         if (!username.empty()) {
             std::cout << username << " : " << *cookie << std::endl;
-            start_chat(username, *cookie);
+            start_chat(username, std::stoi(std::string(*cookie)) , *cookie);
             return;
         }
     }
@@ -71,8 +73,11 @@ void ChatApplication::start_auth() {
     AuthWidget *authWidget =
             root()->addWidget(Wt::cpp14::make_unique<AuthWidget>(server_));
     authWidget->setStyleClass("auth");
-    authWidget->session_signal().connect([this](const Wt::WString& username, const std::optional<std::string>& cookie) {
-        start_chat(username, cookie);
+    authWidget->session_signal().connect(
+            [this](const std::pair<Wt::WString, uint32_t>& data,
+                           const std::optional<std::string>& cookie)
+    {
+        start_chat(data.first, data.second, cookie);
     });
 }
 

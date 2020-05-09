@@ -21,18 +21,6 @@ AuthWidget::AuthWidget(ChatServer &server)
 {
     //(TODO) ther're will be checking sessionId from cookie
 
-//    auto cookie = Wt::WApplication::instance()->environment().getCookie("username");
-//    if (!cookie->empty()) {
-//        std::string username = server_.check_cookie(*cookie);
-//        if (!username.empty()) {
-//            std::cout << username << " : " << *cookie << std::endl;
-//            session_signal_.emit(Wt::WString(username), *cookie);
-//        } else {
-//            create_UI();
-//        }
-//    } else {
-//        create_UI();
-//    }
     create_UI();
 }
 
@@ -42,15 +30,6 @@ AuthWidget::~AuthWidget() {
 
 void AuthWidget::create_UI() {
     clear();
-//    auto cookie = Wt::WApplication::instance()->environment().getCookie("username");
-//    if (!cookie->empty()) {
-//        std::string username = server_.check_cookie(*cookie);
-//        if (!username.empty()) {
-//            std::cout << username << " : " << *cookie << std::endl;
-//            session_signal_.emit(Wt::WString(username), *cookie);
-//        }
-//    }
-//
     auto container = std::make_unique<Wt::WContainerWidget>();
     auto vLayout = create_input_forms_layout();
 
@@ -94,14 +73,15 @@ void AuthWidget::sign_in() {
 bool AuthWidget::start_chat(const Wt::WString& username, const Wt::WString& password) {
     //(TODO) There will be created start point of ChatWidget
     // connect to server, create session, pass callbackFunc, manage session
-    if (server_.sign_in(username, password)) {
+    auto id = server_.sign_in(username, password);
+    if (id.has_value()) {
         signed_in_ = true;
 
         if (remember_me_box_->isChecked()) {
-            Wt::WApplication::instance()->setCookie("username", username.toUTF8(), 3600);
-            session_signal_.emit(username, username.toUTF8());
+            Wt::WApplication::instance()->setCookie("username", std::to_string(id.value()), 3600);
+            session_signal_.emit(std::make_pair(username, id.value()), std::to_string(id.value()));
         } else {
-            session_signal_.emit(username, std::nullopt);
+            session_signal_.emit(std::make_pair(username, id.value()), std::nullopt);
         }
 
         return true;
