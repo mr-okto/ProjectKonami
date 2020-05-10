@@ -9,6 +9,7 @@ class DialogueManager {
   DbSession<DBConnector> &db_session_;
   explicit DialogueManager(DbSession<DBConnector> &db_session);
   DialogueModelPtr get_dialogue(IdType member_a, IdType member_b);
+  std::tuple<DialogueModelPtr, bool> get_or_create_dialogue(IdType member_a, IdType member_b);
 };
 
 template < class DBConnector >
@@ -17,6 +18,7 @@ DialogueManager<DBConnector>::DialogueManager(DbSession<DBConnector> &db_session
 
 template < class DBConnector >
 DialogueModelPtr DialogueManager<DBConnector>::get_dialogue(IdType member_a, IdType member_b) {
+  // Returns nullptr if dialogue does not exist
   DialogueModelPtr result = nullptr;
   db_session_.start_transaction();
   IdType dialogue_id = db_session_.template raw_query<IdType>("select t1.dialogue_id from dialogue_members t1")
@@ -25,6 +27,15 @@ DialogueModelPtr DialogueManager<DBConnector>::get_dialogue(IdType member_a, IdT
   if (dialogue_id) {
     result = db_session_.template get_by_id<DialogueModel>(dialogue_id);
   }
+  db_session_.end_transaction();
+  return result;
+}
+
+template < class DBConnector >
+std::tuple<DialogueModelPtr, bool> DialogueManager<DBConnector>::get_or_create_dialogue(IdType member_a,
+                                                                                        IdType member_b) {
+  DialogueModelPtr result = get_dialogue(member_a, member_b);
+  bool is_new = (result)? false : true;
   if (not result) {
     auto new_dialogue = std::make_unique<DialogueModel>(DialogueModel());
     result = db_session_.add(std::move(new_dialogue));
@@ -34,5 +45,5 @@ DialogueModelPtr DialogueManager<DBConnector>::get_dialogue(IdType member_a, IdT
     result.modify()->members_.insert(member_ptr);
   }
   db_session_.end_transaction();
-  return result;
+  return std::tuple(result, is_new);
 }
