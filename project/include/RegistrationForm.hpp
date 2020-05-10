@@ -4,6 +4,8 @@
 #include <Wt/WContainerWidget.h>
 #include <Wt/WLineEdit.h>
 
+#include "PasswordStrengthValidator.hpp"
+
 struct RegistrationForm : public Wt::WContainerWidget {
 public:
     RegistrationForm();
@@ -17,13 +19,17 @@ public:
     //(TODO) add logic
     bool validate();
 
+
+
     enum ErrorType {
         None,
         ShortPassword,
         UsernameExists,
-        PasswordsMismatch
+        PasswordMismatch
     };
     ErrorType error() const { return error_; }
+    Wt::WString status() const { return status_string_;}
+
     void set_user_exists_error();
 
 private:
@@ -35,6 +41,10 @@ private:
 
     bool is_valid_;
     ErrorType error_;
+
+    PasswordStrengthValidator validator_;
+    Wt::WText  *status_msg_;
+    Wt::WString status_string_;
 };
 
 

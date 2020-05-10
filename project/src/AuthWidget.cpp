@@ -10,6 +10,7 @@
 #include <Wt/WPushButton.h>
 #include <Wt/WCheckBox.h>
 #include <Wt/WEvent.h>
+#include <Wt/Utils.h>
 
 #include "AuthWidget.hpp"
 
@@ -99,13 +100,12 @@ void AuthWidget::show_registration() {
     registration_form_->setStyleClass("registration-form");
     Wt::WPushButton *signUpbButton = dialog.footer()->addWidget(std::make_unique<Wt::WPushButton>("Sign up"));
     Wt::WText *statusMsg = dialog.footer()->addWidget(std::make_unique<Wt::WText>());
-    statusMsg->setTextFormat(Wt::TextFormat::Plain);
+    statusMsg->setInline(false);
+    statusMsg->setTextFormat(Wt::TextFormat::XHTML);
+    statusMsg->setTextAlignment(Wt::AlignmentFlag::Center);
 
 //    registration_form_->validate();
     auto s = registration_form_->get_username().toUTF8();
-    if (s == "123") {
-        std::cout << 123;
-    }
     signUpbButton->clicked().connect(this, &AuthWidget::sign_up);
     signUpbButton->clicked().connect(std::bind(&AuthWidget::validate_reg_dialog, this, std::ref(dialog), statusMsg));
     //    signUpbButton->clicked().connect(&dialog, &Wt::WDialog::accept);
@@ -115,20 +115,21 @@ void AuthWidget::show_registration() {
 
 void AuthWidget::sign_up() {
     if (registration_form_->validate()) {
-        if (!server_.sign_up(registration_form_->get_username(), registration_form_->get_password_first())) {
-            registration_form_->set_user_exists_error();
-        }
+        std::cout << "VALID" << std::endl;
+//        if (!server_.sign_up(registration_form_->get_username(), registration_form_->get_password_first())) {
+//            registration_form_->set_user_exists_error();
+//        }
     }
-
 }
 
 void AuthWidget::validate_reg_dialog(Wt::WDialog &dialog, Wt::WText* status_msg) {
     if (registration_form_->is_valid()) {
         dialog.accept();
-    } else if (registration_form_->error() == RegistrationForm::ErrorType::PasswordsMismatch) {
-        status_msg->setText("Passwords do not match.");
+    } else if (registration_form_->error() == RegistrationForm::ErrorType::PasswordMismatch) {
+        status_msg->setText("Password mismatch.");
     } else if (registration_form_->error() == RegistrationForm::ErrorType::ShortPassword) {
-        status_msg->setText("Passwords is too short.");
+        status_msg->setText("Passwords is too short (<b>" +
+                            Wt::Utils::htmlEncode(registration_form_->status()) + "</b>)");
     } else if (registration_form_->error() == RegistrationForm::ErrorType::UsernameExists) {
         status_msg->setText("Username '" + escapeText(registration_form_->get_username()) + "' is already taken");
     }

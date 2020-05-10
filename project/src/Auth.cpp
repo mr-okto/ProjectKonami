@@ -33,8 +33,6 @@ bool Auth::sign_out(std::string username) {
 }
 
 bool Auth::sign_up(const std::string& username, const std::string& password) {
-    //(TODO) добавить фейк логику
-
     UserModelPtr storaged_user = user_manager_.create_user(username, password);
 
     if (storaged_user) {
