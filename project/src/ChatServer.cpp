@@ -6,7 +6,7 @@
 ChatServer::ChatServer(Wt::WServer& server, DbSession<Wt::Dbo::backend::Postgres>& session)
     : server_(server),
       session_manager_(),
-      dialogue_service_(),
+      dialogue_service_(session),
       auth_service_(user_manager_, &session_manager_),
       user_manager_(session)
 {

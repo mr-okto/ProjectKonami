@@ -17,7 +17,7 @@ std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env
 int main(int argc, char **argv) {
     DbSession<Wt::Dbo::backend::Postgres> session;
     std::ifstream f_in;
-    f_in.open("db_conf.json");
+    f_in.open("project/db_conf.json");
     session.connect(f_in);
     f_in.close();
 
