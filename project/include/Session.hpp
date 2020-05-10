@@ -21,6 +21,7 @@ public:
     Status status_;
 
     ChatEventCallback callback_;
+    std::string cookie_;
 
 public:
     Session() = default;

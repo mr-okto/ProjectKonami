@@ -42,3 +42,13 @@ bool SessionManager::close_session(Client *client) {
 SessionManager::SessionManager() : scheduler_() {
 
 }
+
+void SessionManager::set_cookie(const std::string &username, const std::string &cookie) {
+    for (auto& session : active_sessions_) {
+        if (session.second.username_ == username) {
+            if (session.second.cookie_.empty()) {
+                session.second.cookie_ = cookie;
+            }
+        }
+    }
+}

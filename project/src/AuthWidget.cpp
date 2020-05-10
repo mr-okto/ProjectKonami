@@ -16,39 +16,20 @@
 AuthWidget::AuthWidget(ChatServer &server)
     : WContainerWidget(),
       server_(server),
-      signed_in_(false)
+      signed_in_(false),
+      session_signal_()
 {
-    //(TODO) ther're will be checking sessionId from cookie
-
-    let_sign_in();
+    create_UI();
 }
 
 AuthWidget::~AuthWidget() {
 
 }
 
-void AuthWidget::let_sign_in() {
+void AuthWidget::create_UI() {
     clear();
-
-    auto vLayout = setLayout(std::make_unique<Wt::WVBoxLayout>());
-
-    auto hLayout_(std::make_unique<Wt::WHBoxLayout>());
-    auto hLayout = hLayout_.get();
-
-    vLayout->addLayout(std::move(hLayout_), 1, Wt::AlignmentFlag::Top | Wt::AlignmentFlag::Middle);
-    hLayout->addWidget(std::make_unique<Wt::WLabel>("Login:"), 0, Wt::AlignmentFlag::Middle);
-
-    username_edit_field_ = hLayout->addWidget(std::make_unique<Wt::WLineEdit>(username_), 0, Wt::AlignmentFlag::Middle);
-    username_edit_field_->setFocus();
-
-    auto hLayout1_(std::make_unique<Wt::WHBoxLayout>());
-    auto hLayout1 = hLayout1_.get();
-
-    vLayout->addLayout(std::move(hLayout1_), 1, Wt::AlignmentFlag::Top | Wt::AlignmentFlag::Middle);
-    hLayout1->addWidget(std::make_unique<Wt::WLabel>("Password:"), 0, Wt::AlignmentFlag::Middle);
-
-    password_edit_field_ = hLayout1->addWidget(std::make_unique<Wt::WLineEdit>(password_), 0, Wt::AlignmentFlag::Middle);
-    password_edit_field_->setFocus();
+    auto container = std::make_unique<Wt::WContainerWidget>();
+    auto vLayout = create_input_forms_layout();
 
     auto buttons_(std::make_unique<Wt::WHBoxLayout>());
     auto buttons = buttons_.get();
@@ -64,8 +45,15 @@ void AuthWidget::let_sign_in() {
     auto signUpButton = buttons->addWidget(std::make_unique<Wt::WPushButton>("Sign up"));
     signUpButton->clicked().connect(this, &AuthWidget::show_registration);
 
-    status_msg_ = vLayout->addWidget(Wt::cpp14::make_unique<Wt::WText>(), 0);
+    status_msg_ = vLayout->addWidget(std::make_unique<Wt::WText>(""));
     status_msg_->setTextFormat(Wt::TextFormat::Plain);
+    status_msg_->setInline(false);
+
+    container->setLayout(std::move(vLayout));
+    container->setStyleClass("loginForms");
+    container->setMargin(50, Wt::Side::Top);
+    addWidget(std::move(container));
+    setContentAlignment(Wt::AlignmentFlag::Center);
 }
 
 void AuthWidget::sign_in() {
@@ -83,10 +71,16 @@ void AuthWidget::sign_in() {
 bool AuthWidget::start_chat(const Wt::WString& username, const Wt::WString& password) {
     //(TODO) There will be created start point of ChatWidget
     // connect to server, create session, pass callbackFunc, manage session
-    if (server_.sign_in(username, password)) {
+    auto id = server_.sign_in(username, password);
+    if (id.has_value()) {
         signed_in_ = true;
 
-        session_signal_.emit(username);
+        if (remember_me_box_->isChecked()) {
+            Wt::WApplication::instance()->setCookie("username", std::to_string(id.value()), 3600);
+            session_signal_.emit(std::make_pair(username, id.value()), std::to_string(id.value()));
+        } else {
+            session_signal_.emit(std::make_pair(username, id.value()), std::nullopt);
+        }
 
         return true;
     } else {
@@ -138,4 +132,44 @@ void AuthWidget::validate_reg_dialog(Wt::WDialog &dialog, Wt::WText* status_msg)
     } else if (registration_form_->error() == RegistrationForm::ErrorType::UsernameExists) {
         status_msg->setText("Username '" + escapeText(registration_form_->get_username()) + "' is already taken");
     }
+}
+
+std::unique_ptr<Wt::WVBoxLayout> AuthWidget::create_input_forms_layout() {
+    auto vLayout = std::make_unique<Wt::WVBoxLayout>();
+
+    auto hLayout_(std::make_unique<Wt::WHBoxLayout>());
+    auto hLayout = hLayout_.get();
+
+    vLayout->addLayout(std::move(hLayout_), 1, Wt::AlignmentFlag::Top | Wt::AlignmentFlag::Middle);
+    auto label = hLayout->addWidget(std::make_unique<Wt::WLabel>("Login:"), 0, Wt::AlignmentFlag::Right);
+
+    username_edit_field_ = hLayout->addWidget(std::make_unique<Wt::WLineEdit>(username_), 0, Wt::AlignmentFlag::Middle);
+    username_edit_field_->setFocus();
+    username_edit_field_->setMinimumSize(140, 16);
+    username_edit_field_->setMaximumSize(140, 16);
+    label->setBuddy(username_edit_field_);
+
+    auto hLayout1_(std::make_unique<Wt::WHBoxLayout>());
+    auto hLayout1 = hLayout1_.get();
+
+    vLayout->addLayout(std::move(hLayout1_), 1, Wt::AlignmentFlag::Top | Wt::AlignmentFlag::Middle);
+    label = hLayout1->addWidget(std::make_unique<Wt::WLabel>("Password:"), 0, Wt::AlignmentFlag::Right);
+
+    password_edit_field_ = hLayout1->addWidget(std::make_unique<Wt::WLineEdit>(password_), 0, Wt::AlignmentFlag::Middle);
+    password_edit_field_->setFocus();
+    password_edit_field_->setMinimumSize(140, 16);
+    password_edit_field_->setMaximumSize(140, 16);
+    password_edit_field_->setAttributeValue("type", "password");
+    label->setBuddy(password_edit_field_);
+
+    hLayout1_ = std::make_unique<Wt::WHBoxLayout>();
+    hLayout1 = hLayout1_.get();
+    vLayout->addLayout(std::move(hLayout1_), 1, Wt::AlignmentFlag::Middle);
+    label = hLayout1->addWidget(std::make_unique<Wt::WLabel>("Remember me (for a one hour):"), 0, Wt::AlignmentFlag::Right);
+
+    remember_me_box_ = hLayout1->addWidget(std::make_unique<Wt::WCheckBox>());
+    label->setBuddy(remember_me_box_);
+    label->setStyleClass("rememberMe");
+
+    return std::move(vLayout);
 }

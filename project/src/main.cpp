@@ -2,25 +2,27 @@
 #include <string>
 
 #include <Wt/WServer.h>
+#include <Wt/Dbo/Dbo.h>
+#include <Wt/Dbo/backend/Postgres.h>
 
 #include "Auth.hpp"
 
 #include "ChatServer.hpp"
 #include "ChatApplication.hpp"
 
-class TokenGenerator : public ITokenGenerator {
-public:
-    std::string generate_token() override { return std::string();};
-};
-
 std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env, ChatServer& server) {
     return std::make_unique<ChatApplication>(env, server);
 }
 
 int main(int argc, char **argv) {
+    DbSession<Wt::Dbo::backend::Postgres> session;
+    std::ifstream f_in;
+    f_in.open("db_conf.json");
+    session.connect(f_in);
+    f_in.close();
 
     Wt::WServer server(argc, argv, WTHTTP_CONFIGURATION);
-    ChatServer chatServer(server);
+    ChatServer chatServer(server, session);
 
     // Adding entry-point for full-window app
     server.addEntryPoint(Wt::EntryPointType::Application,
@@ -30,6 +32,7 @@ int main(int argc, char **argv) {
         int sig = Wt::WServer::waitForShutdown();
         std::cerr << "Shutting down: (signal = " << sig << ")" << std::endl;
         server.stop();
+        session.disconnect();
     }
 
     return 0;

@@ -30,12 +30,10 @@ public:
     SessionManager(const SessionManager&) = default;
     ~SessionManager() = default;
 
-//    // вызывается на каждом запросе пользователя
-//    // обновляется time_point у сессии
-//    bool validate_session(const std::string& token) {return false;};
-
     bool add_session(Client *client, const Session& s); // вызывается модулем Auth при успешной авторизации (Session создается в Auth)
     bool close_session(Client *client); // вызывается при принудительном завершении сессии
+
+    void set_cookie(const std::string& username, const std::string& cookie);
 
     const ClientMap& active_sessions() const { return active_sessions_; }
     uint32_t user_id(const std::string& username) { return reserved_map_[username]; }

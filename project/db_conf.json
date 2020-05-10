@@ -1,0 +1,7 @@
+{
+  "host": "ec2-46-137-156-205.eu-west-1.compute.amazonaws.com",
+  "port": 5432,
+  "db_user": "qqeqvpaivfyeim",
+  "db_password": "e16af40deaafe548cee17b1b0c0960316a17077dc4e26a0d0c6cfa278d7830ef",
+  "db_name": "ddhp66kspee3tk"
+}

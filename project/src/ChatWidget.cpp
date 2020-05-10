@@ -16,25 +16,52 @@
 #include <Wt/WFileUpload.h>
 #include <Wt/WFileResource.h>
 #include <Wt/WProgressBar.h>
-#include <Wt/WRasterImage.h>
 #include <fstream>
 
 
 #include "ChatWidget.hpp"
 
-ChatWidget::ChatWidget(const Wt::WString& username, ChatServer& server)
+ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& server)
     : Wt::WContainerWidget(),
       server_(server),
-      username_(username)
+      username_(username),
+      user_id_(id)
 
 {
-    // (TODO) add_session
     connect();
     create_UI();
 }
 
+ChatWidget::ChatWidget(const Wt::WString &username, uint32_t id,
+                        const std::optional<std::string> &cookie, ChatServer &server)
+        : Wt::WContainerWidget(),
+          server_(server),
+          username_(username),
+          user_id_(id)
+
+{
+    //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
+    close_same_session();
+    connect();
+    server_.set_cookie(username_.toUTF8(), cookie.value());
+    create_UI();
+}
+
 ChatWidget::~ChatWidget() {
-    sign_out();
+    //(TODO) split 'sign out' by pressing the button (delete session cookie) and 'sign out' by closing the tab (not delete session cookie)
+    auto cookie = Wt::WApplication::instance()->environment().getCookie("username");
+    if (!cookie || cookie->empty()) {
+        std::cout << "SIGN OUT DISCONECT: " <<  std::endl;
+        sign_out();
+    } else {
+        std::string username = server_.check_cookie(*cookie);
+        if (!username.empty() && username == username_) {
+            std::cout << "CLOSE WINDOW DISCONECT: " << *cookie << std::endl;
+            server_.weak_sign_out(this, username);
+        } else {
+            sign_out();
+        }
+    }
 }
 
 void ChatWidget::connect() {
@@ -51,6 +78,7 @@ void ChatWidget::disconnect() {
 }
 
 void ChatWidget::create_UI() {
+    std::cout << username_ << " : " << user_id_ << std::endl;
     clear();
 
     auto messagesPtr = Wt::cpp14::make_unique<WContainerWidget>();
@@ -83,6 +111,12 @@ void ChatWidget::create_UI() {
                  std::move(sendButtonPtr), std::move(logoutButtonPtr),
                  std::move(dialoguesListPtr),
                  std::move(fileUploaderPtr));
+
+    logoutButton->clicked().connect([this]() {
+        Wt::WApplication::instance()->setCookie("username", std::string{}, 0);
+        Wt::WApplication::instance()->removeCookie("username");
+        sign_out();
+    });
 
     /*
      * Connect event handlers:
@@ -169,38 +203,33 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
   * | send | logout                            |
   * --------------------------------------------
   */
-    auto vLayout = Wt::cpp14::make_unique<Wt::WVBoxLayout>();
 
-    // Create a horizontal layout for the messages | userslist.
-    auto hLayout = Wt::cpp14::make_unique<Wt::WHBoxLayout>();
-
-    // Choose JavaScript implementation explicitly to avoid log warning (needed for resizable layout)
-    hLayout->setPreferredImplementation(Wt::LayoutImplementation::JavaScript);
+    // 3x3 grid layout
+    auto gridLayout = std::make_unique<Wt::WGridLayout>();
+    gridLayout->addWidget(create_title("Dialogues"), 0, 0, Wt::AlignmentFlag::Center);
+    gridLayout->addWidget(create_title("Messages"), 0, 1, Wt::AlignmentFlag::Center);
+    gridLayout->addWidget(create_title("Users"), 0, 2, Wt::AlignmentFlag::Center);
 
     chatUserList->setStyleClass("chat-users");
-    hLayout->addWidget(std::move(chatUserList));
+    chatUserList->resize(Wt::WLength::Auto, 600);
+    gridLayout->addWidget(std::move(chatUserList), 1, 0);
 
-    // Add widget to horizontal layout with stretch = 1
     messages->setStyleClass("chat-msgs");
-    hLayout->addWidget(std::move(messages), 1);
+    gridLayout->addWidget(std::move(messages), 1, 1);
 
-    // Add another widget to horizontal layout with stretch = 0
     userList->setStyleClass("chat-users");
-    hLayout->addWidget(std::move(userList));
+    gridLayout->addWidget(std::move(userList), 1, 2);
 
-    hLayout->setResizable(0, true);
 
-    // Add nested layout to vertical layout with stretch = 1
-    vLayout->addLayout(std::move(hLayout), 1);
+    auto vLayout = Wt::cpp14::make_unique<Wt::WVBoxLayout>();
 
-    // Add widget to vertical layout with stretch = 0
     messageEdit->setStyleClass("chat-noedit");
     vLayout->addWidget(std::move(messageEdit));
 
     vLayout->addWidget(std::move(fileUploader));
 
     // Create a horizontal layout for the buttons.
-    hLayout = Wt::cpp14::make_unique<Wt::WHBoxLayout>();
+    auto hLayout = Wt::cpp14::make_unique<Wt::WHBoxLayout>();
 
     // Add button to horizontal layout with stretch = 0
     hLayout->addWidget(std::move(sendButton));
@@ -211,12 +240,18 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
     // Add nested layout to vertical layout with stretch = 0
     vLayout->addLayout(std::move(hLayout), 0, Wt::AlignmentFlag::Left);
 
-    this->setLayout(std::move(vLayout));
+    gridLayout->addLayout(std::move(vLayout), 2, 1, 1, 2);
+
+    gridLayout->setRowStretch(1, 1);
+    gridLayout->setColumnStretch(1, 1);
+    this->setLayout(std::move(gridLayout));
 }
 
 void ChatWidget::sign_out() {
     if (server_.sign_out(username_)) {
         disconnect();
+
+        logout_signal_.emit(Wt::WString());
     }
 }
 
@@ -412,4 +447,15 @@ std::string ChatWidget::copy_file(const std::string& file_path, const std::strin
     out.close();
 
     return result_filename;
+}
+
+std::unique_ptr<Wt::WText> ChatWidget::create_title(const Wt::WString& title) {
+    auto text = std::make_unique<Wt::WText>(title);
+    text->setInline(false);
+    text->setStyleClass("chat-title");
+    return text;
+}
+
+void ChatWidget::close_same_session() {
+    server_.close_same_session(username_);
 }

@@ -24,7 +24,7 @@ public:
 
 class ChatServer : public Wt::WServer {
 public:
-    ChatServer(Wt::WServer& server);
+    ChatServer(Wt::WServer& server, DbSession<Wt::Dbo::backend::Postgres>& session);
 
     // delete
     ChatServer(const ChatServer&) = delete;
@@ -34,6 +34,10 @@ public:
     // Return false if the client was already connected
     bool connect(Client *client, const ChatEventCallback& handle_event);
     bool disconnect(Client *client);
+
+    void set_cookie(const std::string& username, const std::string& cookie);
+    std::string check_cookie(const std::string& cookie);
+    void close_same_session(const Wt::WString& username_);
 
     std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
     std::vector<chat::Message> get_messages(uint dialogue_id);
@@ -45,10 +49,11 @@ public:
 
     // Try to sign in with given username and password.
     // Returns false if the login was not successful;
-    bool sign_in(const Wt::WString& username, const Wt::WString& password);
+    std::optional<uint32_t> sign_in(const Wt::WString& username, const Wt::WString& password);
     bool sign_up(const Wt::WString& username, const Wt::WString& password);
 
     bool sign_out(const Wt::WString& username);
+    void weak_sign_out(Client * client, const Wt::WString& username_);
 
     std::set<Wt::WString> online_users();
     std::vector<Wt::WString> get_all_users();
@@ -59,12 +64,15 @@ private:
     Wt::WServer& server_;
     std::recursive_mutex mutex_;
 
-    SessionManager        sessionManager_;
-    Auth                  authService_;
+    SessionManager        session_manager_;
+    Auth                  auth_service_;
     chat::DialogueService dialogue_service_;
     // chat::UserService     user_service_;
 
     std::set<Wt::WString> online_users_;
+
+    UserManager
+    <Wt::Dbo::backend::Postgres> user_manager_;
 
     void post_chat_event(const ChatEvent& event);
 };

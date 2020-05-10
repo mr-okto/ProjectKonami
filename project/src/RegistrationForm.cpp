@@ -8,7 +8,7 @@
 
 RegistrationForm::RegistrationForm()
     :Wt::WContainerWidget(),
-    is_valid_(false),
+    is_valid_(true),
     error_(ErrorType::None)
 {
     setFloatSide(Wt::Side::CenterX);
@@ -20,9 +20,12 @@ void RegistrationForm::create_UI() {
     vLayout->setContentsMargins(10,10,10,10);
 
     auto line = vLayout->addWidget(std::make_unique<Wt::WContainerWidget>(), 0,  Wt::AlignmentFlag::Middle);
-    line->addWidget(std::make_unique<Wt::WLabel>("User name: "));
+    auto label_ = std::make_unique<Wt::WLabel>("User name: ");
+    auto label = label_.get();
+    line->addWidget(std::move(label_));
     username_edit_ = line->addWidget(std::make_unique<Wt::WLineEdit>());
     username_edit_->setFloatSide(Wt::Side::Right);
+    label->setBuddy(username_edit_);
 
     line = vLayout->addWidget(std::make_unique<Wt::WContainerWidget>(), 0,  Wt::AlignmentFlag::Middle);
     line->addWidget(std::make_unique<Wt::WText>("Choose password: "));
@@ -34,7 +37,7 @@ void RegistrationForm::create_UI() {
     line->addWidget(std::make_unique<Wt::WText>("Repeat password: "));
     password_edit_second_ = line->addWidget(std::make_unique<Wt::WLineEdit>());
     password_edit_second_->setFloatSide(Wt::Side::Right);
-    password_edit_first_->setAttributeValue("type", "password");
+    password_edit_second_->setAttributeValue("type", "password");
 
 }
 
