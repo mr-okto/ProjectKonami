@@ -2,23 +2,22 @@
 #include <vector>
 #include <tuple>
 #include <boost/filesystem.hpp>
-using boost::filesystem::path;
-using boost::filesystem::create_directory;
+#include <random>
 using namespace cv;
 
-void process_image(const std::string &input_path, const std::string &output_path, unsigned int blur_lvl) {
+bool process_image(const std::string &input_path, const std::string &output_path, unsigned int blur_lvl) {
   Mat image = imread(input_path, IMREAD_UNCHANGED);
   //check whether the image is loaded or not
   if (image.data == nullptr) {
-    throw std::runtime_error("Image could not be loaded");
+    return false;
   }
   if (!blur_lvl) {
     imwrite(output_path, image);
-    return;
+    return true;
   }
   // Blur matrix size
-  int m_x = image.cols * blur_lvl / 20;
-  int m_y = image.rows * blur_lvl / 20;
+  unsigned int m_x = image.cols * blur_lvl / 20;
+  unsigned int m_y = image.rows * blur_lvl / 20;
   if (!(m_x % 2)) {
       m_x += 1; // must be even number
   }
@@ -28,6 +27,7 @@ void process_image(const std::string &input_path, const std::string &output_path
   Mat result;
   GaussianBlur(image, result, Size(m_x, m_y), 0, 0);
   imwrite(output_path, result);
+  return true;
 }
 
 Mat gaussian_blur(const Mat &image, int m_dim) {
@@ -69,22 +69,52 @@ Mat gaussian_blur(const Mat &image, int m_dim) {
     return result;
 }
 
-std::vector<std::string> create_blurred_copies(const std::string &image_path, const std::string &dest_dir,
-                                               long long user_id) {
+std::string random_fname(int len)
+{
+  static std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  static std::mt19937 engine{std::random_device{}()};
+  static std::uniform_int_distribution<std::string::size_type> pick(0, alphabet.size() - 1);
+
+  std::string result(len, ' ');
+  for (int i = 0; i < len; i++) {
+    result[i] = alphabet[pick(engine)];
+  }
+  return result;
+}
+
+
+// Non thread safe
+// File format: {dest_dir}/{user_id % folders_count}/img_{random_fname(32)}_{access_lvl}.jpg
+// Example (dest_dir == ".", user_id = 228): ./28/img_kgeuFGTlGubSgtdSoRiGGufMEdDugTiD_5.jpg
+std::vector<std::string> create_blurred_copies(const std::string &image_path,
+                                               const std::string &dest_dir,
+                                               long long user_id,
+                                               unsigned int blur_levels) {
   std::vector<std::string> filenames;
-  int copies_count = 5;
-  time_t seed = std::time(nullptr);
-  path p_base(dest_dir);
+  int folders_count = 100;
+  boost::filesystem::path p_base(dest_dir);
   // Images are stored in folders
-  p_base /= std::to_string(user_id % 100);
-  create_directory(p_base);
+  p_base /= std::to_string(user_id % folders_count);
+  create_directories(p_base);
   p_base /= "img_";
+  boost::filesystem::path p_test;
+  std::string f_template;
+  do {
+    p_test = p_base;
+    f_template = random_fname(32);
+    p_test += f_template;
+    p_test += "_0.jpg";
+  } while (boost::filesystem::exists(p_test));
+
   std::stringstream final_path;
-  for (int i = 0; i < copies_count; i++) {
+  for (unsigned int i = 0; i < blur_levels; i++) {
+    final_path.str(std::string());
     final_path.clear();
-    final_path << p_base.string() << user_id << "_" << seed << "_" << i << ".jpg";
-    process_image(image_path, final_path.str(), i);
-    filenames.emplace_back(final_path.str());
+    final_path << p_base.string() << f_template << "_" << i << ".jpg";
+    if (process_image(image_path, final_path.str(), i)) {
+      filenames.emplace_back(final_path.str());
+    }
   }
   return filenames;
 }
