@@ -12,9 +12,10 @@ class UserManager {
   UserModelPtr create_user(const std::string &username, const std::string &pwd_hash);
   UserModelPtr get_user(IdType id);
   UserModelPtr get_user(const std::string &username);
-  void update_username(IdType user_id, const std::string &username);
-  void update_password(IdType user_id, const std::string &pwd_hash);
+  bool update_username(IdType user_id, const std::string &username);
+  bool update_password(IdType user_id, const std::string &pwd_hash);
   PictureModelPtr add_picture(IdType user_id, const std::string &path, int access_lvl);
+  PictureModelPtr add_picture(const UserModelPtr &user, const std::string &path, int access_lvl);
 };
 
 template< class DBConnector >
@@ -51,29 +52,46 @@ UserModelPtr UserManager<DBConnector>::get_user(const std::string &username) {
 }
 
 template< class DBConnector >
-void UserManager<DBConnector>::update_username(IdType user_id, const std::string &username) {
+bool UserManager<DBConnector>::update_username(IdType user_id, const std::string &username) {
   db_session_.start_transaction();
   UserModelPtr user = get_user(user_id);
-  user.modify()->username_ = username;
+  bool result = (bool) user;
+  if (result) {
+    user.modify()->username_ = username;
+  }
   db_session_.end_transaction();
+  return result;
 }
 
 template< class DBConnector >
-void UserManager<DBConnector>::update_password(IdType user_id, const std::string &pwd_hash) {
+bool UserManager<DBConnector>::update_password(IdType user_id, const std::string &pwd_hash) {
   db_session_.start_transaction();
   UserModelPtr user = get_user(user_id);
-  user.modify()->pwd_hash_ = pwd_hash;
+  bool result = (bool) user;
+  if (result) {
+    user.modify()->pwd_hash_ = pwd_hash;
+  }
   db_session_.end_transaction();
+  return result;
 }
 
 template< class DBConnector >
 PictureModelPtr UserManager<DBConnector>::add_picture(IdType user_id, const std::string &path, int access_lvl) {
+  UserModelPtr user = get_user(user_id);
+  if (!user) {
+    return nullptr;
+  }
+  return add_picture(user, path, access_lvl);
+}
+
+template< class DBConnector >
+PictureModelPtr UserManager<DBConnector>::add_picture(const UserModelPtr &user, const std::string &path, int access_lvl) {
   auto new_picture = std::make_unique<PictureModel>(PictureModel());
   new_picture->path_ = path;
   new_picture->access_lvl_ = access_lvl;
 
   db_session_.start_transaction();
-  new_picture->user_ = db_session_.template get_by_id<UserModel>(user_id);
+  new_picture->user_ = user;
   PictureModelPtr result = db_session_.add(std::move(new_picture));
   db_session_.end_transaction();
   return result;
