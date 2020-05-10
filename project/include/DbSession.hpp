@@ -64,7 +64,6 @@ void DbSession<DBConnector>::connect(const std::string &host,
   db_session_.mapClass<UserModel>("user");
   db_session_.mapClass<PictureModel>("picture");
   db_session_.mapClass<ContentModel>("content");
-  db_session_.createTables();
 }
 
 template<class DBConnector>
