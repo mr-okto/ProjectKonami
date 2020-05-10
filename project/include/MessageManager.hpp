@@ -38,7 +38,7 @@ template < class DBConnector >
 Messages MessageManager<DBConnector>::get_latest_messages(IdType dialogue_id, time_t start) {
   db_session_.start_transaction();
   Messages result = db_session_.template find<MessageModel>().where("dialogue_id = ?").bind(dialogue_id)
-                                                             .where("time >= ?").bind(start);
+                                                             .where("creation_dt >= ?").bind(start);
   db_session_.end_transaction();
   return result;
 }
