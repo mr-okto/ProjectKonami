@@ -10,6 +10,7 @@ class DialogueManager {
   explicit DialogueManager(DbSession<DBConnector> &db_session);
   DialogueModelPtr get_dialogue(IdType member_a, IdType member_b);
   std::tuple<DialogueModelPtr, bool> get_or_create_dialogue(IdType member_a, IdType member_b);
+  std::tuple<DialogueModelPtr, bool> get_or_create_dialogue(const UserModelPtr &member_a, const UserModelPtr &member_b);
 };
 
 template < class DBConnector >
@@ -32,18 +33,28 @@ DialogueModelPtr DialogueManager<DBConnector>::get_dialogue(IdType member_a, IdT
 }
 
 template < class DBConnector >
-std::tuple<DialogueModelPtr, bool> DialogueManager<DBConnector>::get_or_create_dialogue(IdType member_a,
-                                                                                        IdType member_b) {
+std::tuple<DialogueModelPtr, bool> DialogueManager<DBConnector>::get_or_create_dialogue(const UserModelPtr &member_a,
+                                                                                        const UserModelPtr &member_b) {
   DialogueModelPtr result = get_dialogue(member_a, member_b);
   bool is_new = (result)? false : true;
   if (not result) {
     auto new_dialogue = std::make_unique<DialogueModel>(DialogueModel());
     result = db_session_.add(std::move(new_dialogue));
-    UserModelPtr member_ptr = db_session_.template get_by_id<UserModel>(member_a);
-    result.modify()->members_.insert(member_ptr);
-    member_ptr = db_session_.template get_by_id<UserModel>(member_b);
-    result.modify()->members_.insert(member_ptr);
+    result.modify()->members_.insert(member_a);
+    result.modify()->members_.insert(member_b);
   }
   db_session_.end_transaction();
   return std::tuple(result, is_new);
+}
+
+
+template < class DBConnector >
+std::tuple<DialogueModelPtr, bool> DialogueManager<DBConnector>::get_or_create_dialogue(IdType member_a,
+                                                                                        IdType member_b) {
+  UserModelPtr member_a_ptr = db_session_.template get_by_id<UserModel>(member_a);
+  UserModelPtr member_b_ptr = db_session_.template get_by_id<UserModel>(member_b);
+  if (member_a_ptr && member_b_ptr) {
+    return get_or_create_dialogue(member_a_ptr, member_b_ptr);
+  }
+  return std::tuple(nullptr, false);
 }

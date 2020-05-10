@@ -11,9 +11,11 @@ class MessageManager {
   MessageModelPtr create_msg(IdType dialogue_id,
                              IdType author_id, const std::string &text);
   Messages get_latest_messages(IdType dialogue_id, time_t start);
-  void mark_read(IdType msg_id);
-  void mark_read(MessageModelPtr msg);
+  bool mark_read(IdType msg_id);
+  void mark_read(MessageModelPtr &msg);
   ContentModelPtr add_content(IdType msg_id, ContentModel::Type type, const std::string &path,
+                              const std::string &metadata = {});
+  ContentModelPtr add_content(MessageModelPtr &msg, ContentModel::Type type, const std::string &path,
                               const std::string &metadata = {});
 };
 
@@ -46,15 +48,20 @@ Messages MessageManager<DBConnector>::get_latest_messages(IdType dialogue_id, ti
 }
 
 template<class DBConnector>
-void MessageManager<DBConnector>::mark_read(IdType msg_id) {
+bool MessageManager<DBConnector>::mark_read(IdType msg_id) {
+  // Returns false on invalid id
   db_session_.start_transaction();
   MessageModelPtr msg = db_session_.template get_by_id<MessageModel>(msg_id);
-  msg.modify()->is_read_ = true;
+  bool result = (bool) msg;
+  if (msg) {
+    msg.modify()->is_read_ = true;
+  }
   db_session_.end_transaction();
+  return result;
 }
 
 template<class DBConnector>
-void MessageManager<DBConnector>::mark_read(MessageModelPtr msg) {
+void MessageManager<DBConnector>::mark_read(MessageModelPtr &msg) {
   db_session_.start_transaction();
   msg.modify()->is_read_ = true;
   db_session_.end_transaction();
@@ -63,12 +70,22 @@ void MessageManager<DBConnector>::mark_read(MessageModelPtr msg) {
 template<class DBConnector>
 ContentModelPtr MessageManager<DBConnector>::add_content(IdType msg_id, ContentModel::Type type,
                                                          const std::string &path, const std::string &metadata) {
+  MessageModelPtr message = db_session_.template get_by_id<MessageModel>(msg_id);
+  if (!message) {
+    return nullptr;
+  }
+  return add_content(message, type, path, metadata);
+}
+
+template<class DBConnector>
+ContentModelPtr MessageManager<DBConnector>::add_content(MessageModelPtr &msg, ContentModel::Type type,
+                                                         const std::string &path, const std::string &metadata) {
   auto new_content = std::make_unique<ContentModel>(ContentModel());
   new_content->type_ = type;
   new_content->file_path_ = path;
   new_content->metadata_ = metadata;
   db_session_.start_transaction();
-  new_content->message_ = db_session_.template get_by_id<MessageModel>(msg_id);
+  new_content->message_ = msg;
   ContentModelPtr result = db_session_.add(std::move(new_content));
   db_session_.end_transaction();
   return result;
