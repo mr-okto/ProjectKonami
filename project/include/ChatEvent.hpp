@@ -3,6 +3,7 @@
 #include <Wt/WString.h>
 #include <Wt/WEvent.h>
 #include <Wt/WSignal.h>
+#include <DialogueService.hpp>
 
 #include <cstdint>
 #include <string>
@@ -25,10 +26,11 @@ public:
           data_(data),
           dialogue_id_(-1) { }
 
-    ChatEvent(uint32_t dialogue_id, const Wt::WString& username, Type type = Type::NEW_MSG)
+    ChatEvent(const chat::Message& message, const Wt::WString& username, Type type = Type::NEW_MSG)
         : type_(type),
           username_(username),
-          dialogue_id_(dialogue_id) {}
+          dialogue_id_(message.dialogue_id),
+          message_(message) {}
 
     ChatEvent(Type type, const Wt::WString& username)
         : type_(type),
@@ -44,6 +46,7 @@ private:
   int dialogue_id_;
   Wt::WString data_;
   Wt::WString username_;
+  chat::Message message_;
 
     ChatEvent(Type type,
                   const Wt::WString& username,

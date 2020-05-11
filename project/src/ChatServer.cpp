@@ -123,12 +123,12 @@ std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id, const std:
     return dialogue_service_.get_messages(dialogue_id, username);
 }
 
-void ChatServer::send_msg(const chat::Message& message, const chat::User& user) {
+void ChatServer::send_msg(const chat::Message& message, const chat::User& receiver) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    dialogue_service_.post_message(message);
-    if (online_users_.count(user.username)) {
-        notify_user(ChatEvent(message.dialogue_id, Wt::WString(user.username)));
+    if (online_users_.count(receiver.username)) {
+        notify_user(ChatEvent(message, Wt::WString(receiver.username)));
     }
+    dialogue_service_.post_message(message);
 }
 
 bool ChatServer::create_dialogue(const Wt::WString& creater, const Wt::WString& receiver) {

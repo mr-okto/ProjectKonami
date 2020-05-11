@@ -274,7 +274,7 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
         update_dialogue_list();
         if (dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
-            update_messages(current_dialogue_);
+            print_message(event.message_);
         }
     }
 }
@@ -284,6 +284,7 @@ void ChatWidget::fill_fileuploader() {
     Wt::WFileUpload *fu = fileUploader_->addNew<Wt::WFileUpload>();
     Wt::WText *out = fileUploader_->addNew<Wt::WText>();
 
+    fu->setFilters("image/*");  // TODO
     fu->setFileTextSize(100); // Set the maximum file size to 100 kB.
     fu->setProgressBar(Wt::cpp14::make_unique<Wt::WProgressBar>());
 
@@ -341,7 +342,7 @@ std::string ChatWidget::get_message_format(const std::string& username,
     char       buf[80];
     ts = localtime(&time);
     strftime(buf, sizeof(buf), "%H:%M", ts);
-    if (is_read) {
+    if (is_read && username == username_.toUTF8()) {
         return username + ": " + message_content + " " + std::string(buf) + " True";
     } else {
         return username + ": " + message_content + " " + std::string(buf);
@@ -368,17 +369,11 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
 void ChatWidget::print_message(const chat::Message& message) {
     // Message text
     Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-    if (message.user.username == username_.toUTF8()) {
-        w->setText(get_message_format(message.user.username, 
-                                  message.content.message, 
-                                  message.time, 
-                                  message.is_read));
-    } else {
-        w->setText(get_message_format(message.user.username, 
-                                  message.content.message, 
-                                  message.time, 
-                                  false));
-    }
+    w->setText(get_message_format(message.user.username, 
+                            message.content.message,
+                            message.time,
+                            message.is_read));
+   
     w->setInline(false);
 
     // Message media
@@ -386,6 +381,7 @@ void ChatWidget::print_message(const chat::Message& message) {
         auto image = std::make_shared<Wt::WFileResource>("image/*", message.content.file_path);
         messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(image)));
     }
+
     Wt::WApplication *app = Wt::WApplication::instance();
     app->doJavaScript(messages_->jsRef() + ".scrollTop += "
 		       + messages_->jsRef() + ".scrollHeight;");
@@ -427,8 +423,8 @@ void ChatWidget::send_message() {
             receiver = dialogues_[current_dialogue_].second_user;
         }
 
-        server_.send_msg(message, receiver);
         print_message(message);
+        server_.send_msg(message, receiver);
     }
 }
 
