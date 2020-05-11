@@ -50,6 +50,7 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::
     std::cout << std::endl << "In get messages func dialogue service" << std::endl;
     auto messages = message_manager_.get_latest_messages(dialogue_id, 0);
     std::vector<Message> return_vec;
+    std::vector<std::pair<int, std::string>> messages_ids;
     session_.start_transaction();
     for (const auto& item : messages) {
         Content content = {
@@ -70,15 +71,17 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::
             item->creation_dt_,
             item->is_read_,
         };
-
+        messages_ids.push_back({item.id(), item->author_->username_});
         return_vec.push_back(message);
     }
     session_.end_transaction();
-    /*for (auto& item : return_vec) {
-        if (item.user.username != username) {
-            item.is_read = true;
+    session_.start_transaction();
+    for (const auto& item : messages_ids) {
+        if (item.second != username) {
+            message_manager_.mark_read(item.first);
         }
-    }*/
+    }
+    session_.end_transaction();
     std::cout << std::endl << "leave get messages func dialogue service" << std::endl;
     return return_vec;
 }
