@@ -6,6 +6,7 @@
 #include <DialogueManager.hpp>
 #include <MessageManager.hpp>
 #include <UserManager.hpp>
+#include <Models.hpp>
 
 #include <ctime>
 #include <chrono>
@@ -22,8 +23,8 @@ struct Content {
     enum FileType {
         IMAGE,
         VIDEO,
-        LOCATION,
-        WITHOUTFILE,
+        DOCUMENT,
+        OTHER,
     };
     FileType type;
     std::string message;
@@ -47,6 +48,7 @@ struct Message {
     User user;
     Content content;
     std::time_t time;
+    bool is_read;
 };
 
 static bool operator==(const Message& lhs, const Message& rhs) {
@@ -68,19 +70,18 @@ class DialogueService {
         message_manager_(session),
         user_manager_(session) {}
 
+    ContentModel::Type parse_type(Content::FileType type);
+    Content::FileType parse_type(ContentModel::Type type);
+
     std::vector<Dialogue> get_dialogues(const std::string& username);
-    std::vector<Message> get_messages(uint dialog_id);
-    bool create_dialogue(const chat::User& first_user, const chat::User& second_user);
+    std::vector<Message> get_messages(uint dialog_id, const std::string& username);
+    bool create_dialogue(uint first_user_id, uint second_user_id);
     void post_message(const Message& message);
 
  private:
-    //std::map<std::string, std::vector<Dialogue>> dialogues_;
-    //std::map<uint, std::vector<Message>> messages_;
-
     DbSession<Wt::Dbo::backend::Postgres>& session_;
     DialogueManager<Wt::Dbo::backend::Postgres> dialogue_manager_;
     MessageManager<Wt::Dbo::backend::Postgres> message_manager_;
     UserManager<Wt::Dbo::backend::Postgres> user_manager_;
-    //FIXME
 };
 }

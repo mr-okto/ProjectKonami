@@ -40,7 +40,7 @@ public:
     void close_same_session(const Wt::WString& username_);
 
     std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
-    std::vector<chat::Message> get_messages(uint dialogue_id);
+    std::vector<chat::Message> get_messages(uint dialogue_id, const std::string& username);
     void send_msg(const chat::Message& message, const chat::User& user);
 
     bool create_dialogue(const Wt::WString& creater, const Wt::WString& receiver);

@@ -199,7 +199,7 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
   * --------------------------------------------
   * | message edit area                        |
   * --------------------------------------------
-  * | WHBoxLayout                              |
+  * |  upload file                             |
   * | send | logout                            |
   * --------------------------------------------
   */
@@ -250,7 +250,6 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
 void ChatWidget::sign_out() {
     if (server_.sign_out(username_)) {
         disconnect();
-
         logout_signal_.emit(Wt::WString());
     }
 }
@@ -271,7 +270,7 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
         update_dialogue_list();
     }
 
-    if (event.type_ == ChatEvent::NEW_MSG ) {
+    if (event.type_ == ChatEvent::NEW_MSG) {
         update_dialogue_list();
         if (dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
@@ -324,44 +323,38 @@ void ChatWidget::update_dialogue_list() {
         dialogues_[username] = dialogue;
         l->addItem(username);
     }
-    l->activated().connect([this, l] {
+    l->activated().connect([=] {
+        std::cout << std::endl << "In activation function" << std::endl;
         this->update_messages(l->currentText());
         current_dialogue_ = l->currentText();
         this->sendButton_->enable();
         this->messageEdit_->enable();
+        std::cout << std::endl << "Leave activation function" << std::endl;
     });
 }
 
 std::string ChatWidget::get_message_format(const std::string& username,
                                            const std::string& message_content, 
-                                           const time_t& time) {
+                                           const time_t& time,
+                                           bool is_read) {
     struct tm *ts;
     char       buf[80];
     ts = localtime(&time);
     strftime(buf, sizeof(buf), "%H:%M", ts);
-    return username + ": " + message_content + " " + std::string(buf);
+    if (is_read) {
+        return username + ": " + message_content + " " + std::string(buf) + " True";
+    } else {
+        return username + ": " + message_content + " " + std::string(buf);
+    }
 }
 
 void ChatWidget::update_messages(const Wt::WString& username) {
+    std::cout << std::endl << "In update messages func" << std::endl;
     messages_->clear();
-    for (const auto& message : server_.get_messages(dialogues_[username].dialogue_id)) {
-
-        // Message text
-        Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-        if (message.user.username != username_) {
-            // TODO
-        } else {
-            // TODO
-        }
-        w->setText(get_message_format(message.user.username, message.content.message, message.time));
-        w->setInline(false);
-
-        // Message media
-        if (message.content.type == chat::Content::IMAGE) {
-            auto imageFile = std::make_shared<Wt::WFileResource>("image", message.content.file_path);
-            messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(imageFile)));
-        }
+    for (const auto& message : server_.get_messages(dialogues_[username].dialogue_id, username_.toUTF8())) {
+        print_message(message);
     }
+    std::cout << std::endl << "Leave update messages func" << std::endl;
 }
 
 bool ChatWidget::create_dialogue(const Wt::WString& username) {
@@ -372,25 +365,59 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
     return false;
 }
 
+void ChatWidget::print_message(const chat::Message& message) {
+    // Message text
+    Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
+    if (message.user.username == username_.toUTF8()) {
+        w->setText(get_message_format(message.user.username, 
+                                  message.content.message, 
+                                  message.time, 
+                                  message.is_read));
+    } else {
+        w->setText(get_message_format(message.user.username, 
+                                  message.content.message, 
+                                  message.time, 
+                                  false));
+    }
+    w->setInline(false);
+
+    // Message media
+    if (message.content.type == chat::Content::IMAGE) {  // TODO
+        auto image = std::make_shared<Wt::WFileResource>("image/*", message.content.file_path);
+        messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(image)));
+    }
+    Wt::WApplication *app = Wt::WApplication::instance();
+    app->doJavaScript(messages_->jsRef() + ".scrollTop += "
+		       + messages_->jsRef() + ".scrollHeight;");
+}
+
 void ChatWidget::send_message() {
     if (!messageEdit_->text().empty() || is_uploaded) {
         chat::Message message;
         message.dialogue_id = dialogues_[current_dialogue_].dialogue_id;
         message.user = {user_id_, username_.toUTF8()};
         message.time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        message.is_read = false;
 
         std::string filename = "NULL";
         if (is_uploaded) {
-            filename = copy_file(fileUploaderPtr_->spoolFileName(), 
-                                 fileUploaderPtr_->clientFileName().toUTF8());
-            message.content = {chat::Content::IMAGE, // FIXME
-                               messageEdit_->text().toUTF8(), 
-                               filename};
+            filename = copy_file(
+                fileUploaderPtr_->spoolFileName(), 
+                fileUploaderPtr_->clientFileName().toUTF8()
+            );
+            message.content = {
+                chat::Content::IMAGE, // FIXME
+                messageEdit_->text().toUTF8(), 
+                filename,
+            };
             is_uploaded = false;
+            fill_fileuploader();
         } else {
-            message.content = {chat::Content::WITHOUTFILE, 
-                               messageEdit_->text().toUTF8(), 
-                               "NULL"};
+            message.content = {
+                chat::Content::OTHER, 
+                messageEdit_->text().toUTF8(), 
+                "NULL"
+            };
         }
                                  
         chat::User receiver;
@@ -401,18 +428,7 @@ void ChatWidget::send_message() {
         }
 
         server_.send_msg(message, receiver);
-
-        // Message text
-        Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-        w->setText(get_message_format(message.user.username, message.content.message, message.time));
-        w->setInline(false);
-
-        // Message media
-        if (message.content.type == chat::Content::IMAGE) {  // TODO
-            auto imageFile = std::make_shared<Wt::WFileResource>("image", filename);
-            messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(imageFile)));
-            fill_fileuploader();
-        }
+        print_message(message);
     }
 }
 
@@ -435,11 +451,11 @@ void ChatWidget::update_users_list() {
 }
 
 std::string ChatWidget::copy_file(const std::string& file_path, const std::string& filename) {
-    std::string result_filename = "./photo/" + filename;
+    std::string result_filename = "./photo/" + filename;  // FIXME
     std::ifstream in(file_path, std::ios::binary | std::ios::in);
     std::ofstream out(result_filename, std::ios::binary | std::ios::out);
 
-    char byte;
+    char byte = 0;
     while (in.read(&byte, sizeof(char))) {
         out.write(&byte, sizeof(char));
     }

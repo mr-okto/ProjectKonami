@@ -1,17 +1,35 @@
 #include "DialogueService.hpp"
 #include <iostream>
 #include <algorithm>
+#include <utility>
 
 namespace chat {
 
-std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username) {
-    /*if (dialogues_.count(username)) {
-        auto dialogues = dialogues_[username];
-        sort(dialogues.begin(), dialogues.end());
-        return dialogues;
+ContentModel::Type DialogueService::parse_type(Content::FileType type) {
+    if (type == Content::IMAGE) {
+        return ContentModel::IMAGE;
+    } else if (type == Content::VIDEO) {
+        return ContentModel::VIDEO;
+    } else if (type == Content::DOCUMENT) {
+        return ContentModel::DOCUMENT;  
     } else {
-        return std::vector<Dialogue>();
-    }*/
+        return ContentModel::OTHER;
+    }
+}
+
+Content::FileType DialogueService::parse_type(ContentModel::Type type) {
+    if (type == ContentModel::IMAGE) {
+        return Content::IMAGE;
+    } else if (type == ContentModel::VIDEO) {
+        return Content::VIDEO;
+    } else if (type == ContentModel::DOCUMENT) {
+        return Content::DOCUMENT;  
+    } else {
+        return Content::OTHER;
+    }
+}
+
+std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username) {
     auto user = user_manager_.get_user(username);
     auto dialogues = user->dialogues_;
     std::vector<Dialogue> return_vec;
@@ -28,83 +46,55 @@ std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username
     return return_vec;
 }
 
-std::vector<Message> DialogueService::get_messages(uint dialogue_id) {
+std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::string& username) {
+    std::cout << std::endl << "In get messages func dialogue service" << std::endl;
     auto messages = message_manager_.get_latest_messages(dialogue_id, 0);
     std::vector<Message> return_vec;
     session_.start_transaction();
     for (const auto& item : messages) {
-        Content content = {Content::WITHOUTFILE, item->text_, "NULL"};
-        User user = {(uint)item->author_.id(), item->author_->username_};
-        Message message = {(uint)dialogue_id, user, content, item->creation_dt_};
+        Content content = {
+            parse_type((*item->content_elements_.begin())->type_),
+            item->text_,
+            (*item->content_elements_.begin())->file_path_,
+        };
+
+        User user = {(
+            uint)item->author_.id(),
+            item->author_->username_
+        };
+
+        Message message = {
+            (uint)dialogue_id, 
+            user, 
+            content, 
+            item->creation_dt_,
+            item->is_read_,
+        };
+
         return_vec.push_back(message);
     }
     session_.end_transaction();
-
+    /*for (auto& item : return_vec) {
+        if (item.user.username != username) {
+            item.is_read = true;
+        }
+    }*/
+    std::cout << std::endl << "leave get messages func dialogue service" << std::endl;
     return return_vec;
 }
 
-bool DialogueService::create_dialogue(const chat::User& first_user, const chat::User& second_user) {
-    /*if (dialogues_.count(first_user.username)) {
-        for (const auto& dialogue: dialogues_[first_user.username]) {
-            if (dialogue.first_user.username == first_user.username &&
-                    dialogue.second_user.username == second_user.username) {
-                return false;
-            } else if (dialogue.first_user.username == second_user.username && 
-                    dialogue.second_user.username == first_user.username) {
-                return false;
-            }
-        }
-        Dialogue tmp = {unique_dialogue_id,
-                        first_user, 
-                        second_user, 
-                        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
-        dialogues_[first_user.username].push_back(tmp);
-    } else {
-        std::vector<Dialogue> vec = {{unique_dialogue_id, 
-                                      first_user, 
-                                      second_user, 
-                                      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())}};
-        dialogues_[first_user.username] = vec;
-    }
-
-    if (dialogues_.count(second_user.username)) {
-        for (const auto& dialogue : dialogues_[second_user.username]) {
-            if (dialogue.first_user.username == first_user.username &&
-                    dialogue.second_user.username == second_user.username) {
-                return false;
-            } else if (dialogue.first_user.username == second_user.username &&
-                     dialogue.second_user.username == first_user.username) {
-                return false;
-            }
-        }
-        Dialogue tmp = {unique_dialogue_id, 
-                        first_user, 
-                        second_user, 
-                        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
-        dialogues_[second_user.username].push_back(tmp);
-    } else {
-        std::vector<Dialogue> vec = {{unique_dialogue_id, 
-                                      first_user, 
-                                      second_user, 
-                                      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())}};
-        dialogues_[second_user.username] = vec;
-    }
-    unique_dialogue_id++;
-    return true;*/
-    dialogue_manager_.get_dialogue(first_user.user_id, second_user.user_id);
-    return true;
+bool DialogueService::create_dialogue(uint first_user_id, uint second_user_id) {
+    return std::get<1>(
+        dialogue_manager_.get_or_create_dialogue(first_user_id, second_user_id)
+    );
 }
 
 void DialogueService::post_message(const Message& message) {
-    /*messages_[message.dialogue_id].push_back(message);
-    std::time_t current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    for (auto& pairs : dialogues_) {
-        for (auto& dialogue : pairs.second) {
-            if (dialogue.dialogue_id == message.dialogue_id) {
-                dialogue.last_msg_time = current_time;
-            }
-        }
-    }*/
-    message_manager_.create_msg(message.dialogue_id, message.user.user_id, message.content.message);
+    auto message_model = message_manager_.create_msg(
+        message.dialogue_id, message.user.user_id, message.content.message
+    );
+    message_manager_.add_content(
+        message_model, parse_type(message.content.type), message.content.file_path
+    );
 }
 }

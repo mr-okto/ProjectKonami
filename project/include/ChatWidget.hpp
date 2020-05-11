@@ -62,11 +62,13 @@ private:
     chat::Dialogue get_dialogue(const Wt::WString& dialogue_name) {return dialogues_[dialogue_name];}
     std::string get_message_format(const std::string& username,
                                    const std::string& message_content, 
-                                   const time_t& time);
+                                   const time_t& time,
+                                   bool is_read);
 
     void update_users_list();
     void update_dialogue_list();
     void update_messages(const Wt::WString& username);
+    void print_message(const chat::Message& message);
     bool create_dialogue(const Wt::WString& username);
     void send_message();
 

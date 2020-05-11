@@ -35,7 +35,7 @@ DialogueModelPtr DialogueManager<DBConnector>::get_dialogue(IdType member_a, IdT
 template < class DBConnector >
 std::tuple<DialogueModelPtr, bool> DialogueManager<DBConnector>::get_or_create_dialogue(const UserModelPtr &member_a,
                                                                                         const UserModelPtr &member_b) {
-  DialogueModelPtr result = get_dialogue(member_a, member_b);
+  DialogueModelPtr result = get_dialogue(member_a.id(), member_b.id());
   bool is_new = (result)? false : true;
   if (not result) {
     auto new_dialogue = std::make_unique<DialogueModel>(DialogueModel());
