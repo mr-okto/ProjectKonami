@@ -285,7 +285,7 @@ void ChatWidget::fill_fileuploader() {
     Wt::WText *out = fileUploader_->addNew<Wt::WText>();
 
     fu->setFilters("image/*");  // TODO
-    fu->setFileTextSize(100); // Set the maximum file size to 100 kB.
+    fu->setFileTextSize(10000); // Set the maximum file size to 10000 kB.
     fu->setProgressBar(Wt::cpp14::make_unique<Wt::WProgressBar>());
 
     // File upload automatically
