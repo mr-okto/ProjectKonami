@@ -30,19 +30,28 @@ struct Content {
     std::string message;
     std::string file_path;
 
-    /* Content(FileType type, const std::string& message, const std::string& file_path) :
+    explicit Content(const std::string& message = "") :
+        type(OTHER),
+        message(message),
+        file_path("NULL") {}
+
+    Content(FileType type, const std::string& message, const std::string& file_path) :
         type(type),
         message(message),
-        file_path(file_path) {}*/
+        file_path(file_path) {}
 };
 
 struct User {
     uint user_id;
     std::string username;
 
-    /* User(uint user_id, const std::string& username) :
+    User() : 
+        user_id(0),
+        username("") {}
+
+    User(uint user_id, const std::string& username) :
         user_id(user_id),
-        username(username) {}*/
+        username(username) {}
 };
 
 struct Dialogue {
@@ -51,11 +60,15 @@ struct Dialogue {
     User second_user;
     std::time_t last_msg_time;
 
-    /* Dialogue(uint dialogue_id, const User& first_user, const User& second_user, time_t last_msg_time=0) :
+    Dialogue() :
+        dialogue_id(0),
+        last_msg_time(0) {}
+
+    Dialogue(uint dialogue_id, const User& first_user, const User& second_user, time_t last_msg_time=0) :
         dialogue_id(dialogue_id),
         first_user(first_user),
         second_user(second_user),
-        last_msg_time(last_msg_time) {}*/
+        last_msg_time(last_msg_time) {}
 
 };
 
@@ -67,7 +80,13 @@ struct Message {
     bool is_read;
     uint message_id;
 
-    /* Message(uint dialogue_id, const User& user, const Content& content) :
+    Message() : 
+        dialogue_id(0),
+        time(0),
+        is_read(false),
+        message_id(0) {}
+
+    Message(uint dialogue_id, const User& user, const Content& content) :
         dialogue_id(dialogue_id),
         user(user),
         content(content),
@@ -86,7 +105,7 @@ struct Message {
         content(content),
         time(time),
         is_read(is_read),
-        message_id(message_id) {} */
+        message_id(message_id) {}
 };
 
 static bool operator==(const Message& lhs, const Message& rhs) {

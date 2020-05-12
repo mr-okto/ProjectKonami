@@ -37,10 +37,9 @@ std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username
     for (const auto& item : dialogues) {
         std::vector<User> users;
         for (const auto& member : item->members_) {
-            users.push_back({(uint)member.id(), member->username_});
+            users.push_back(User((uint)member.id(), member->username_));
         }
-        Dialogue dialogue = {(uint)item.id(), users[0], users[1], (time_t)0};
-        return_vec.push_back(dialogue);
+        return_vec.push_back(Dialogue((uint)item.id(), users[0], users[1]));
     }
     session_.end_transaction();
     return return_vec;
@@ -52,24 +51,25 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::
     session_.start_transaction();
     for (const auto& item : messages) {
         auto message_model = *item->content_elements_.begin();
-        Content content = {
+        Content content(
             parse_type(message_model->type_),
             item->text_,
-            message_model->file_path_,
-        };
+            message_model->file_path_
+        );
 
-        User user = {
+        User user(
             (uint)item->author_.id(),
-            item->author_->username_,
-        };
-        Message message = {
+            item->author_->username_
+        );
+
+        Message message(
             (uint)dialogue_id, 
             user, 
             content, 
             item->creation_dt_,
             item->is_read_,
-            (uint)message_model.id(),
-        };
+            (uint)message_model.id()
+        );
         return_vec.push_back(message);
     }
     session_.end_transaction();

@@ -399,39 +399,32 @@ void ChatWidget::print_message(const chat::Message& message) {
 
 void ChatWidget::send_message() {
     if (!messageEdit_->text().empty() || is_uploaded_) {
-        chat::Message message;
-        message.dialogue_id = dialogues_[current_dialogue_].dialogue_id;
-        message.user = {user_id_, username_.toUTF8()};
-        message.time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        message.is_read = false;
-        message.message_id = 0;
-
+        chat::Content content;
         if (is_uploaded_) {
             std::string filename = copy_file(
                 fileUploaderPtr_->spoolFileName(), 
                 fileUploaderPtr_->clientFileName().toUTF8()
             );
-            message.content = {
+            content = chat::Content(
                 chat::Content::IMAGE, // FIXME
                 messageEdit_->text().toUTF8(), 
-                filename,
-            };
+                filename
+            );
             is_uploaded_ = false;
             fill_fileuploader();
         } else {
-            message.content = {
-                chat::Content::OTHER, 
-                messageEdit_->text().toUTF8(), 
-                "NULL"
-            };
+            content = chat::Content(messageEdit_->text().toUTF8());
         }
-                                 
-        chat::User receiver;
-        if (dialogues_[current_dialogue_].first_user.username != username_) {
-            receiver = dialogues_[current_dialogue_].first_user;
-        } else {
-            receiver = dialogues_[current_dialogue_].second_user;
-        }
+
+        chat::Message message(
+            dialogues_[current_dialogue_].dialogue_id, 
+            chat::User(user_id_, username_.toUTF8()),
+            content
+        );
+          
+        chat::User receiver = dialogues_[current_dialogue_].first_user.username != username_ ? 
+                                dialogues_[current_dialogue_].first_user : 
+                                dialogues_[current_dialogue_].second_user;
 
         print_message(message);
         server_.send_msg(message, receiver);
