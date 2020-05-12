@@ -118,7 +118,7 @@ class DialogueService {
     std::vector<Dialogue> get_dialogues(const std::string& username);
     std::vector<Message> get_messages(uint dialog_id, const std::string& username);
     bool create_dialogue(uint first_user_id, uint second_user_id);
-    void post_message(Message& message);
+    Message post_message(const Message& message);
     void mark_message_as_read(uint message_id);
 
  private:

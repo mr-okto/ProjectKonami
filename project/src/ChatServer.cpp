@@ -118,17 +118,16 @@ std::vector<chat::Dialogue> ChatServer::get_dialogues(const Wt::WString& usernam
 }
 
 std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id, const std::string& username) {
-    std::cout << std::endl << "In get messages func" << std::endl;
     std::unique_lock<std::recursive_mutex> lock(mutex_);
     return dialogue_service_.get_messages(dialogue_id, username);
 }
 
-void ChatServer::send_msg(chat::Message& message, const chat::User& receiver) {
+void ChatServer::send_msg(const chat::Message& message, const chat::User& receiver) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
+    chat::Message msg = dialogue_service_.post_message(message);
     if (online_users_.count(receiver.username)) {
-        notify_user(ChatEvent(message, Wt::WString(receiver.username)));
+        notify_user(ChatEvent(msg, Wt::WString(receiver.username)));
     }
-    dialogue_service_.post_message(message);
 }
 
 bool ChatServer::create_dialogue(const Wt::WString& creater, const Wt::WString& receiver) {
@@ -142,8 +141,11 @@ bool ChatServer::create_dialogue(const Wt::WString& creater, const Wt::WString& 
 }
 
 void ChatServer::mark_message_as_read(const chat::Message& message) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
     dialogue_service_.mark_message_as_read(message.message_id);
-    notify_user(ChatEvent(message, message.user.username, ChatEvent::READ_MESSAGE));
+    if (online_users_.count(message.user.username)) {
+        notify_user(ChatEvent(message, message.user.username, ChatEvent::READ_MESSAGE));
+    }
 }
 
 uint ChatServer::get_user_id(const Wt::WString& username) {

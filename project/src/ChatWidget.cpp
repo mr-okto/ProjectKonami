@@ -25,7 +25,8 @@ ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& ser
     : Wt::WContainerWidget(),
       server_(server),
       username_(username),
-      user_id_(id)
+      user_id_(id),
+      is_uploaded_(false)
 
 {
     connect();
@@ -37,7 +38,8 @@ ChatWidget::ChatWidget(const Wt::WString &username, uint32_t id,
         : Wt::WContainerWidget(),
           server_(server),
           username_(username),
-          user_id_(id)
+          user_id_(id),
+          is_uploaded_(false)
 
 {
     //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
@@ -280,7 +282,8 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
         for (int i = messages_->count() - 1; i >= 0; i--) {
             auto widget = messages_->widget(i);
-            if (dynamic_cast<Wt::WText*>(widget)->text() == get_message_format(event.message_)) {
+            if (typeid(*widget) == typeid(Wt::WText) && 
+                    dynamic_cast<Wt::WText*>(widget)->text() == get_message_format(event.message_)) {
                 Wt::WText* w =  messages_->insertBefore(Wt::cpp14::make_unique<Wt::WText>(), widget);
                 messages_->removeWidget(widget);
                 chat::Message message = event.message_;
@@ -311,7 +314,7 @@ void ChatWidget::fill_fileuploader() {
 
     // React to a succesfull upload.
     fu->uploaded().connect([=] {
-        this->is_uploaded = true;
+        this->is_uploaded_ = true;
         this->sendButton_->enable();
         out->setText("File upload is finished.");
     });
@@ -363,6 +366,9 @@ void ChatWidget::update_messages(const Wt::WString& username) {
     messages_->clear();
     for (const auto& message : server_.get_messages(dialogues_[username].dialogue_id, username_.toUTF8())) {
         print_message(message);
+        if (message.user.username != username_ && !message.is_read) {
+            server_.mark_message_as_read(message);
+        }
     }
 }
 
@@ -392,7 +398,7 @@ void ChatWidget::print_message(const chat::Message& message) {
 }
 
 void ChatWidget::send_message() {
-    if (!messageEdit_->text().empty() || is_uploaded) {
+    if (!messageEdit_->text().empty() || is_uploaded_) {
         chat::Message message;
         message.dialogue_id = dialogues_[current_dialogue_].dialogue_id;
         message.user = {user_id_, username_.toUTF8()};
@@ -400,7 +406,7 @@ void ChatWidget::send_message() {
         message.is_read = false;
         message.message_id = 0;
 
-        if (is_uploaded) {
+        if (is_uploaded_) {
             std::string filename = copy_file(
                 fileUploaderPtr_->spoolFileName(), 
                 fileUploaderPtr_->clientFileName().toUTF8()
@@ -410,7 +416,7 @@ void ChatWidget::send_message() {
                 messageEdit_->text().toUTF8(), 
                 filename,
             };
-            is_uploaded = false;
+            is_uploaded_ = false;
             fill_fileuploader();
         } else {
             message.content = {

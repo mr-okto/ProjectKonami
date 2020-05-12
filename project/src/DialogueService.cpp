@@ -49,7 +49,6 @@ std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username
 std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::string& username) {
     auto messages = message_manager_.get_latest_messages(dialogue_id, 0);
     std::vector<Message> return_vec;
-    std::vector<std::pair<int, std::string>> messages_ids;
     session_.start_transaction();
     for (const auto& item : messages) {
         auto message_model = *item->content_elements_.begin();
@@ -61,7 +60,7 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::
 
         User user = {
             (uint)item->author_.id(),
-            item->author_->username_
+            item->author_->username_,
         };
         Message message = {
             (uint)dialogue_id, 
@@ -69,16 +68,9 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::
             content, 
             item->creation_dt_,
             item->is_read_,
+            (uint)message_model.id(),
         };
-        messages_ids.push_back({item.id(), item->author_->username_});
         return_vec.push_back(message);
-    }
-    session_.end_transaction();
-    session_.start_transaction();
-    for (const auto& item : messages_ids) {
-        if (item.second != username) {
-            message_manager_.mark_read(item.first);
-        }
     }
     session_.end_transaction();
     sort(return_vec.begin(), return_vec.end());
@@ -91,17 +83,21 @@ bool DialogueService::create_dialogue(uint first_user_id, uint second_user_id) {
     );
 }
 
-void DialogueService::post_message(Message& message) {
+Message DialogueService::post_message(const Message& message) {
     auto message_model = message_manager_.create_msg(
         message.dialogue_id, message.user.user_id, message.content.message
     );
     message_manager_.add_content(
         message_model, parse_type(message.content.type), message.content.file_path
     );
-    message.message_id = message_model.id();
+    Message msg = message;
+    msg.message_id = message_model.id();
+    return msg;
 }
 
 void DialogueService::mark_message_as_read(uint message_id) {
+    session_.start_transaction();
     message_manager_.mark_read(message_id);
+    session_.end_transaction();
 }
 }

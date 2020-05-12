@@ -35,7 +35,7 @@ private:
     Wt::WTextArea                *messageEdit_;
     Wt::Core::observing_ptr<Wt::WPushButton> sendButton_;
 
-    bool is_uploaded;
+    bool is_uploaded_;
 
     Wt::Core::observing_ptr<Wt::WContainerWidget> userList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> dialoguesList_;
