@@ -81,6 +81,7 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::
         }
     }
     session_.end_transaction();
+    sort(return_vec.begin(), return_vec.end());
     return return_vec;
 }
 
@@ -90,12 +91,17 @@ bool DialogueService::create_dialogue(uint first_user_id, uint second_user_id) {
     );
 }
 
-void DialogueService::post_message(const Message& message) {
+void DialogueService::post_message(Message& message) {
     auto message_model = message_manager_.create_msg(
         message.dialogue_id, message.user.user_id, message.content.message
     );
     message_manager_.add_content(
         message_model, parse_type(message.content.type), message.content.file_path
     );
+    message.message_id = message_model.id();
+}
+
+void DialogueService::mark_message_as_read(uint message_id) {
+    message_manager_.mark_read(message_id);
 }
 }

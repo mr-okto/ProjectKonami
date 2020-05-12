@@ -268,15 +268,30 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 
     if (event.type_ == ChatEvent::NEW_DIALOGUE) {
         update_dialogue_list();
-    }
-
-    if (event.type_ == ChatEvent::NEW_MSG) {
+    } else if (event.type_ == ChatEvent::NEW_MSG) {
         update_dialogue_list();
         if (dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
             print_message(event.message_);
+            server_.mark_message_as_read(event.message_);
+        }
+    } else if(event.type_ == ChatEvent::READ_MESSAGE && 
+                dialogues_.count(current_dialogue_) &&
+                event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
+        for (int i = messages_->count() - 1; i >= 0; i--) {
+            auto widget = messages_->widget(i);
+            if (dynamic_cast<Wt::WText*>(widget)->text() == get_message_format(event.message_)) {
+                Wt::WText* w =  messages_->insertBefore(Wt::cpp14::make_unique<Wt::WText>(), widget);
+                messages_->removeWidget(widget);
+                chat::Message message = event.message_;
+                message.is_read = true;
+                w->setText(get_message_format(message));
+                w->setInline(false);
+                break;
+            }
         }
     }
+
 }
 
 void ChatWidget::fill_fileuploader() {
@@ -325,37 +340,30 @@ void ChatWidget::update_dialogue_list() {
         l->addItem(username);
     }
     l->activated().connect([=] {
-        std::cout << std::endl << "In activation function" << std::endl;
         this->update_messages(l->currentText());
         current_dialogue_ = l->currentText();
         this->sendButton_->enable();
         this->messageEdit_->enable();
-        std::cout << std::endl << "Leave activation function" << std::endl;
     });
 }
 
-std::string ChatWidget::get_message_format(const std::string& username,
-                                           const std::string& message_content, 
-                                           const time_t& time,
-                                           bool is_read) {
+std::string ChatWidget::get_message_format(const chat::Message& message) {
     struct tm *ts;
     char       buf[80];
-    ts = localtime(&time);
+    ts = localtime(&message.time);
     strftime(buf, sizeof(buf), "%H:%M", ts);
-    if (is_read && username == username_.toUTF8()) {
-        return username + ": " + message_content + " " + std::string(buf) + " True";
+    if (message.is_read && message.user.username == username_.toUTF8()) {
+        return message.user.username + ": " + message.content.message + " " + std::string(buf) + " True";
     } else {
-        return username + ": " + message_content + " " + std::string(buf);
+        return message.user.username + ": " + message.content.message + " " + std::string(buf);
     }
 }
 
 void ChatWidget::update_messages(const Wt::WString& username) {
-    std::cout << std::endl << "In update messages func" << std::endl;
     messages_->clear();
     for (const auto& message : server_.get_messages(dialogues_[username].dialogue_id, username_.toUTF8())) {
         print_message(message);
     }
-    std::cout << std::endl << "Leave update messages func" << std::endl;
 }
 
 bool ChatWidget::create_dialogue(const Wt::WString& username) {
@@ -369,11 +377,7 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
 void ChatWidget::print_message(const chat::Message& message) {
     // Message text
     Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-    w->setText(get_message_format(message.user.username, 
-                            message.content.message,
-                            message.time,
-                            message.is_read));
-   
+    w->setText(get_message_format(message));
     w->setInline(false);
 
     // Message media
@@ -394,10 +398,10 @@ void ChatWidget::send_message() {
         message.user = {user_id_, username_.toUTF8()};
         message.time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
         message.is_read = false;
+        message.message_id = 0;
 
-        std::string filename = "NULL";
         if (is_uploaded) {
-            filename = copy_file(
+            std::string filename = copy_file(
                 fileUploaderPtr_->spoolFileName(), 
                 fileUploaderPtr_->clientFileName().toUTF8()
             );

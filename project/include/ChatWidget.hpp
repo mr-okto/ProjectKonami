@@ -60,10 +60,7 @@ private:
     void process_chat_event(const ChatEvent& event);
 
     chat::Dialogue get_dialogue(const Wt::WString& dialogue_name) {return dialogues_[dialogue_name];}
-    std::string get_message_format(const std::string& username,
-                                   const std::string& message_content, 
-                                   const time_t& time,
-                                   bool is_read);
+    std::string get_message_format(const chat::Message& message);
 
     void update_users_list();
     void update_dialogue_list();

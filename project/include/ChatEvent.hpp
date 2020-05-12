@@ -18,6 +18,7 @@ public:
       SIGN_OUT,
       NEW_MSG,
       NEW_DIALOGUE,
+      READ_MESSAGE,
     };
 
     ChatEvent(Type type, uint32_t user_id, std::string data = std::string())
