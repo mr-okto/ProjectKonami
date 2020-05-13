@@ -11,6 +11,7 @@ class MessageManager {
   MessageModelPtr create_msg(IdType dialogue_id,
                              IdType author_id, const std::string &text);
   Messages get_latest_messages(IdType dialogue_id, time_t start);
+  MessageModelPtr get_last_msg(IdType dialogue_id);
   bool mark_read(IdType msg_id);
   void mark_read(MessageModelPtr &msg);
   ContentModelPtr add_content(IdType msg_id, ContentModel::Type type, const std::string &path,
@@ -42,7 +43,8 @@ template < class DBConnector >
 Messages MessageManager<DBConnector>::get_latest_messages(IdType dialogue_id, time_t start) {
   db_session_.start_transaction();
   Messages result = db_session_.template find<MessageModel>().where("dialogue_id = ?").bind(dialogue_id)
-                                                             .where("creation_dt >= ?").bind(start);
+                                                             .where("creation_dt >= ?").bind(start)
+                                                             .orderBy("creation_dt");
   db_session_.end_transaction();
   return result;
 }
@@ -89,4 +91,13 @@ ContentModelPtr MessageManager<DBConnector>::add_content(MessageModelPtr &msg, C
   ContentModelPtr result = db_session_.add(std::move(new_content));
   db_session_.end_transaction();
   return result;
+}
+
+template<class DBConnector>
+MessageModelPtr MessageManager<DBConnector>::get_last_msg(IdType dialogue_id) {
+  db_session_.start_transaction();
+  MessageModelPtr result = db_session_.template find<MessageModel>().where("dialogue_id = ?").bind(dialogue_id)
+                                                                    .orderBy("creation_dt DESC").limit(1);
+  db_session_.end_transaction();
+  return MessageModelPtr();
 }
