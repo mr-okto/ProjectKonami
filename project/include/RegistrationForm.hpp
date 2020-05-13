@@ -3,6 +3,8 @@
 
 #include <Wt/WContainerWidget.h>
 #include <Wt/WLineEdit.h>
+#include <Wt/WFileUpload.h>
+
 
 #include "PasswordStrengthValidator.hpp"
 
@@ -16,6 +18,8 @@ public:
     const Wt::WString& get_password_first() const { return password_edit_first_->text(); }
     const Wt::WString& get_password_second() const { return password_edit_second_->text(); }
 
+    const Wt::WFileUpload* get_file_uploader() const { return file_upload_; }
+
     //(TODO) add logic
     bool validate();
 
@@ -25,7 +29,8 @@ public:
         None,
         ShortPassword,
         UsernameExists,
-        PasswordMismatch
+        PasswordMismatch,
+        ImgTooLarge
     };
     ErrorType error() const { return error_; }
     Wt::WString status() const { return status_string_;}
@@ -45,6 +50,12 @@ private:
     PasswordStrengthValidator validator_;
     Wt::WText  *status_msg_;
     Wt::WString status_string_;
+
+    Wt::WFileUpload *file_upload_;
+
+    std::string copy_temp_img_to_avatar_folder(
+            const std::string& tmp_file_path, const std::string& client_filename);
+
 };
 
 

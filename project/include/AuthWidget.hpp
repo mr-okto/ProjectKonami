@@ -54,6 +54,8 @@ private:
     void sign_up() ;
 
     void validate_reg_dialog(Wt::WDialog& dialog, Wt::WText* status_msg);
+    std::string copy_temp_img_to_avatar_folder(
+            const std::string& tmp_file_path, const std::string& client_filename);
 
 };
 

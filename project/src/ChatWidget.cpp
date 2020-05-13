@@ -79,6 +79,7 @@ void ChatWidget::disconnect() {
 
 void ChatWidget::create_UI() {
     std::cout << username_ << " : " << user_id_ << std::endl;
+
     clear();
 
     auto messagesPtr = Wt::cpp14::make_unique<WContainerWidget>();
