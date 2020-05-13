@@ -16,6 +16,8 @@
 #include <Wt/WFileUpload.h>
 #include <Wt/WFileResource.h>
 #include <Wt/WProgressBar.h>
+#include <Wt/WVideo.h>
+#include <boost/filesystem.hpp>
 #include <fstream>
 
 
@@ -302,7 +304,7 @@ void ChatWidget::fill_fileuploader() {
     Wt::WFileUpload *fu = fileUploader_->addNew<Wt::WFileUpload>();
     Wt::WText *out = fileUploader_->addNew<Wt::WText>();
 
-    fu->setFilters("image/*");  // TODO
+    fu->setFilters("video/*|image/*");  // TODO
     fu->setFileTextSize(10000); // Set the maximum file size to 10000 kB.
     fu->setProgressBar(Wt::cpp14::make_unique<Wt::WProgressBar>());
 
@@ -387,14 +389,29 @@ void ChatWidget::print_message(const chat::Message& message) {
     w->setInline(false);
 
     // Message media
-    if (message.content.type == chat::Content::IMAGE) {  // TODO
-        auto image = std::make_shared<Wt::WFileResource>("image/*", message.content.file_path);
-        messages_->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(image)));
+    if (message.content.type == chat::Content::IMAGE) {
+        auto image_resource = std::make_shared<Wt::WFileResource>("image/*", message.content.file_path);
+        auto image = messages_->addNew<Wt::WImage>(Wt::WLink(image_resource));
+        image->resize(300, 300);
+    } else if (message.content.type == chat::Content::VIDEO) {
+        auto video_resource = std::make_shared<Wt::WFileResource>("video/*", message.content.file_path);
+        auto video = messages_->addNew<Wt::WVideo>();
+        video->addSource(Wt::WLink(video_resource)); 
+        video->resize(300, 300);
     }
 
     Wt::WApplication *app = Wt::WApplication::instance();
     app->doJavaScript(messages_->jsRef() + ".scrollTop += "
 		       + messages_->jsRef() + ".scrollHeight;");
+}
+
+chat::Content::FileType ChatWidget::parse_type(const std::string& filename)  {
+    std::string extension = boost::filesystem::extension(filename);
+    if (extension == ".mp4") {  // FIXME
+        return chat::Content::VIDEO;
+    } else {
+        return chat::Content::IMAGE;
+    }
 }
 
 void ChatWidget::send_message() {
@@ -406,7 +423,7 @@ void ChatWidget::send_message() {
                 fileUploaderPtr_->clientFileName().toUTF8()
             );
             content = chat::Content(
-                chat::Content::IMAGE, // FIXME
+                parse_type(filename),
                 messageEdit_->text().toUTF8(), 
                 filename
             );
