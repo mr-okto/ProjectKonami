@@ -9,19 +9,6 @@
 #include "Models.hpp"
 #include "UserManager.hpp"
 
-//struct AuthData {
-//    std::string username;
-//    std::string password;
-//    uint32_t id;
-//
-//public:
-//    AuthData() = default;
-//
-//     AuthData(std::string  login_, std::string  password_) :
-//        username(std::move(login_)),
-//        password(std::move(password_)) {};
-//};
-
 class IAuth {
 public:
     virtual bool sign_in(const std::string& username,

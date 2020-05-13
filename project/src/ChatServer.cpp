@@ -49,13 +49,19 @@ bool ChatServer::connect(Client *client, const ChatEventCallback &handle_event) 
 
 }
 
-bool ChatServer::sign_up(const Wt::WString& username, const Wt::WString& password) {
+bool ChatServer::sign_up
+(const Wt::WString& username, const Wt::WString& password, const std::string& avatar_path) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-
-    if (auth_service_.sign_up(username.toUTF8(), password.toUTF8())) {
+    auto userModel = user_manager_.create_user(username.toUTF8(), password.toUTF8());
+    if (userModel) {
+        if (!avatar_path.empty()) {
+            std::cout << avatar_path << std::endl;
+            user_manager_.add_picture(userModel.id(), avatar_path, 5);
+        }
         return true;
-    } else
+    } else {
         return false;
+    }
 }
 
 bool ChatServer::sign_out(const Wt::WString &username_) {
@@ -178,12 +184,6 @@ void ChatServer::weak_sign_out(Client *client , const Wt::WString& username_) {
     std::string username = username_.toUTF8();
     //(FIXME) maybe delete 'has_reserved'
 //    if (session_manager_.has_reserved(username)) {
-//        auto count = std::count_if(
-//                session_manager_.active_sessions().begin(), session_manager_.active_sessions().end(),
-//                [&username](auto& s) {
-//                    return s.second.username_ == username;
-//                });
-//        std::cout << "COUNT: " << count << std::endl;
         // if there was no 'close_same_session' call
         if (session_manager_.active_sessions().find(client) != session_manager_.active_sessions().end()) {
             std::cout << "WEAK SIGN OUT"<< std::endl;

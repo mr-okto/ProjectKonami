@@ -3,6 +3,10 @@
 
 #include <Wt/WContainerWidget.h>
 #include <Wt/WLineEdit.h>
+#include <Wt/WFileUpload.h>
+
+
+#include "PasswordStrengthValidator.hpp"
 
 struct RegistrationForm : public Wt::WContainerWidget {
 public:
@@ -14,16 +18,23 @@ public:
     const Wt::WString& get_password_first() const { return password_edit_first_->text(); }
     const Wt::WString& get_password_second() const { return password_edit_second_->text(); }
 
+    const Wt::WFileUpload* get_file_uploader() const { return file_upload_; }
+
     //(TODO) add logic
     bool validate();
+
+
 
     enum ErrorType {
         None,
         ShortPassword,
         UsernameExists,
-        PasswordsMismatch
+        PasswordMismatch,
+        ImgTooLarge
     };
     ErrorType error() const { return error_; }
+    Wt::WString status() const { return status_string_;}
+
     void set_user_exists_error();
 
 private:
@@ -35,6 +46,16 @@ private:
 
     bool is_valid_;
     ErrorType error_;
+
+    PasswordStrengthValidator validator_;
+    Wt::WText  *status_msg_;
+    Wt::WString status_string_;
+
+    Wt::WFileUpload *file_upload_;
+
+    std::string copy_temp_img_to_avatar_folder(
+            const std::string& tmp_file_path, const std::string& client_filename);
+
 };
 
 

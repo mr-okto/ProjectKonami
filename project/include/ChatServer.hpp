@@ -51,7 +51,8 @@ public:
     // Try to sign in with given username and password.
     // Returns false if the login was not successful;
     std::optional<uint32_t> sign_in(const Wt::WString& username, const Wt::WString& password);
-    bool sign_up(const Wt::WString& username, const Wt::WString& password);
+    bool sign_up
+        (const Wt::WString& username, const Wt::WString& password, const std::string& avatar_path);
 
     bool sign_out(const Wt::WString& username);
     void weak_sign_out(Client * client, const Wt::WString& username_);

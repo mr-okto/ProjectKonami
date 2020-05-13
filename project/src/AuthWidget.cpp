@@ -10,6 +10,7 @@
 #include <Wt/WPushButton.h>
 #include <Wt/WCheckBox.h>
 #include <Wt/WEvent.h>
+#include <Wt/Utils.h>
 
 #include "AuthWidget.hpp"
 
@@ -69,8 +70,6 @@ void AuthWidget::sign_in() {
 }
 
 bool AuthWidget::start_chat(const Wt::WString& username, const Wt::WString& password) {
-    //(TODO) There will be created start point of ChatWidget
-    // connect to server, create session, pass callbackFunc, manage session
     auto id = server_.sign_in(username, password);
     if (id.has_value()) {
         signed_in_ = true;
@@ -99,13 +98,12 @@ void AuthWidget::show_registration() {
     registration_form_->setStyleClass("registration-form");
     Wt::WPushButton *signUpbButton = dialog.footer()->addWidget(std::make_unique<Wt::WPushButton>("Sign up"));
     Wt::WText *statusMsg = dialog.footer()->addWidget(std::make_unique<Wt::WText>());
-    statusMsg->setTextFormat(Wt::TextFormat::Plain);
+    statusMsg->setInline(false);
+    statusMsg->setTextFormat(Wt::TextFormat::XHTML);
+    statusMsg->setTextAlignment(Wt::AlignmentFlag::Center);
 
 //    registration_form_->validate();
     auto s = registration_form_->get_username().toUTF8();
-    if (s == "123") {
-        std::cout << 123;
-    }
     signUpbButton->clicked().connect(this, &AuthWidget::sign_up);
     signUpbButton->clicked().connect(std::bind(&AuthWidget::validate_reg_dialog, this, std::ref(dialog), statusMsg));
     //    signUpbButton->clicked().connect(&dialog, &Wt::WDialog::accept);
@@ -115,22 +113,41 @@ void AuthWidget::show_registration() {
 
 void AuthWidget::sign_up() {
     if (registration_form_->validate()) {
-        if (!server_.sign_up(registration_form_->get_username(), registration_form_->get_password_first())) {
+        std::cout << "VALID" << std::endl;
+        auto fu = registration_form_->get_file_uploader();
+        bool success;
+        if (fu->empty()) {
+            success = server_.sign_up(
+                    registration_form_->get_username(),
+                    registration_form_->get_password_first(),
+                    std::string{});
+        } else {
+            auto avatar_path = copy_temp_img_to_avatar_folder(fu->spoolFileName(), fu->clientFileName().toUTF8());
+            success = server_.sign_up(
+                    registration_form_->get_username(),
+                    registration_form_->get_password_first(),
+                    avatar_path);
+        }
+
+        if (!success) {
             registration_form_->set_user_exists_error();
         }
     }
-
 }
 
 void AuthWidget::validate_reg_dialog(Wt::WDialog &dialog, Wt::WText* status_msg) {
     if (registration_form_->is_valid()) {
         dialog.accept();
-    } else if (registration_form_->error() == RegistrationForm::ErrorType::PasswordsMismatch) {
-        status_msg->setText("Passwords do not match.");
+    } else if (registration_form_->error() == RegistrationForm::ErrorType::PasswordMismatch) {
+        status_msg->setText("Password mismatch.");
     } else if (registration_form_->error() == RegistrationForm::ErrorType::ShortPassword) {
-        status_msg->setText("Passwords is too short.");
+        status_msg->setText("Passwords is too short (<b>" +
+                            Wt::Utils::htmlEncode(registration_form_->status()) + "</b>)");
     } else if (registration_form_->error() == RegistrationForm::ErrorType::UsernameExists) {
         status_msg->setText("Username '" + escapeText(registration_form_->get_username()) + "' is already taken");
+    } else if (registration_form_->error() == RegistrationForm::ErrorType::ImgTooLarge) {
+        auto fu = registration_form_->get_file_uploader();
+        status_msg->setText("File '" + escapeText(fu->clientFileName()) + "' is too large (over 100kB)");
     }
 }
 
@@ -172,4 +189,20 @@ std::unique_ptr<Wt::WVBoxLayout> AuthWidget::create_input_forms_layout() {
     label->setStyleClass("rememberMe");
 
     return std::move(vLayout);
+}
+
+std::string
+AuthWidget::copy_temp_img_to_avatar_folder(const std::string &tmp_file_path, const std::string &client_filename) {
+    std::string result_filename = "./avatars/" + client_filename;
+    std::ifstream in(tmp_file_path, std::ios::binary | std::ios::in);
+    std::ofstream out(result_filename, std::ios::binary | std::ios::out);
+
+    char byte;
+    while (in.read(&byte, sizeof(char))) {
+        out.write(&byte, sizeof(char));
+    }
+    in.close();
+    out.close();
+
+    return result_filename;
 }
