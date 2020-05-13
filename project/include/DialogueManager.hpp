@@ -11,6 +11,8 @@ class DialogueManager {
   DialogueModelPtr get_dialogue(IdType member_a, IdType member_b);
   std::tuple<DialogueModelPtr, bool> get_or_create_dialogue(IdType member_a, IdType member_b);
   std::tuple<DialogueModelPtr, bool> get_or_create_dialogue(const UserModelPtr &member_a, const UserModelPtr &member_b);
+  unsigned long count_messages(const UserModelPtr &sender, const UserModelPtr &recipient);
+  unsigned long count_messages(IdType dialogue, IdType sender);
 };
 
 template < class DBConnector >
@@ -35,6 +37,7 @@ DialogueModelPtr DialogueManager<DBConnector>::get_dialogue(IdType member_a, IdT
 template < class DBConnector >
 std::tuple<DialogueModelPtr, bool> DialogueManager<DBConnector>::get_or_create_dialogue(const UserModelPtr &member_a,
                                                                                         const UserModelPtr &member_b) {
+  db_session_.start_transaction();
   DialogueModelPtr result = get_dialogue(member_a.id(), member_b.id());
   bool is_new = (result)? false : true;
   if (not result) {
@@ -57,4 +60,22 @@ std::tuple<DialogueModelPtr, bool> DialogueManager<DBConnector>::get_or_create_d
     return get_or_create_dialogue(member_a_ptr, member_b_ptr);
   }
   return std::tuple(nullptr, false);
+}
+
+template<class DBConnector>
+unsigned long DialogueManager<DBConnector>::count_messages(const UserModelPtr &sender, const UserModelPtr &recipient) {
+  db_session_.start_transaction();
+  DialogueModelPtr dialogue = get_dialogue(sender.id(), recipient.id());
+  db_session_.end_transaction();
+  return count_messages(dialogue.id(), sender.id());
+}
+
+template<class DBConnector>
+unsigned long DialogueManager<DBConnector>::count_messages(IdType dialogue, IdType sender) {
+  db_session_.start_transaction();
+  Messages messages = db_session_.template find<MessageModel>().where("dialogue_id = ?").bind(dialogue)
+                                                               .where("author_id = ?").bind(sender);
+  unsigned long result = messages.size();
+  db_session_.end_transaction();
+  return result;
 }
