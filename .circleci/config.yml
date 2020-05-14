@@ -5,6 +5,7 @@ jobs:
       - image: oktomx/project-konami:0.0.1
     steps:
       - checkout
+      - run: gcc -v
       - run: echo "Simple artifact" >> sample.txt
       - run: mkdir build && touch build/file.o
       - persist_to_workspace:
