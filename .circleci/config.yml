@@ -18,7 +18,7 @@ jobs:
       - image: oktomx/project-konami:0.0.1
     steps:
       - attach_workspace:
-        at: "."
+          at: "."
       - run: |
           cat sample.txt \
           && ls build
