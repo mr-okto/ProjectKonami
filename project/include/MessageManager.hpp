@@ -99,5 +99,5 @@ MessageModelPtr MessageManager<DBConnector>::get_last_msg(IdType dialogue_id) {
   MessageModelPtr result = db_session_.template find<MessageModel>().where("dialogue_id = ?").bind(dialogue_id)
                                                                     .orderBy("creation_dt DESC").limit(1);
   db_session_.end_transaction();
-  return MessageModelPtr();
+  return result;
 }
