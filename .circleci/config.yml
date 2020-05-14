@@ -9,7 +9,7 @@ jobs:
       - run: echo "Simple artifact" >> sample.txt
       - run: mkdir build && touch build/file.o
       - persist_to_workspace:
-          root: .
+          root: "."
           paths:
             - sample.txt
             - build/*
@@ -18,7 +18,7 @@ jobs:
       - image: oktomx/project-konami:0.0.1
     steps:
       - attach_workspace:
-        at: .
+        at: "."
         run: |
           cat sample.txt \
           && ls build
