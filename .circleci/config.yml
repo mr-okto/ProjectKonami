@@ -9,7 +9,7 @@ jobs:
       - run: echo "Simple artifact" >> sample.txt
       - run: mkdir build && touch build/file.o
       - persist_to_workspace:
-          root: /tmp/workspace
+          root: .
           paths:
             - sample.txt
             - build/*
