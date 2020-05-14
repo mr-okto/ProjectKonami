@@ -4,5 +4,21 @@ jobs:
     docker:
       - image: oktomx/project-konami:0.0.1
     steps:
-      - checkout # check out the code in the project directory
-      - run: echo "hello world\n" && ls # run the `echo` command
+      - checkout
+      - run: echo "Simple artifact" >> sample.txt
+      - run: mkdir build && touch build/file.o
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - sample.txt
+            - build/*
+  test:
+    docker:
+      - image: oktomx/project-konami:0.0.1
+    steps:
+      - checkout 
+      - attach_workspace:
+        at: /tmp/workspace
+      - run: >-
+        cat /tmp/workspace/sample.txt \
+        && ls /tmp/workspace/build
