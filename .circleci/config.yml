@@ -19,7 +19,7 @@ jobs:
     steps:
       - attach_workspace:
         at: "."
-        run: |
+      - run: |
           cat sample.txt \
           && ls build
 workflows:
