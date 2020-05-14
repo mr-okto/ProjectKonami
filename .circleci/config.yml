@@ -17,10 +17,15 @@ jobs:
     docker:
       - image: oktomx/project-konami:0.0.1
     steps:
-      - checkout 
       - attach_workspace:
-        at: /tmp/workspace
-      - >-
-        run:
-        cat /tmp/workspace/sample.txt
-        && ls /tmp/workspace/build
+        at: .
+        run: |
+          cat sample.txt \
+          && ls build
+workflows:
+  ci-workflow:
+    jobs:
+      - build
+      - test:
+        requires:
+          - build
