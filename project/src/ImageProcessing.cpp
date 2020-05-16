@@ -2,7 +2,7 @@
 #include <vector>
 #include <tuple>
 #include <boost/filesystem.hpp>
-#include <random>
+#include "Randomizer.hpp"
 using namespace cv;
 
 bool process_image(const std::string &input_path, const std::string &output_path, unsigned int blur_lvl) {
@@ -69,20 +69,6 @@ Mat gaussian_blur(const Mat &image, int m_dim) {
     return result;
 }
 
-std::string random_fname(int len)
-{
-  static std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-  static std::mt19937 engine{std::random_device{}()};
-  static std::uniform_int_distribution<std::string::size_type> pick(0, alphabet.size() - 1);
-
-  std::string result(len, ' ');
-  for (int i = 0; i < len; i++) {
-    result[i] = alphabet[pick(engine)];
-  }
-  return result;
-}
-
 
 // Non thread safe
 // File format: {dest_dir}/{user_id % folders_count}/img_{random_fname(32)}_{access_lvl}.jpg
@@ -100,9 +86,10 @@ std::vector<std::string> create_blurred_copies(const std::string &image_path,
   p_base /= "img_";
   boost::filesystem::path p_test;
   std::string f_template;
+  Randomizer &randomizer = Randomizer::get_instance();
   do {
     p_test = p_base;
-    f_template = random_fname(32);
+    f_template = randomizer.get_string(32);
     p_test += f_template;
     p_test += "_0.jpg";
   } while (boost::filesystem::exists(p_test));

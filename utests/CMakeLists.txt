@@ -1,15 +1,13 @@
 include(GoogleTest)
 find_package(GTest REQUIRED)
 
-set (PROJECT_DIR ../project)
+include_directories(include ${PROJECT_SOURCE_DIR}/project/include/ ${GTEST_INCLUDE_DIRS})
 
-include_directories(include ${PROJECT_DIR}/include/ ${GTEST_INCLUDE_DIRS})
-
-set(UNIT_SOURCES ${PROJECT_DIR}/src/Client.cpp ${PROJECT_DIR}/src/ClientService.cpp)
-
-set(TEST_SOURCES src/DbConnectorStub.cpp src/TestDb.cpp src/TestClientService.cpp src/TestClient.cpp src/test.cpp)
+set(UNIT_SOURCES ${PROJECT_SOURCE_DIR}/project/src/Randomizer.cpp)
+set(TEST_SOURCES src/TestDb.cpp src/test.cpp)
 
 
 add_executable(test ${UNIT_SOURCES} ${TEST_SOURCES})
 
-target_link_libraries(test gmock gtest pthread)
+target_link_libraries(test gmock gtest pthread wthttp wt wtdbo wtdbopostgres Threads::Threads ${OpenCV_LIBS} boost_filesystem)
+set_target_properties(test PROPERTIES COMPILE_FLAGS "-DPOSTGRES")
