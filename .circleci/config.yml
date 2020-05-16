@@ -1,8 +1,7 @@
 version: 2.1
 jobs:
   build:
-    docker:
-      - image: oktomx/project-konami:0.0.1
+    executor: default
     steps:
       - checkout
       - run: gcc -v
@@ -14,14 +13,25 @@ jobs:
             - sample.txt
             - build/*
   test:
-    docker:
-      - image: oktomx/project-konami:0.0.1
+    executor: default
+    resource_class: small
     steps:
       - attach_workspace:
           at: "."
       - run: |
           cat sample.txt \
           && ls build
+  deploy:
+    # branches:
+    #   only:
+    #     - dev
+    executor: heroku/default
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: "."
+      - heroku/install
+      - heroku/deploy-via-git
 workflows:
   ci-workflow:
     jobs:
@@ -29,3 +39,9 @@ workflows:
       - test:
           requires:
             - build
+executors:
+  default:
+    docker:
+    - image: oktomx/project-konami:0.0.1
+orbs:
+  heroku: circleci/heroku@x.y
