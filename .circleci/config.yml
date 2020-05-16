@@ -31,21 +31,22 @@ jobs:
       - attach_workspace:
           at: "."
       - run: |
-          git config user.email $GIT_EMAIL && git config user.name $GIT_USERNAME \
+          git config --global user.email $GIT_EMAIL \
+          && git config --global user.name $GIT_USERNAME \
           && git init && git add . && git commit -am "Add deployment files"
       - heroku/deploy-via-git:
           branch: "master"
 workflows:
   ci-workflow:
     jobs:
-      - build
-      - test:
-          requires:
-            - build
-      - deploy:
-          requires:
-            - build
-            - test
+      - deploy
+      # - build
+      # - test:
+          # requires:
+            # - build
+      # - deploy:
+          # requires:
+            # - test
 executors:
   default:
     docker:
