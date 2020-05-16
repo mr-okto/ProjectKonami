@@ -30,8 +30,9 @@ jobs:
     steps:
       - attach_workspace:
           at: "."
-      - heroku/install
-      - heroku/deploy-via-git
+      - run: git init && git add . && git commit -am "Add deployment files"
+      - heroku/deploy-via-git:
+          branch: "master"
 workflows:
   ci-workflow:
     jobs:
