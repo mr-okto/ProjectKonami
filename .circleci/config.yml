@@ -4,13 +4,11 @@ jobs:
     executor: default
     steps:
       - checkout
-      - run: gcc -v
-      - run: echo "Simple artifact" >> sample.txt
-      - run: mkdir build && touch build/file.o
+      - run: g++ main.cpp
+      - run: mkdir build && mv a.out build/ProjectKonami
       - persist_to_workspace:
           root: "."
           paths:
-            - sample.txt
             - build/*
   test:
     executor: default
@@ -18,9 +16,7 @@ jobs:
     steps:
       - attach_workspace:
           at: "."
-      - run: |
-          cat sample.txt \
-          && ls build
+      - run: build/ProjectKonami
   deploy:
     # branches:
     #   only:
@@ -31,7 +27,6 @@ jobs:
       - attach_workspace:
           at: "."
       - run: |
-          echo "Some data" >> test.txt && \
           git config --global user.email $GIT_EMAIL \
           && git config --global user.name $GIT_USERNAME \
           && git init && git add . && git commit -am "Add deployment files"
@@ -40,14 +35,13 @@ jobs:
 workflows:
   ci-workflow:
     jobs:
-      - deploy
-      # - build
-      # - test:
-          # requires:
-            # - build
-      # - deploy:
-          # requires:
-            # - test
+      - build
+      - test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - test
 executors:
   default:
     docker:
