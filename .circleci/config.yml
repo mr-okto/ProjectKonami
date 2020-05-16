@@ -39,6 +39,10 @@ workflows:
       - test:
           requires:
             - build
+      - deploy:
+          requires:
+            - build
+            - test
 executors:
   default:
     docker:
