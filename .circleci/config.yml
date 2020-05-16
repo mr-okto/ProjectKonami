@@ -30,7 +30,9 @@ jobs:
     steps:
       - attach_workspace:
           at: "."
-      - run: git init && git add . && git commit -am "Add deployment files"
+      - run: |
+        git config user.email $GIT_EMAIL && git config user.name $GIT_USERNAME \
+        && git init && git add . && git commit -am "Add deployment files"
       - heroku/deploy-via-git:
           branch: "master"
 workflows:
