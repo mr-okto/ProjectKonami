@@ -7,16 +7,17 @@ jobs:
       - run: g++ main.cpp
       - run: mkdir build && mv a.out build/ProjectKonami
       - persist_to_workspace:
-          root: "."
+          root: "build"
           paths:
-            - build/*
+            - ProjectKonami
   test:
     executor: default
     resource_class: small
     steps:
       - attach_workspace:
           at: "."
-      - run: build/ProjectKonami
+      - run: ls .
+      - run: ls build
   deploy:
     # branches:
     #   only:
@@ -39,12 +40,12 @@ workflows:
       - test:
           requires:
             - build
-      - deploy:
-          requires:
-            - test
+      # - deploy:
+          # requires:
+            # - test
 executors:
   default:
     docker:
-    - image: oktomx/project-konami:0.0.1
+    - image: oktomx/project-konami:1.0
 orbs:
   heroku: circleci/heroku@1.0.1
