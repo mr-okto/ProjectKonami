@@ -1,15 +1,5 @@
 version: 2.1
 jobs:
-  simple:
-    executor: lightweight
-    resource_class: small
-    steps:
-      - run: mkdir test && echo "Test" > test/test.txt && echo "Root" > root.txt
-      - persist_to_workspace:
-          root: "."
-          paths:
-            - test
-            - root.txt
   build:
     executor: default
     steps:
@@ -27,7 +17,7 @@ jobs:
       - attach_workspace:
           at: "."
       - run: ls .
-      - run: ls test
+      - run: ./ProjectKonami
   deploy:
     # branches:
     #   only:
@@ -46,14 +36,13 @@ jobs:
 workflows:
   ci-workflow:
     jobs:
-      # - build
-      - simple
+      - build
       - test:
           requires:
-            - simple
-      # - deploy:
-          # requires:
-            # - test
+            - build
+      - deploy:
+          requires:
+            - test
 executors:
   default:
     docker:
