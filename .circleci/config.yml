@@ -44,4 +44,4 @@ executors:
     docker:
     - image: oktomx/project-konami:0.0.1
 orbs:
-  heroku: circleci/heroku@x.y
+  heroku: circleci/heroku@1.0.1
