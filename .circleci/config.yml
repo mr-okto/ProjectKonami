@@ -5,13 +5,16 @@ jobs:
     steps:
       - checkout
       - run: g++ main.cpp
-      - run: mkdir build && mv a.out build/ProjectKonami
+      - run: mkdir build && mv a.out ProjectKonami && mkdir resources
       - persist_to_workspace:
-          root: "build"
+          root: "."
           paths:
+            - herokuDockerfile
+            - heroku.yml
             - ProjectKonami
+            - resources
   test:
-    executor: default
+    executor: lightweight
     resource_class: small
     steps:
       - attach_workspace:
