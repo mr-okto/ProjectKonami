@@ -1,5 +1,15 @@
 version: 2.1
 jobs:
+  simple:
+    executor: lightweight
+    resource_class: small
+    steps:
+      - run: mkdir test && echo "Test" > test/test.txt && echo "Root" > root.txt
+      - persist_to_workspace:
+          root: "."
+          paths:
+            - test
+            - root.txt
   build:
     executor: default
     steps:
@@ -17,7 +27,7 @@ jobs:
       - attach_workspace:
           at: "."
       - run: ls .
-      - run: ls build
+      - run: ls test
   deploy:
     # branches:
     #   only:
@@ -36,10 +46,11 @@ jobs:
 workflows:
   ci-workflow:
     jobs:
-      - build
+      # - build
+      - simple
       - test:
           requires:
-            - build
+            - simple
       # - deploy:
           # requires:
             # - test
@@ -47,5 +58,8 @@ executors:
   default:
     docker:
     - image: oktomx/project-konami:1.0
+  lightweight:
+    docker:
+    - image: cimg/base:stable
 orbs:
   heroku: circleci/heroku@1.0.1
