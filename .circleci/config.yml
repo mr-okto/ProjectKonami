@@ -33,6 +33,7 @@ jobs:
           && git init && git add . && git commit -am "Add deployment files"
       - heroku/deploy-via-git:
           branch: "master"
+          force: true
 workflows:
   ci-workflow:
     jobs:
