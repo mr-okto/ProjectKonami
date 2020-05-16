@@ -1,0 +1,58 @@
+version: 2.1
+jobs:
+  build:
+    executor: default
+    steps:
+      - checkout
+      - run: g++ main.cpp
+      - run: mkdir build && mv a.out ProjectKonami && mkdir resources
+      - persist_to_workspace:
+          root: "."
+          paths:
+            - herokuDockerfile
+            - heroku.yml
+            - ProjectKonami
+            - resources
+  test:
+    executor: lightweight
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: "."
+      - run: ls .
+      - run: ./ProjectKonami
+  deploy:
+    # branches:
+    #   only:
+    #     - dev
+    executor: heroku/default
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: "."
+      - run: |
+          git config --global user.email $GIT_EMAIL \
+          && git config --global user.name $GIT_USERNAME \
+          && git init && git add . && git commit -am "Add deployment files"
+      - heroku/deploy-via-git:
+          branch: "master"
+          force: true
+workflows:
+  ci-workflow:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - test
+executors:
+  default:
+    docker:
+    - image: oktomx/project-konami:1.0
+  lightweight:
+    docker:
+    - image: cimg/base:stable
+orbs:
+  heroku: circleci/heroku@1.0.1

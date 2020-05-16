@@ -1,0 +1,5 @@
+FROM oktomx/project-konami:1.0
+
+WORKDIR /app
+
+COPY . .
