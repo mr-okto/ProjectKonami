@@ -32,6 +32,10 @@ Users UserManager<DBConnector>::get_all_users() {
 
 template< class DBConnector >
 UserModelPtr UserManager<DBConnector>::create_user(const std::string &username, const std::string &pwd_hash) {
+  if (get_user(username)) {
+    // Username already exists
+    return UserModelPtr();
+  }
   auto new_user = std::make_unique<UserModel>(UserModel());
   new_user->username_ = username;
   new_user->pwd_hash_ = pwd_hash;

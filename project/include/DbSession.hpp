@@ -4,6 +4,7 @@
 #include <istream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <Models.hpp>
 
 namespace dbo = Wt::Dbo;
@@ -14,11 +15,13 @@ class DbSession {
   bool is_connected_{};
   dbo::Session db_session_;
   std::unique_ptr<dbo::Transaction> transaction_;
+  static std::string get_var(const std::string &name, const boost::property_tree::ptree &pt);
  public:
   DbSession() = default;
-  void connect(const std::string &host, uint32_t port, const std::string &user,
-            const std::string &password, const std::string &db_name);
-  void connect(std::basic_istream<boost::property_tree::ptree::key_type::value_type> &json_config);
+  bool connect(const std::string &host, uint32_t port, const std::string &user,
+               const std::string &password, const std::string &db_name);
+  bool connect(std::basic_istream<boost::property_tree::ptree::key_type::value_type> &json_config);
+  bool connect(const std::string &json_config_fname);
   void disconnect();
   DbSession(const DbSession &) = delete;
   ~DbSession();
@@ -32,6 +35,8 @@ class DbSession {
   dbo::Query<dbo::ptr<C>> find();
   template<class C>
   dbo::Query<C> raw_query(const std::string & sql);
+  static std::string dbconfig_filename(int argc, char **argv);
+
 };
 
 template<class DBConnector>
@@ -42,7 +47,7 @@ DbSession<DBConnector>::~DbSession() {
 }
 
 template<class DBConnector>
-void DbSession<DBConnector>::connect(const std::string &host,
+bool DbSession<DBConnector>::connect(const std::string &host,
                                      uint32_t port,
                                      const std::string &user,
                                      const std::string &password,
@@ -52,31 +57,77 @@ void DbSession<DBConnector>::connect(const std::string &host,
   snprintf(buf, len_limit, "host=%s user=%s password=%s port=%u dbname=%s",
            host.c_str(), user.c_str(), password.c_str(), port, db_name.c_str());
   std::unique_ptr<DBConnector> db_connector{new DBConnector()};
-  db_connector->connect(buf);
+  try {
+    db_connector->connect(buf);
+  }
+  catch (Wt::Dbo::Exception &e) {
+    std::cerr << e.what();
+    delete[] buf;
+    return false;
+  }
   delete[] buf;
   if (is_connected_) {
     disconnect();
   }
-  db_session_.setConnection(std::move(db_connector));
   is_connected_ = true;
-  db_session_.mapClass<DialogueModel>("dialogue");
-  db_session_.mapClass<MessageModel>("message");
-  db_session_.mapClass<UserModel>("user");
-  db_session_.mapClass<PictureModel>("picture");
-  db_session_.mapClass<ContentModel>("content");
+  try {
+    db_session_.setConnection(std::move(db_connector));
+    db_session_.mapClass<DialogueModel>("dialogue");
+    db_session_.mapClass<MessageModel>("message");
+    db_session_.mapClass<UserModel>("user");
+    db_session_.mapClass<PictureModel>("picture");
+    db_session_.mapClass<ContentModel>("content");
+  }
+  catch (Wt::Dbo::Exception &e) {
+    std::cerr << e.what();
+    is_connected_ = false;
+    return false;
+  }
+  return true;
 }
 
 template<class DBConnector>
-void DbSession<DBConnector>::connect(std::basic_istream<boost::property_tree::ptree::key_type::value_type> &json_config) {
+bool DbSession<DBConnector>::connect(std::basic_istream<boost::property_tree::ptree::key_type::value_type> &json_config) {
   boost::property_tree::ptree pt;
-  boost::property_tree::read_json(json_config, pt);
-  auto host = pt.get<std::string>("host");
-  auto port = pt.get<uint32_t>("port");
-  auto user = pt.get<std::string>("db_user");
-  auto password = pt.get<std::string>("db_password");
-  auto db_name = pt.get<std::string>("db_name");
+  try {
+    boost::property_tree::read_json(json_config, pt);
+    std::string host = get_var("host", pt);
+    uint32_t port = std::stoul(get_var("port", pt));
+    std::string user = get_var("db_user", pt);
+    std::string password = get_var("db_password", pt);
+    std::string db_name = get_var("db_name", pt);
+    return connect(host, port, user, password, db_name);
+  }
+  catch (boost::property_tree::ptree_error &e) {
+    std::cerr << e.what();
+    return false;
+  }
+}
 
-  connect(host, port, user, password, db_name);
+template<class DBConnector>
+bool DbSession<DBConnector>::connect(const std::string &json_config_fname) {
+  std::ifstream f_in;
+  f_in.open(json_config_fname);
+  bool result = (bool) f_in;
+  if (result) {
+     result = connect(f_in);
+  } else {
+    std::cerr << "Unable to open DB config file: \"" << json_config_fname << "\"" << std::endl;
+  }
+  f_in.close();
+  return result;
+}
+
+template<class DBConnector>
+std::string DbSession<DBConnector>::get_var(const std::string &name, const boost::property_tree::ptree &pt) {
+  std::string result = pt.get<std::string>(name);
+  if (!result.empty() && result[0] == '$') {
+    char *val = std::getenv(result.c_str());
+    if (val) {
+      result = val;
+    }
+  }
+  return result;
 }
 
 template<class DBConnector>
@@ -148,3 +199,15 @@ dbo::Query<C> DbSession<DBConnector>::raw_query(const std::string &sql) {
   return db_session_.query<C>(sql);
 }
 
+// Detects "--db *.json" option
+template<class DBConnector>
+std::string DbSession<DBConnector>::dbconfig_filename(int argc, char **argv) {
+  std::string fname("db_conf.json");
+  char **end_ptr = argv + argc;
+  auto cmp = [](const char *x) { return strcmp(x, "--db") == 0; };
+  auto ptr = std::find_if(argv, end_ptr, cmp);
+  if (ptr != end_ptr && ++ptr != end_ptr && boost::algorithm::ends_with(*ptr, ".json")) {
+    fname = *ptr;
+  }
+  return fname;
+}
