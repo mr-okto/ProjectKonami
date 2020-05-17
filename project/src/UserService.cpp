@@ -1,10 +1,10 @@
 #include "UserService.hpp"
 
 namespace chat {
-UserService::UserService(UserManager& user_manager, PhotoManager& photo_manager, SessionManager& session_manager)
+UserService::UserService() {}/*UserManager& user_manager, PhotoManager& photo_manager)
     : user_manager_(user_manager), 
       photo_manager_(photo_manager),
-      session_manager_(session_manager) {}
+      session_manager_(session_manager) {}*/
 
 std::vector<User> UserService::get_all_users() {
     return std::vector<User>();

@@ -1,0 +1,61 @@
+version: 2.1
+jobs:
+  build:
+    executor: default
+    steps:
+      - checkout
+      - run: mkdir build && cd build && cmake .. && make -j4
+      - persist_to_workspace:
+          root: build
+          paths:
+            - project/ProjectKonami
+            - utests/Test
+  test:
+    executor: default
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: "build"
+      - run: utests/run_unittests.sh build/utests/Test
+  deploy_heroku:
+    executor: lightweight
+    resource_class: small
+    steps:
+      - checkout
+      - attach_workspace:
+          at: "build"
+      - run: |
+          mkdir /tmp/git_repo && mv -t /tmp/git_repo build/project/ProjectKonami \
+          project/resources herokuDockerfile heroku.yml db_conf.json \
+          project/simplechat.xml project/*.css
+      - deploy:
+          working_directory:
+            /tmp/git_repo
+          command: |
+            git config --global user.email $GIT_EMAIL
+            git config --global user.name $GIT_USERNAME
+            git init && git add . && git commit -am "Deploy"
+            git push -f https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git master:master
+workflows:
+  version: 2
+  ci-workflow:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - deploy_heroku:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - dev
+executors:
+  default:
+    docker:
+    - image: oktomx/project-konami:1.2
+  lightweight:
+    docker:
+    - image: cimg/base:stable
