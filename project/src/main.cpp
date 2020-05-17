@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   auto time = std::time(nullptr);
   std::stringstream buffer;
   buffer << std::put_time(std::gmtime(&time), "%F %T%z") << std::endl;
-  MessageModelPtr msg = message_manager.create_msg(1, 1, buffer.str());
+  MessageModelPtr msg = message_manager.create_msg(11, 11, buffer.str());
   if (msg) {
     std::cout << msg->text_;
   } else {
