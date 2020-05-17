@@ -23,9 +23,9 @@ jobs:
           at: "."
       - run: ./test
   deploy:
-    # branches:
-    #   only:
-    #     - dev
+     branches:
+       only:
+         - dev
     executor: heroku/default
     resource_class: small
     steps:
