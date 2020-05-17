@@ -52,7 +52,6 @@ workflows:
             branches:
               only:
                 - dev
-                - dev-wt-server
 executors:
   default:
     docker:

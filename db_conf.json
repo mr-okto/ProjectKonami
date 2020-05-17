@@ -1,5 +1,5 @@
 {
-  "host": "ec2-46-137-156-205.eu-west-1.compute.amazonaws.com",
+  "host": "$KONAMI_DB_HOST",
   "port": 5432,
   "db_user": "$KONAMI_DB_USER",
   "db_password": "$KONAMI_DB_PWD",
