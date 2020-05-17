@@ -4,7 +4,7 @@ jobs:
     executor: default
     steps:
       - checkout
-      - run: mkdir build && cd build && cmake .. && make -j4 && cd ..
+      - run: mkdir build && cd build && cmake .. && make -j4
       - persist_to_workspace:
           root: build
           paths:
@@ -18,25 +18,25 @@ jobs:
       - attach_workspace:
           at: "build"
       - run: utests/run_unittests.sh build/utests/Test
-  deploy:
-    executor: heroku/default
+  deploy_heroku:
+    executor: lightweight
     resource_class: small
     steps:
       - checkout
       - attach_workspace:
           at: "build"
       - run: |
-          mkdir /tmp/git_repo && mv -t /tmp/git_repo \
-          build/project/ProjectKonami project/resources \
-          herokuDockerfile heroku.yml db_conf.json \
-          project/simplechat.xml project/*.css \
-          && git config --global user.email $GIT_EMAIL \
-          && git config --global user.name $GIT_USERNAME \
-          && cd /tmp/git_repo && git init && git add . && git commit -am "Deploy"
-      - workdir: /tmp/git_repo
-      - heroku/deploy-via-git:
-          branch: "master"
-          force: true
+          mkdir /tmp/git_repo && mv -t /tmp/git_repo build/project/ProjectKonami \
+          project/resources herokuDockerfile heroku.yml db_conf.json \
+          project/simplechat.xml project/*.css
+      - deploy:
+          working_directory:
+            /tmp/git_repo
+          command: |
+            git config --global user.email $GIT_EMAIL
+            git config --global user.name $GIT_USERNAME
+            git init && git add . && git commit -am "Deploy"
+            git push -f https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git master:master
 workflows:
   version: 2
   ci-workflow:
@@ -45,7 +45,7 @@ workflows:
       - test:
           requires:
             - build
-      - deploy:
+      - deploy_heroku:
           requires:
             - test
           filters:
@@ -60,5 +60,3 @@ executors:
   lightweight:
     docker:
     - image: cimg/base:stable
-orbs:
-  heroku: circleci/heroku@1.0.1
