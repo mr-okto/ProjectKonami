@@ -2,4 +2,4 @@ build:
   docker:
     web: herokuDockerfile
 run:
-  web: ./ProjectKonami --docroot . --http-address 0.0.0.0 --http-port $PORT --resources-dir=./resources
+  web: ./ProjectKonami --docroot . --http-address 0.0.0.0 --http-port $PORT --resources-dir=./resources --db db_conf.json

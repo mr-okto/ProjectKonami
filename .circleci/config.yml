@@ -5,40 +5,39 @@ jobs:
     steps:
       - checkout
       - run: mkdir build && cd build && cmake .. && make -j4 && cd ..
-      - run: |
-          mkdir workspace && mv build/project/ProjectKonami workspace \
-          && mv build/utests/test workspace && mv project/resources workspace \
-          && mv herokuDockerfile workspace && mv heroku.yml workspace \
-          && mv db_conf.json workspace && mv project/simplechat.xml workspace \
-          && mv project/*.css workspace
       - persist_to_workspace:
-          root: workspace
+          root: build
           paths:
-            - ./*
+            - project/ProjectKonami
+            - utests/Test
   test:
     executor: default
     resource_class: small
     steps:
+      - checkout
       - attach_workspace:
-          at: "."
-      - run: ./test
+          at: "build"
+      - run: utests/run_unittests.sh build/utests/Test
   deploy:
-     branches:
-       only:
-         - dev
     executor: heroku/default
     resource_class: small
     steps:
+      - checkout
       - attach_workspace:
-          at: "."
+          at: "build"
       - run: |
-          git config --global user.email $GIT_EMAIL \
+          mkdir /tmp/git_repo && mv -t /tmp/git_repo \
+          build/project/ProjectKonami project/resources \
+          herokuDockerfile heroku.yml db_conf.json \
+          project/simplechat.xml project/*.css \
+          && git config --global user.email $GIT_EMAIL \
           && git config --global user.name $GIT_USERNAME \
-          && git init && git add . && git commit -am "Add deployment files"
+          && cd /tmp/git_repo && git init && git add . && git commit -am "Deploy"
       - heroku/deploy-via-git:
           branch: "master"
           force: true
 workflows:
+  version: 2
   ci-workflow:
     jobs:
       - build
@@ -48,10 +47,15 @@ workflows:
       - deploy:
           requires:
             - test
+          filters:
+            branches:
+              only:
+                - dev
+                - dev-wt-server
 executors:
   default:
     docker:
-    - image: oktomx/project-konami:1.1
+    - image: oktomx/project-konami:1.2
   lightweight:
     docker:
     - image: cimg/base:stable
