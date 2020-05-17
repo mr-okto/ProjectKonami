@@ -92,7 +92,14 @@ bool DbSession<DBConnector>::connect(std::basic_istream<boost::property_tree::pt
   try {
     boost::property_tree::read_json(json_config, pt);
     std::string host = get_var("host", pt);
-    uint32_t port = std::stoul(get_var("port", pt));
+    uint32_t port = 0;
+    try {
+      port = std::stoul(get_var("port", pt));
+    }
+    catch (std::logic_error &e) {
+      std::cerr << e.what();
+      return false;
+    }
     std::string user = get_var("db_user", pt);
     std::string password = get_var("db_password", pt);
     std::string db_name = get_var("db_name", pt);
@@ -102,6 +109,7 @@ bool DbSession<DBConnector>::connect(std::basic_istream<boost::property_tree::pt
     std::cerr << e.what();
     return false;
   }
+
 }
 
 template<class DBConnector>
@@ -122,7 +130,7 @@ template<class DBConnector>
 std::string DbSession<DBConnector>::get_var(const std::string &name, const boost::property_tree::ptree &pt) {
   std::string result = pt.get<std::string>(name);
   if (!result.empty() && result[0] == '$') {
-    char *val = std::getenv(result.c_str());
+    char *val = std::getenv(result.c_str() + 1);
     if (val) {
       result = val;
     }
