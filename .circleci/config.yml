@@ -11,9 +11,9 @@ jobs:
           && mv herokuDockerfile workspace && mv heroku.yml workspace \
           && mv db_conf.json workspace
       - persist_to_workspace:
-          root: "workspace"
+          root: workspace
           paths:
-            - *
+            - ./*
   test:
     executor: default
     resource_class: small
