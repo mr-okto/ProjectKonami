@@ -9,6 +9,6 @@ list(FILTER UNIT_SOURCES EXCLUDE REGEX ".main.cpp$")
 set(TEST_SOURCES src/TestDb.cpp src/TestMain.cpp)
 
 
-add_executable(test ${UNIT_SOURCES} ${TEST_SOURCES})
-target_link_libraries(test gmock gtest pthread wthttp wt wtdbo wtdbopostgres Threads::Threads ${OpenCV_LIBS} boost_filesystem)
-set_target_properties(test PROPERTIES COMPILE_FLAGS "-DPOSTGRES")
+add_executable(Test ${UNIT_SOURCES} ${TEST_SOURCES})
+target_link_libraries(Test gmock gtest pthread wthttp wt wtdbo wtdbopostgres Threads::Threads ${OpenCV_LIBS} boost_filesystem)
+set_target_properties(Test PROPERTIES COMPILE_FLAGS "-DPOSTGRES")
