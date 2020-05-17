@@ -9,7 +9,8 @@ jobs:
           mkdir workspace && mv build/project/ProjectKonami workspace \
           && mv build/utests/test workspace && mv project/resources workspace \
           && mv herokuDockerfile workspace && mv heroku.yml workspace \
-          && mv db_conf.json workspace
+          && mv db_conf.json workspace && mv project/simplechat.xml workspace \
+          && mv project/*.css workspace
       - persist_to_workspace:
           root: workspace
           paths:
