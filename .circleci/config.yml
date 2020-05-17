@@ -4,23 +4,23 @@ jobs:
     executor: default
     steps:
       - checkout
-      - run: g++ main.cpp
-      - run: mkdir build && mv a.out ProjectKonami && mkdir resources
+      - run: mkdir build && cd build && cmake .. && make -j4 && cd ..
+      - run: |
+          mkdir workspace && mv build/project/ProjectKonami workspace \
+          && mv build/utests/test workspace && mv project/resources workspace \
+          && mv herokuDockerfile workspace && mv heroku.yml workspace \
+          && mv db_conf.json workspace
       - persist_to_workspace:
-          root: "."
+          root: "workspace"
           paths:
-            - herokuDockerfile
-            - heroku.yml
-            - ProjectKonami
-            - resources
+            - *
   test:
-    executor: lightweight
+    executor: default
     resource_class: small
     steps:
       - attach_workspace:
           at: "."
-      - run: ls .
-      - run: ./ProjectKonami
+      - run: ./test
   deploy:
     # branches:
     #   only:
@@ -50,7 +50,7 @@ workflows:
 executors:
   default:
     docker:
-    - image: oktomx/project-konami:1.0
+    - image: oktomx/project-konami:1.1
   lightweight:
     docker:
     - image: cimg/base:stable
