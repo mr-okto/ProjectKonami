@@ -1,0 +1,58 @@
+version: 2.1
+jobs:
+  build:
+    executor: default
+    steps:
+      - checkout
+      - run: mkdir build && cd build && cmake .. && make -j4 && cd ..
+      - run: |
+          mkdir workspace && mv build/project/ProjectKonami workspace \
+          && mv build/utests/test workspace && mv project/resources workspace \
+          && mv herokuDockerfile workspace && mv heroku.yml workspace \
+          && mv db_conf.json workspace
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - ./*
+  test:
+    executor: default
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: "."
+      - run: ./test
+  deploy:
+    # branches:
+    #   only:
+    #     - dev
+    executor: heroku/default
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: "."
+      - run: |
+          git config --global user.email $GIT_EMAIL \
+          && git config --global user.name $GIT_USERNAME \
+          && git init && git add . && git commit -am "Add deployment files"
+      - heroku/deploy-via-git:
+          branch: "master"
+          force: true
+workflows:
+  ci-workflow:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - test
+executors:
+  default:
+    docker:
+    - image: oktomx/project-konami:1.1
+  lightweight:
+    docker:
+    - image: cimg/base:stable
+orbs:
+  heroku: circleci/heroku@1.0.1
