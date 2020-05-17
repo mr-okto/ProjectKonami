@@ -10,7 +10,7 @@ jobs:
           && mv build/utests/test workspace && mv project/resources workspace \
           && mv herokuDockerfile workspace && mv heroku.yml workspace \
           && mv db_conf.json workspace && mv project/simplechat.xml workspace \
-          && mv project/*.css workspace
+          && mv project/*.css workspace && mv utests/run_unittests.sh workspace
       - persist_to_workspace:
           root: workspace
           paths:
@@ -21,11 +21,12 @@ jobs:
     steps:
       - attach_workspace:
           at: "."
-      - run: ./test
+      - run: run_unittests.sh ./test
   deploy:
-     branches:
-       only:
-         - dev
+    branches:
+      only:
+        - dev
+        - dev-wt-server
     executor: heroku/default
     resource_class: small
     steps:

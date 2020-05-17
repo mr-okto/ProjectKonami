@@ -16,7 +16,7 @@ using Wt::Dbo::backend::Postgres;
 class DbTest : public Test {
  public:
   DbTest() : Test(), session_(), test_uname_(Randomizer::get_instance().get_string(64)), test_pwd_( "123456") {
-    session_.connect("db_conf.json");
+    assert(session_.connect("db_conf.json"));
   }
   virtual ~DbTest() {
     session_.disconnect();
