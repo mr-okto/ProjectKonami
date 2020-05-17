@@ -23,10 +23,6 @@ jobs:
           at: "."
       - run: run_unittests.sh ./test
   deploy:
-    branches:
-      only:
-        - dev
-        - dev-wt-server
     executor: heroku/default
     resource_class: small
     steps:
@@ -40,6 +36,7 @@ jobs:
           branch: "master"
           force: true
 workflows:
+  version: 2
   ci-workflow:
     jobs:
       - build
@@ -49,6 +46,11 @@ workflows:
       - deploy:
           requires:
             - test
+          filters:
+            branches:
+              only:
+                - dev
+                - dev-wt-server
 executors:
   default:
     docker:
