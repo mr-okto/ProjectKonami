@@ -33,6 +33,7 @@ jobs:
           && git config --global user.email $GIT_EMAIL \
           && git config --global user.name $GIT_USERNAME \
           && cd /tmp/git_repo && git init && git add . && git commit -am "Deploy"
+      - workdir: /tmp/git_repo
       - heroku/deploy-via-git:
           branch: "master"
           force: true
