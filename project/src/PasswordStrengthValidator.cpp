@@ -26,13 +26,13 @@ const int PasswordStrengthValidator::Disabled = std::numeric_limits<int>::max();
 
 PasswordStrengthValidator::PasswordStrengthValidator() {
     min_length_[0] = Disabled;
-    min_length_[1] = 15;
-    min_length_[2] = 11;
-    min_length_[3] = 8;
-    min_length_[4] = 5;
+    min_length_[1] = 7;
+    min_length_[2] = 6;
+    min_length_[3] = 4;
+    min_length_[4] = 2;
 
-    pass_phrase_word_ = 3;
-    min_match_length_ = 4;
+    pass_phrase_word_ = 2;
+    min_match_length_ = 3;
 }
 
 StrengthValidatorResult
