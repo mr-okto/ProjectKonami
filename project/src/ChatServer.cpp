@@ -2,6 +2,7 @@
 #include <Wt/WEnvironment.h>
 
 #include "ChatServer.hpp"
+#include "ImageProcessing.hpp"
 
 ChatServer::ChatServer(Wt::WServer& server, DbSession<Wt::Dbo::backend::Postgres>& session)
     : server_(server),
@@ -56,7 +57,10 @@ bool ChatServer::sign_up
     if (userModel) {
         if (!avatar_path.empty()) {
             std::cout << avatar_path << std::endl;
-            user_manager_.add_picture(userModel.id(), avatar_path, 5);
+            auto blurredPaths = create_blurred_copies(avatar_path, "./avatars", userModel.id(), 5);
+            for (int i = 0; i < 5; ++i) {
+                user_manager_.add_picture(userModel.id(), blurredPaths[i], i + 1);
+            }
         }
         return true;
     } else {

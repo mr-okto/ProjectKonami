@@ -59,7 +59,7 @@ button {
   margin-right: auto;
   margin-top: 10px;
   margin-bottom: 10px;
-  max-width: 600px;
+  max-width: 900px;
   /*width: 400px;*/
   /*height: 400px;*/
 }
@@ -100,7 +100,8 @@ textarea.chat-noedit {
 }
 
 .chat-users {
-  width: 12ex;
+  /*width: 12ex;*/
+  width: 33.33333333333333%;
 }
 
 /*.chat-msg {*/
@@ -135,4 +136,18 @@ textarea.chat-noedit {
   margin-bottom: 10px;
   width: 500px;
   max-height: 300px;
+}
+
+.user-widget {
+  height: 60px;
+  border: 2px solid #98B0D0;
+  font-size: large;
+  padding: 0px;
+}
+
+.user-widget img {
+  height: 50px;
+  width: 50px;
+  padding: 5px;
+  margin: 0px 20px 0px 0px;
 }

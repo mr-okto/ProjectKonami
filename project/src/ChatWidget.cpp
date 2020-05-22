@@ -22,6 +22,7 @@
 
 
 #include "ChatWidget.hpp"
+#include "UserWidget.hpp"
 
 ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& server)
     : Wt::WContainerWidget(),
@@ -213,16 +214,17 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
     auto gridLayout = std::make_unique<Wt::WGridLayout>();
     gridLayout->addWidget(create_title("Dialogues"), 0, 0, Wt::AlignmentFlag::Center);
     gridLayout->addWidget(create_title("Messages"), 0, 1, Wt::AlignmentFlag::Center);
-    gridLayout->addWidget(create_title("Users"), 0, 2, Wt::AlignmentFlag::Center);
+    gridLayout->addWidget(create_title("Online Users"), 0, 2, Wt::AlignmentFlag::Center);
 
     chatUserList->setStyleClass("chat-users");
-    chatUserList->resize(Wt::WLength::Auto, 600);
+//    chatUserList->resize(Wt::WLength::Auto, 600);
     gridLayout->addWidget(std::move(chatUserList), 1, 0);
 
     messages->setStyleClass("chat-msgs");
     gridLayout->addWidget(std::move(messages), 1, 1);
 
     userList->setStyleClass("chat-users");
+    userList->resize(200, 475);
     gridLayout->addWidget(std::move(userList), 1, 2);
 
 
@@ -455,9 +457,12 @@ void ChatWidget::update_users_list() {
 
         std::set<Wt::WString> users = server_.online_users();
         auto *l = userList_->addWidget(std::make_unique<Wt::WSelectionBox>());
+        auto *userListWidget = userList_->addWidget(std::make_unique<Wt::WContainerWidget>());
+        userListWidget->setOverflow(Wt::Overflow::Auto);
         for (auto i = users.begin(); i != users.end(); ++i) {
             if (*i != username_) {
                 l->addItem(*i);
+                userListWidget->addWidget(std::make_unique<UserWidget>(*i, "./avatars/88/img_template_4.jpg"));
             }
         }
         l->activated().connect([this, l] {

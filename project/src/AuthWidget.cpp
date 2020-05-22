@@ -11,8 +11,15 @@
 #include <Wt/WCheckBox.h>
 #include <Wt/WEvent.h>
 #include <Wt/Utils.h>
+#include <filesystem>
 
 #include "AuthWidget.hpp"
+
+//void cut_extension(const std::string& file) {
+//    auto ext = std::filesystem::path(file).extension();
+//    size_t pos = file.find(ext);
+//    file.erase(pos, ext.string().length());
+//}
 
 AuthWidget::AuthWidget(ChatServer &server)
     : WContainerWidget(),
@@ -192,8 +199,13 @@ std::unique_ptr<Wt::WVBoxLayout> AuthWidget::create_input_forms_layout() {
 }
 
 std::string
-AuthWidget::copy_temp_img_to_avatar_folder(const std::string &tmp_file_path, const std::string &client_filename) {
-    std::string result_filename = "./avatars/" + client_filename;
+AuthWidget::copy_temp_img_to_avatar_folder(const std::string& tmp_file_path, const std::string& client_filename) {
+//    auto ext = std::filesystem::path(client_filename).extension();
+//    if (ext == ".jpg") {
+//        client_filename = client_filename.erase(client_filename.find(ext), ext.string().length()) + "";
+//    }
+
+    std::string result_filename = "./avatars/" + client_filename;// + ".jpeg";
     std::ifstream in(tmp_file_path, std::ios::binary | std::ios::in);
     std::ofstream out(result_filename, std::ios::binary | std::ios::out);
 
