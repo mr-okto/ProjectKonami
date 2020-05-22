@@ -47,6 +47,8 @@ public:
     void mark_message_as_read(const chat::Message& message);
 
     uint get_user_id(const Wt::WString& username);
+    UserModelPtr get_user_model(const Wt::WString& username);
+    std::string get_user_picture(const Wt::WString& username, int accs_lvl);
 
     // Try to sign in with given username and password.
     // Returns false if the login was not successful;
@@ -58,6 +60,7 @@ public:
     void weak_sign_out(Client * client, const Wt::WString& username_);
 
     std::set<Wt::WString> online_users();
+    std::map<Wt::WString, Wt::WString> avatar_map(); // by default contains 5 lvl access of blurred picture
     std::vector<Wt::WString> get_all_users();
 
     void notify_user(const ChatEvent& event);
@@ -66,12 +69,15 @@ private:
     Wt::WServer& server_;
     std::recursive_mutex mutex_;
 
+    DbSession<Wt::Dbo::backend::Postgres>& db_session_;
+
     SessionManager        session_manager_;
     Auth                  auth_service_;
     chat::DialogueService dialogue_service_;
     // chat::UserService     user_service_;
 
     std::set<Wt::WString> online_users_;
+    std::map<Wt::WString, Wt::WString> avatar_map_;
 
     UserManager
     <Wt::Dbo::backend::Postgres> user_manager_;

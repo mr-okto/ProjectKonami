@@ -3,6 +3,7 @@
 
 #include <Wt/WContainerWidget.h>
 #include <Wt/WMessageBox.h>
+#include <Wt/WLink.h>
 
 #include "ChatServer.hpp"
 
@@ -25,6 +26,7 @@ public:
 private:
     ChatServer& server_;
     Wt::WString username_;
+    Wt::WLink avatar_link_;
     uint32_t  user_id_;
 
     Wt::Signal<Wt::WString> logout_signal_;

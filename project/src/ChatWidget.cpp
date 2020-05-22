@@ -29,7 +29,8 @@ ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& ser
       server_(server),
       username_(username),
       user_id_(id),
-      is_uploaded_(false)
+      is_uploaded_(false),
+      avatar_link_(server_.get_user_picture(username_, 5))
 
 {
     connect();
@@ -42,7 +43,8 @@ ChatWidget::ChatWidget(const Wt::WString &username, uint32_t id,
           server_(server),
           username_(username),
           user_id_(id),
-          is_uploaded_(false)
+          is_uploaded_(false),
+          avatar_link_(server_.get_user_picture(username_, 5))
 
 {
     //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
@@ -456,18 +458,26 @@ void ChatWidget::update_users_list() {
         userList_->clear();
 
         std::set<Wt::WString> users = server_.online_users();
+        std::map<Wt::WString,Wt::WString> avatars = server_.avatar_map();
         auto *l = userList_->addWidget(std::make_unique<Wt::WSelectionBox>());
         auto *userListWidget = userList_->addWidget(std::make_unique<Wt::WContainerWidget>());
         userListWidget->setOverflow(Wt::Overflow::Auto);
+
         for (auto i = users.begin(); i != users.end(); ++i) {
             if (*i != username_) {
                 l->addItem(*i);
-                userListWidget->addWidget(std::make_unique<UserWidget>(*i, "./avatars/88/img_template_4.jpg"));
+                userListWidget->addWidget(std::make_unique<UserWidget>(*i, avatars[*i].toUTF8()));
             }
         }
         l->activated().connect([this, l] {
             this->create_dialogue(l->currentText());
         });
+
+        for (WWidget *userWidget : userListWidget->children()) {
+            dynamic_cast<UserWidget*>(userWidget)->is_selected().connect([this](const Wt::WString& username) {
+                this->create_dialogue(username);
+            });
+        }
         update_dialogue_list();
     }
 }

@@ -151,3 +151,11 @@ textarea.chat-noedit {
   padding: 5px;
   margin: 0px 20px 0px 0px;
 }
+
+.user-widget:hover {
+  background: #6093cb;
+  -webkit-filter: brightness(70%);
+  -moz-filter: brightness(70%);
+  -o-filter: brightness(70%);
+  filter: brightness(70%);
+}

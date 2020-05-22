@@ -7,9 +7,10 @@
 ChatServer::ChatServer(Wt::WServer& server, DbSession<Wt::Dbo::backend::Postgres>& session)
     : server_(server),
       session_manager_(),
-      dialogue_service_(session),
+      db_session_(session),
+      dialogue_service_(db_session_),
       auth_service_(user_manager_, &session_manager_),
-      user_manager_(session)
+      user_manager_(db_session_)
 {
 }
 
@@ -74,6 +75,7 @@ bool ChatServer::sign_out(const Wt::WString &username_) {
     std::string username = username_.toUTF8();
     session_manager_.unreserve(username);
     online_users_.erase(username_);
+    avatar_map_.erase(username_);
     std::cout << "SIGN OUT"<< std::endl;
 
     post_chat_event(ChatEvent(ChatEvent::Type::SIGN_OUT, username));
@@ -120,6 +122,10 @@ void ChatServer::notify_user(const ChatEvent& event) {
 std::set<Wt::WString> ChatServer::online_users() {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
     return online_users_;
+}
+std::map<Wt::WString, Wt::WString> ChatServer::avatar_map() {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    return avatar_map_;
 }
 
 std::vector<chat::Dialogue> ChatServer::get_dialogues(const Wt::WString& username) {
@@ -192,6 +198,7 @@ void ChatServer::weak_sign_out(Client *client , const Wt::WString& username_) {
         if (session_manager_.active_sessions().find(client) != session_manager_.active_sessions().end()) {
             std::cout << "WEAK SIGN OUT"<< std::endl;
             online_users_.erase(username_);
+            avatar_map_.erase(username_);
             post_chat_event(ChatEvent(ChatEvent::Type::SIGN_OUT, username));
         }
 //    }
@@ -207,4 +214,26 @@ void ChatServer::close_same_session(const Wt::WString& username_) {
             return;
         }
     }
+}
+
+UserModelPtr ChatServer::get_user_model(const Wt::WString &username) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    return user_manager_.get_user(username.toUTF8());
+}
+
+std::string ChatServer::get_user_picture(const Wt::WString &username, int accs_lvl) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    UserModelPtr user = user_manager_.get_user(username.toUTF8());
+    db_session_.start_transaction();
+    for (const auto& pic : user->pictures_) {
+        if (pic->access_lvl_ == accs_lvl) {
+            db_session_.end_transaction();
+            avatar_map_[username] = pic->path_;
+            return pic->path_;
+        }
+    }
+    db_session_.end_transaction();
+    avatar_map_[username] = std::string();
+    return std::string();
 }
