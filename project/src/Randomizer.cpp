@@ -9,7 +9,7 @@ std::string Randomizer::get_string(unsigned len) {
   static std::string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
   static std::uniform_int_distribution<std::string::size_type> pick(0, alphabet.size() - 1);
   std::string result(len, ' ');
-  std::generate_n(result.begin(), len, [&]() { return pick(engine_m); });
+  std::generate_n(result.begin(), len, [&]() { return alphabet[pick(engine_m)]; });
   return result;
 }
 
