@@ -20,7 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 
-
+#include "DialogueWidget.hpp"
 #include "ChatWidget.hpp"
 #include "UserWidget.hpp"
 
@@ -334,7 +334,6 @@ void ChatWidget::fill_fileuploader() {
 
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
-    auto *l = dialoguesList_->addWidget(std::make_unique<Wt::WSelectionBox>());
     for (const auto& dialogue : server_.get_dialogues(username_)) {
         std::string username;
         if (dialogue.first_user.username != username_) {
@@ -343,14 +342,15 @@ void ChatWidget::update_dialogue_list() {
             username = dialogue.second_user.username;
         }
         dialogues_[username] = dialogue;
-        l->addItem(username);
+
+        auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, ""));
+        w->clicked().connect([=] {
+            this->update_messages(w->get_dialogue_name());
+            this->current_dialogue_ = w->get_dialogue_name();
+            this->sendButton_->enable();
+            this->messageEdit_->enable();
+        });
     }
-    l->activated().connect([=] {
-        this->update_messages(l->currentText());
-        current_dialogue_ = l->currentText();
-        this->sendButton_->enable();
-        this->messageEdit_->enable();
-    });
 }
 
 std::string ChatWidget::get_message_format(const chat::Message& message) {
@@ -364,7 +364,7 @@ std::string ChatWidget::get_message_format(const chat::Message& message) {
             ss << "<span style=\"font-size: large; font-weight: bolder;\">";
                 ss << message.user.username;
             ss << "</span>";
-            ss << "<span style=\"padding: 2px; font-size: 75%; color: Gray;\">";
+            ss << "<span style=\"font-size: 75%; color: Gray;\">";
                 ss << "(" << std::string(buf) << ")";
             ss << "</span>";
     ss << "</p>";
