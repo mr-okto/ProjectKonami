@@ -219,7 +219,7 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
     gridLayout->addWidget(create_title("Online Users"), 0, 2, Wt::AlignmentFlag::Center);
 
     chatUserList->setStyleClass("chat-users");
-//    chatUserList->resize(Wt::WLength::Auto, 600);
+    chatUserList->resize(200, 475);
     gridLayout->addWidget(std::move(chatUserList), 1, 0);
 
     messages->setStyleClass("chat-msgs");
@@ -275,7 +275,7 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
     if (event.type_ == ChatEvent::NEW_DIALOGUE) {
         update_dialogue_list();
     } else if (event.type_ == ChatEvent::NEW_MSG) {
-        update_dialogue_list();
+        local_dialogue_list_update(event.message_.user.username);
         if (dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
             chat::Message message = event.message_;
@@ -332,6 +332,17 @@ void ChatWidget::fill_fileuploader() {
     fileUploaderPtr_ = fu;
 }
 
+void ChatWidget::local_dialogue_list_update(const Wt::WString& dialogue_name) {
+    for (int i = 0; i < dialoguesList_->count(); i++) {
+            auto widget = dialoguesList_->widget(i);
+            if (typeid(*widget) == typeid(DialogueWidget) && 
+                    dynamic_cast<DialogueWidget*>(widget)->get_dialogue_name() == dialogue_name) {
+                dialoguesList_->insertWidget(0, dialoguesList_->removeWidget(widget));
+                break;
+            }
+        }
+}
+
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
     for (const auto& dialogue : server_.get_dialogues(username_)) {
@@ -343,7 +354,7 @@ void ChatWidget::update_dialogue_list() {
         }
         dialogues_[username] = dialogue;
 
-        auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, ""));
+        auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, "", 0));
         w->clicked().connect([=] {
             this->update_messages(w->get_dialogue_name());
             this->current_dialogue_ = w->get_dialogue_name();
@@ -459,6 +470,7 @@ void ChatWidget::send_message() {
                                 dialogues_[current_dialogue_].first_user : 
                                 dialogues_[current_dialogue_].second_user;
 
+        local_dialogue_list_update(receiver.username);
         print_message(message);
         server_.send_msg(message, receiver);
     }

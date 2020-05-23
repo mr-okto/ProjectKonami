@@ -68,6 +68,7 @@ private:
 
     void update_users_list();
     void update_dialogue_list();
+    void local_dialogue_list_update(const Wt::WString& dialogue_name);
     void update_messages(const Wt::WString& username);
     void print_message(const chat::Message& message);
     bool create_dialogue(const Wt::WString& username);
