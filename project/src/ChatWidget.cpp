@@ -170,14 +170,12 @@ void ChatWidget::create_UI() {
     if (sendButton_) {
         sendButton_->clicked().connect(this, &ChatWidget::send_message);
         sendButton_->clicked().connect(clearInput_);
-        sendButton_->clicked().connect((WWidget *)messageEdit_,
-                        &WWidget::setFocus);   
+        sendButton_->clicked().connect((WWidget *)messageEdit_, &WWidget::setFocus);   
         sendButton_->disable();  
     }
     messageEdit_->enterPressed().connect(this, &ChatWidget::send_message);
     messageEdit_->enterPressed().connect(clearInput_);
-    messageEdit_->enterPressed().connect((WWidget *)messageEdit_,
-					 &WWidget::setFocus);
+    messageEdit_->enterPressed().connect((WWidget *)messageEdit_, &WWidget::setFocus);
     messageEdit_->disable();
 
 
@@ -186,6 +184,7 @@ void ChatWidget::create_UI() {
     messageEdit_->enterPressed().preventDefaultAction();
 
     update_users_list();
+    update_dialogue_list();
 }
 
 void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::unique_ptr<Wt::WWidget> userList,
@@ -266,7 +265,8 @@ void ChatWidget::sign_out() {
 void ChatWidget::process_chat_event(const ChatEvent& event) {
     Wt::WApplication *app = Wt::WApplication::instance();
 
-    if (event.type() != ChatEvent::Type::NEW_MSG) {
+    if (event.type() != ChatEvent::Type::NEW_MSG && 
+            event.type() != ChatEvent::READ_MESSAGE) {
         update_users_list();
     }
 
@@ -275,7 +275,7 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
     if (event.type_ == ChatEvent::NEW_DIALOGUE) {
         update_dialogue_list();
     } else if (event.type_ == ChatEvent::NEW_MSG) {
-        local_dialogue_list_update(event.message_.user.username);
+        set_dialogue_top(event.message_.user.username);
         if (dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
             chat::Message message = event.message_;
@@ -283,11 +283,12 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
             print_message(message);
             server_.mark_message_as_read(event.message_);
         }
+
     } else if(event.type_ == ChatEvent::READ_MESSAGE && 
                 dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
         for (int i = messages_->count() - 1; i >= 0; i--) {
-            auto widget = messages_->widget(i);
+            WWidget* widget = messages_->widget(i);
             if (typeid(*widget) == typeid(Wt::WText) && 
                     dynamic_cast<Wt::WText*>(widget)->text() == get_message_format(event.message_)) {
                 chat::Message message = event.message_;
@@ -332,11 +333,14 @@ void ChatWidget::fill_fileuploader() {
     fileUploaderPtr_ = fu;
 }
 
-void ChatWidget::local_dialogue_list_update(const Wt::WString& dialogue_name) {
+void ChatWidget::set_dialogue_top(const Wt::WString& dialogue_name) {
     for (int i = 0; i < dialoguesList_->count(); i++) {
-            auto widget = dialoguesList_->widget(i);
-            if (typeid(*widget) == typeid(DialogueWidget) && 
+            WWidget* widget = dialoguesList_->widget(i);
+            if (typeid(*widget) == typeid(DialogueWidget) &&
                     dynamic_cast<DialogueWidget*>(widget)->get_dialogue_name() == dialogue_name) {
+                if (i == 0) {
+                    return;
+                }
                 dialoguesList_->insertWidget(0, dialoguesList_->removeWidget(widget));
                 break;
             }
@@ -346,12 +350,9 @@ void ChatWidget::local_dialogue_list_update(const Wt::WString& dialogue_name) {
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
     for (const auto& dialogue : server_.get_dialogues(username_)) {
-        std::string username;
-        if (dialogue.first_user.username != username_) {
-            username = dialogue.first_user.username;
-        } else {
-            username = dialogue.second_user.username;
-        }
+        std::string username = dialogue.first_user.username != username_ ? 
+                               dialogue.first_user.username :
+                               dialogue.second_user.username;
         dialogues_[username] = dialogue;
 
         auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, "", 0));
@@ -364,6 +365,8 @@ void ChatWidget::update_dialogue_list() {
     }
 }
 
+
+// Little html code
 std::string ChatWidget::get_message_format(const chat::Message& message) {
     struct tm *ts;
     char       buf[80];
@@ -403,6 +406,7 @@ void ChatWidget::update_messages(const Wt::WString& username) {
 
 bool ChatWidget::create_dialogue(const Wt::WString& username) {
     if (server_.create_dialogue(username_, username)) {
+        // Little overhead
         update_dialogue_list();
         return true;
     }
@@ -427,6 +431,7 @@ void ChatWidget::print_message(const chat::Message& message) {
         video->resize(300, 300);
     }
 
+    // Js trick for page scroll
     Wt::WApplication *app = Wt::WApplication::instance();
     app->doJavaScript(messages_->jsRef() + ".scrollTop += "
 		       + messages_->jsRef() + ".scrollHeight;");
@@ -466,11 +471,11 @@ void ChatWidget::send_message() {
             content
         );
           
-        chat::User receiver = dialogues_[current_dialogue_].first_user.username != username_ ? 
-                                dialogues_[current_dialogue_].first_user : 
-                                dialogues_[current_dialogue_].second_user;
+        chat::User receiver = dialogues_[current_dialogue_].first_user.username != username_ ?  // If
+                                    dialogues_[current_dialogue_].first_user :   // Else 
+                                    dialogues_[current_dialogue_].second_user;
 
-        local_dialogue_list_update(receiver.username);
+        set_dialogue_top(receiver.username);
         print_message(message);
         server_.send_msg(message, receiver);
     }
@@ -479,29 +484,15 @@ void ChatWidget::send_message() {
 void ChatWidget::update_users_list() {
     if (userList_) {
         userList_->clear();
-
-        std::set<Wt::WString> users = server_.online_users();
         std::map<Wt::WString,Wt::WString> avatars = server_.avatar_map();
-        auto *l = userList_->addWidget(std::make_unique<Wt::WSelectionBox>());
-        auto *userListWidget = userList_->addWidget(std::make_unique<Wt::WContainerWidget>());
-        userListWidget->setOverflow(Wt::Overflow::Auto);
-
-        for (auto i = users.begin(); i != users.end(); ++i) {
-            if (*i != username_) {
-                l->addItem(*i);
-                userListWidget->addWidget(std::make_unique<UserWidget>(*i, avatars[*i].toUTF8()));
+        for (const auto& user : server_.online_users()) {
+            if (user != username_) {
+                auto w = userList_->addWidget(std::make_unique<UserWidget>(user, avatars[user].toUTF8()));
+                w->clicked().connect([=] {
+                    this->create_dialogue(w->get_username());
+                });
             }
         }
-        l->activated().connect([this, l] {
-            this->create_dialogue(l->currentText());
-        });
-
-        for (WWidget *userWidget : userListWidget->children()) {
-            dynamic_cast<UserWidget*>(userWidget)->is_selected().connect([this](const Wt::WString& username) {
-                this->create_dialogue(username);
-            });
-        }
-        update_dialogue_list();
     }
 }
 

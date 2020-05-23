@@ -11,42 +11,35 @@ class ChatWidget : public Wt::WContainerWidget, public Client {
 public:
     ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& server);
     ChatWidget(const Wt::WString& username, uint32_t id,
-                const std::optional<std::string>& cookie, ChatServer& server);
-
-    ~ChatWidget();
+               const std::optional<std::string>& cookie, ChatServer& server);
 
     void connect() override;
     void disconnect() override;
-    Wt::Signal<Wt::WString>& logout_signal() { return logout_signal_; }
-
     void sign_out() override;
+    Wt::Signal<Wt::WString>& logout_signal() {return logout_signal_;}
 
-    std::string username() override { return username_.toUTF8(); }
+    std::string username() override {return username_.toUTF8();}
+
+    ~ChatWidget();
 
 private:
     ChatServer& server_;
     Wt::WString username_;
-    Wt::WLink avatar_link_;
-    uint32_t  user_id_;
+    Wt::WLink   avatar_link_;
+    uint32_t    user_id_;
+    bool        is_uploaded_;
+    Wt::WString current_dialogue_;
+    std::map<Wt::WString, chat::Dialogue> dialogues_;
 
-    Wt::Signal<Wt::WString> logout_signal_;
-
-    Wt::JSlot                    clearInput_;
-
-    Wt::WContainerWidget         *messages_;
-    Wt::WTextArea                *messageEdit_;
-    Wt::Core::observing_ptr<Wt::WPushButton> sendButton_;
-
-    bool is_uploaded_;
-
+    Wt::Signal<Wt::WString>                       logout_signal_;
+    Wt::JSlot                                     clearInput_;
+    Wt::WContainerWidget*                         messages_;
+    Wt::WTextArea*                                messageEdit_;
+    Wt::Core::observing_ptr<Wt::WPushButton>      sendButton_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> userList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> dialoguesList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> fileUploader_;
-
-    Wt::WFileUpload* fileUploaderPtr_;
-
-    std::map<Wt::WString, chat::Dialogue> dialogues_;
-    Wt::WString current_dialogue_;
+    Wt::WFileUpload*                              fileUploaderPtr_;
 
     void fill_fileuploader();
     void create_UI();
@@ -68,7 +61,7 @@ private:
 
     void update_users_list();
     void update_dialogue_list();
-    void local_dialogue_list_update(const Wt::WString& dialogue_name);
+    void set_dialogue_top(const Wt::WString& dialogue_name);
     void update_messages(const Wt::WString& username);
     void print_message(const chat::Message& message);
     bool create_dialogue(const Wt::WString& username);
