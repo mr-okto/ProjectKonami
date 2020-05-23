@@ -272,16 +272,15 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 
     app->triggerUpdate();
 
-    bool display = event.type() != ChatEvent::Type::NEW_MSG
-        || !userList_;
-
     if (event.type_ == ChatEvent::NEW_DIALOGUE) {
         update_dialogue_list();
     } else if (event.type_ == ChatEvent::NEW_MSG) {
         update_dialogue_list();
         if (dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
-            print_message(event.message_);
+            chat::Message message = event.message_;
+            message.is_read = true;
+            print_message(message);
             server_.mark_message_as_read(event.message_);
         }
     } else if(event.type_ == ChatEvent::READ_MESSAGE && 
@@ -291,12 +290,9 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
             auto widget = messages_->widget(i);
             if (typeid(*widget) == typeid(Wt::WText) && 
                     dynamic_cast<Wt::WText*>(widget)->text() == get_message_format(event.message_)) {
-                Wt::WText* w =  messages_->insertBefore(Wt::cpp14::make_unique<Wt::WText>(), widget);
-                messages_->removeWidget(widget);
                 chat::Message message = event.message_;
                 message.is_read = true;
-                w->setText(get_message_format(message));
-                w->setInline(false);
+                dynamic_cast<Wt::WText*>(widget)->setText(get_message_format(message));
                 break;
             }
         }
@@ -362,20 +358,35 @@ std::string ChatWidget::get_message_format(const chat::Message& message) {
     char       buf[80];
     ts = localtime(&message.time);
     strftime(buf, sizeof(buf), "%H:%M", ts);
-    if (message.is_read && message.user.username == username_.toUTF8()) {
-        return message.user.username + ": " + message.content.message + " " + std::string(buf) + " True";
+
+    std::stringstream ss;
+    ss << "<p style=\"margin-bottom: -4px\">";
+            ss << "<span style=\"font-size: large; font-weight: bolder;\">";
+                ss << message.user.username;
+            ss << "</span>";
+            ss << "<span style=\"padding: 2px; font-size: 75%; color: Gray;\">";
+                ss << "(" << std::string(buf) << ")";
+            ss << "</span>";
+    ss << "</p>";
+    if (message.is_read) {
+        ss << message.content.message;
     } else {
-        return message.user.username + ": " + message.content.message + " " + std::string(buf);
+        ss << "<font color=\"Gray\">";
+            ss << message.content.message;
+        ss << "</font>";
     }
+
+    return ss.str();
 }
 
 void ChatWidget::update_messages(const Wt::WString& username) {
     messages_->clear();
-    for (const auto& message : server_.get_messages(dialogues_[username].dialogue_id, username_.toUTF8())) {
-        print_message(message);
+    for (auto& message : server_.get_messages(dialogues_[username].dialogue_id, username_.toUTF8())) {
         if (message.user.username != username_ && !message.is_read) {
             server_.mark_message_as_read(message);
+            message.is_read = true;
         }
+        print_message(message);
     }
 }
 

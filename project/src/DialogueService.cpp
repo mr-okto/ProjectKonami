@@ -42,6 +42,16 @@ std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username
         return_vec.push_back(Dialogue((uint)item.id(), users[0], users[1]));
     }
     session_.end_transaction();
+    session_.start_transaction();
+    for (auto& item : return_vec) {
+        auto last_msg = message_manager_.get_last_msg(item.dialogue_id);
+        if (last_msg) {
+            item.last_msg_time = last_msg->creation_dt_;
+        }
+            
+    }
+    session_.end_transaction();
+    sort(return_vec.begin(), return_vec.end());
     return return_vec;
 }
 
@@ -73,7 +83,7 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::
         return_vec.push_back(message);
     }
     session_.end_transaction();
-    sort(return_vec.begin(), return_vec.end());
+    // sort(return_vec.begin(), return_vec.end());
     return return_vec;
 }
 
