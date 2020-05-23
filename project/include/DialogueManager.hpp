@@ -13,6 +13,7 @@ class DialogueManager {
   std::tuple<DialogueModelPtr, bool> get_or_create_dialogue(const UserModelPtr &member_a, const UserModelPtr &member_b);
   unsigned long count_messages(const UserModelPtr &sender, const UserModelPtr &recipient);
   unsigned long count_messages(IdType dialogue, IdType sender);
+  unsigned long count_unread_messages(IdType dialogue, IdType recipient);
 };
 
 template < class DBConnector >
@@ -74,7 +75,17 @@ template<class DBConnector>
 unsigned long DialogueManager<DBConnector>::count_messages(IdType dialogue, IdType sender) {
   db_session_.start_transaction();
   Messages messages = db_session_.template find<MessageModel>().where("dialogue_id = ?").bind(dialogue)
-                                                               .where("author_id = ?").bind(sender);
+      .where("author_id = ?").bind(sender);
+  unsigned long result = messages.size();
+  db_session_.end_transaction();
+  return result;
+}
+
+template<class DBConnector>
+unsigned long DialogueManager<DBConnector>::count_unread_messages(IdType dialogue, IdType sender) {
+  db_session_.start_transaction();
+  Messages messages = db_session_.template find<MessageModel>().where("dialogue_id = ?").bind(dialogue)
+      .where("author_id != ?").bind(sender).where("is_read = ?").bind(false);
   unsigned long result = messages.size();
   db_session_.end_transaction();
   return result;
