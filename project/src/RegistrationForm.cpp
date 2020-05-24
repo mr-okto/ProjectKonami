@@ -4,9 +4,11 @@
 #include <Wt/WText.h>
 #include <Wt/WLabel.h>
 #include <Wt/WProgressBar.h>
+#include <Wt/WLengthValidator.h>
 #include <fstream>
 
 #include "RegistrationForm.hpp"
+#define MINPASSLENGTH 4
 
 RegistrationForm::RegistrationForm()
     :Wt::WContainerWidget(),
@@ -50,26 +52,14 @@ void RegistrationForm::create_UI() {
 
     line = vLayout->addWidget(std::make_unique<Wt::WContainerWidget>(),0,Wt::AlignmentFlag::Middle);
     line->addWidget(std::make_unique<Wt::WText>("Upload avatars: "));
-    file_upload_ = line->addWidget(std::make_unique<Wt::WFileUpload>());
-    file_upload_->setInline(true);
-    file_upload_->setFileTextSize(100);
-    file_upload_->setProgressBar(std::make_unique<Wt::WProgressBar>());
-    file_upload_->setFilters("image/*");
+    file_upload_container = line->addWidget(std::make_unique<Wt::WContainerWidget>());
+    create_file_uploader();
 
-    file_upload_->changed().connect([this] {
-       file_upload_->upload();
-       status_msg_->setText("File upload is changed.");
-    });
-
-    file_upload_->uploaded().connect([this] {
-        error_ = ErrorType::None;
-        status_msg_->setText("File upload is finished.");
-    });
-
-    file_upload_->fileTooLarge().connect([=] {
-        error_ = ErrorType::ImgTooLarge;
-        status_msg_->setText("File is too large.");
-    });
+    line = vLayout->addWidget(std::make_unique<Wt::WContainerWidget>(),0,Wt::AlignmentFlag::Middle);
+    auto helpText = line->addWidget(std::make_unique<Wt::WText>("Password must be at least 4 characters long. "
+                                                "The password must consist of letters of the Latin alphabet (A-z),"
+                                                "Arabic numerals (0-9) and special characters."));
+    helpText->setStyleClass("help-text");
 
     line = vLayout->addWidget(std::make_unique<Wt::WContainerWidget>(), 0,  Wt::AlignmentFlag::Middle);
     status_msg_ = line->addWidget(std::make_unique<Wt::WText>());
@@ -86,6 +76,12 @@ bool RegistrationForm::validate() {
         return false;
     }
 
+    if (password1.toUTF8().length() < MINPASSLENGTH) {
+        error_ = ErrorType::ShortPassword;
+        is_valid_ = false;
+        return false;
+    }
+
     if (error_ == ErrorType::ImgTooLarge) {
         is_valid_ = false;
         return false;
@@ -98,9 +94,8 @@ bool RegistrationForm::validate() {
         return true;
     } else {
         is_valid_ = false;
-//        status_msg_->setText(res.message().toUTF8());
         status_string_ = res.message();
-        error_ = ErrorType::ShortPassword;
+        error_ = ErrorType::WeakPassword;
         return false;
     }
 }
@@ -108,4 +103,29 @@ bool RegistrationForm::validate() {
 void RegistrationForm::set_user_exists_error() {
     error_ = ErrorType::UsernameExists;
     is_valid_ = false;
+}
+
+void RegistrationForm::create_file_uploader() {
+    file_upload_container->clear();
+    file_upload_ = file_upload_container->addWidget(std::make_unique<Wt::WFileUpload>());
+    file_upload_->setInline(true);
+    file_upload_->setFileTextSize(100);
+    file_upload_->setProgressBar(std::make_unique<Wt::WProgressBar>());
+    file_upload_->setFilters("image/*");
+
+    file_upload_->changed().connect([this] {
+        file_upload_->upload();
+        status_msg_->setText("File upload is changed.");
+    });
+
+    file_upload_->uploaded().connect([this] {
+        error_ = ErrorType::None;
+        status_msg_->setText("File upload is finished.");
+    });
+
+    file_upload_->fileTooLarge().connect([=] {
+        error_ = ErrorType::ImgTooLarge;
+        status_msg_->setText("File is too large (over 4 MB). Try again");
+        create_file_uploader();
+    });
 }

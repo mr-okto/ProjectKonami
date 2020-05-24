@@ -9,13 +9,15 @@
 #include <Wt/WFileResource.h>
 #include <Wt/WHBoxLayout.h>
 
-const std::string default_avatar = "./avatars/88/img_template_4.jpg";
+const std::string default_avatar = "./avatars/default-avatar.png";
 
 class UserWidget : public Wt::WContainerWidget {
 public:
     UserWidget(const Wt::WString& username, const std::string& path)
             : username_(username) {
         auto Layout = std::make_unique<Wt::WHBoxLayout>();
+
+        std::cout << " PATH (USERWIDGET) " << path << std::endl;
 
         if (!path.empty())
             avatar_ = Layout->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(std::make_shared<Wt::WFileResource>(path))));

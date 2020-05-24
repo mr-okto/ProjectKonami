@@ -28,6 +28,7 @@ public:
     enum ErrorType {
         None,
         ShortPassword,
+        WeakPassword,
         UsernameExists,
         PasswordMismatch,
         ImgTooLarge
@@ -39,6 +40,7 @@ public:
 
 private:
     void create_UI();
+    void create_file_uploader();
 
     Wt::WLineEdit *username_edit_;
     Wt::WLineEdit *password_edit_first_;
@@ -51,6 +53,7 @@ private:
     Wt::WText  *status_msg_;
     Wt::WString status_string_;
 
+    Wt::WContainerWidget * file_upload_container;
     Wt::WFileUpload *file_upload_;
 
     std::string copy_temp_img_to_avatar_folder(

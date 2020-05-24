@@ -127,7 +127,7 @@ textarea.chat-noedit {
   margin-left: 40px;
   font-weight: bolder;
   width: 400px;
-  height: 200px;
+  height: 230px;
 }
 
 .registration {
@@ -136,6 +136,11 @@ textarea.chat-noedit {
   margin-bottom: 10px;
   width: 500px;
   max-height: 300px;
+}
+
+.help-text {
+  font-size: x-small;
+  color: grey;
 }
 
 .user-widget {

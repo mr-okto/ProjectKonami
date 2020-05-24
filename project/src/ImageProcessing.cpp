@@ -86,11 +86,10 @@ std::vector<std::string> create_blurred_copies(const std::string &image_path,
   p_base /= "img_";
   boost::filesystem::path p_test;
   std::string f_template;
-//  Randomizer &randomizer = Randomizer::get_instance();
+  Randomizer &randomizer = Randomizer::get_instance();
   do {
     p_test = p_base;
-//    f_template = randomizer.get_string(32);
-      f_template = "template";
+    f_template = randomizer.get_string(32);
     p_test += f_template;
     p_test += "_0.jpg";
   } while (boost::filesystem::exists(p_test));

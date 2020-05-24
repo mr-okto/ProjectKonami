@@ -108,8 +108,6 @@ void AuthWidget::show_registration() {
     statusMsg->setInline(false);
     statusMsg->setTextFormat(Wt::TextFormat::XHTML);
     statusMsg->setTextAlignment(Wt::AlignmentFlag::Center);
-
-//    registration_form_->validate();
     auto s = registration_form_->get_username().toUTF8();
     signUpbButton->clicked().connect(this, &AuthWidget::sign_up);
     signUpbButton->clicked().connect(std::bind(&AuthWidget::validate_reg_dialog, this, std::ref(dialog), statusMsg));
@@ -148,7 +146,9 @@ void AuthWidget::validate_reg_dialog(Wt::WDialog &dialog, Wt::WText* status_msg)
     } else if (registration_form_->error() == RegistrationForm::ErrorType::PasswordMismatch) {
         status_msg->setText("Password mismatch.");
     } else if (registration_form_->error() == RegistrationForm::ErrorType::ShortPassword) {
-        status_msg->setText("Passwords is too short (<b>" +
+        status_msg->setText("Password is too short. (Minimum length is 4 symbols");
+    } else if (registration_form_->error() == RegistrationForm::ErrorType::WeakPassword) {
+        status_msg->setText("Password is not secure (<b>" +
                             Wt::Utils::htmlEncode(registration_form_->status()) + "</b>)");
     } else if (registration_form_->error() == RegistrationForm::ErrorType::UsernameExists) {
         status_msg->setText("Username '" + escapeText(registration_form_->get_username()) + "' is already taken");
