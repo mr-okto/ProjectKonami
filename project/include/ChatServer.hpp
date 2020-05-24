@@ -73,15 +73,13 @@ private:
     DbSession<Wt::Dbo::backend::Postgres>& db_session_;
 
     SessionManager        session_manager_;
-    Auth                  auth_service_;
     chat::DialogueService dialogue_service_;
-    // chat::UserService     user_service_;
+    Auth                  auth_service_;
 
     std::set<Wt::WString> online_users_;
     std::map<Wt::WString, Wt::WString> avatar_map_;
 
-    UserManager
-    <Wt::Dbo::backend::Postgres> user_manager_;
+    UserManager<Wt::Dbo::backend::Postgres> user_manager_;
 
     void post_chat_event(const ChatEvent& event);
 };

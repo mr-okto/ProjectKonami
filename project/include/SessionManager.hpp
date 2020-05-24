@@ -27,7 +27,7 @@ private:
 
 public:
     SessionManager();
-    SessionManager(const SessionManager&) = default;
+    SessionManager(const SessionManager&) = delete;
     ~SessionManager() = default;
 
     bool add_session(Client *client, const Session& s); // вызывается модулем Auth при успешной авторизации (Session создается в Auth)

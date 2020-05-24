@@ -29,6 +29,10 @@ Content::FileType DialogueService::parse_type(ContentModel::Type type) {
     }
 }
 
+static bool operator<(const Dialogue& lhs, const Dialogue& rhs) {
+    return lhs.last_msg_time > rhs.last_msg_time;
+}
+
 std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username) {
     auto user = user_manager_.get_user(username);
     auto dialogues = user->dialogues_;

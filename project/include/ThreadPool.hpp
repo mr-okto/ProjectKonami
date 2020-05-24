@@ -75,9 +75,6 @@ public:
     // n_threads must be >= 0
     void resize(int n_threads) {};
 
-    // pops a functional wrapper to the original function
-    std::function<void(int)> dequeue() {};
-
     // run the user's function that excepts argument int - id of the running thread. returned value is templatized
     // operator returns std::future, where the user can get the result and rethrow the catched exceptins
     template<typename F>

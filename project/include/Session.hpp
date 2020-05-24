@@ -28,8 +28,6 @@ public:
     Session(const Session& s) = default;
     ~Session() = default;
 
-    bool operator==(const Session& rhs) const {};
-
     bool is_active() const { return status_ == Status::Active; };
 
     void activate() { status_ = Status::Active; };

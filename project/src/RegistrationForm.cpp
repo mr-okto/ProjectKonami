@@ -96,7 +96,7 @@ bool RegistrationForm::validate() {
     if (res.isValid()) {
         is_valid_ = true;
         return true;
-    } else if (!res.isValid()) {
+    } else {
         is_valid_ = false;
 //        status_msg_->setText(res.message().toUTF8());
         status_string_ = res.message();

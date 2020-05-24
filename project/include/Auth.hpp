@@ -37,7 +37,7 @@ private:
     SessionManager* session_manager_;
 
 public:
-    Auth() = default;
+    Auth() = delete;
     Auth(const Auth&) = delete ;
     ~Auth() = default;
 

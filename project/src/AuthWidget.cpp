@@ -195,7 +195,7 @@ std::unique_ptr<Wt::WVBoxLayout> AuthWidget::create_input_forms_layout() {
     label->setBuddy(remember_me_box_);
     label->setStyleClass("rememberMe");
 
-    return std::move(vLayout);
+    return vLayout;
 }
 
 std::string

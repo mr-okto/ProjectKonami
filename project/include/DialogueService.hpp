@@ -17,8 +17,6 @@
 typedef unsigned int uint;
 
 namespace chat {
-class Cache {};
-
 struct Content {
     enum FileType {
         IMAGE,
@@ -69,7 +67,6 @@ struct Dialogue {
         first_user(first_user),
         second_user(second_user),
         last_msg_time(last_msg_time) {}
-
 };
 
 struct Message {
@@ -107,21 +104,6 @@ struct Message {
         is_read(is_read),
         message_id(message_id) {}
 };
-
-static bool operator==(const Message& lhs, const Message& rhs) {
-    if (lhs.time == rhs.time) {
-        return true;
-    }
-    return false;
-}
-
-static bool operator<(const Dialogue& lhs, const Dialogue& rhs) {
-    return lhs.last_msg_time > rhs.last_msg_time;
-}
-
-static bool operator<(const Message& lhs, const Message& rhs) {
-    return lhs.time < rhs.time;
-}
 
 class DialogueService {
  public:

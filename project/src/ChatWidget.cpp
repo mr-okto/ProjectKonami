@@ -27,9 +27,9 @@ ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& ser
     : Wt::WContainerWidget(),
       server_(server),
       username_(username),
+      avatar_link_(server_.get_user_picture(username_, 5)),
       user_id_(id),
-      is_uploaded_(false),
-      avatar_link_(server_.get_user_picture(username_, 5))
+      is_uploaded_(false)
 
 {
     connect();
@@ -41,9 +41,9 @@ ChatWidget::ChatWidget(const Wt::WString &username, uint32_t id,
         : Wt::WContainerWidget(),
           server_(server),
           username_(username),
+          avatar_link_(server_.get_user_picture(username_, 5)),
           user_id_(id),
-          is_uploaded_(false),
-          avatar_link_(server_.get_user_picture(username_, 5))
+          is_uploaded_(false)
 
 {
     //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
@@ -343,13 +343,12 @@ void ChatWidget::set_dialogue_top(const Wt::WString& dialogue_name) {
 
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
-    std::map<Wt::WString, Wt::WString> avatars = server_.avatar_map();
     for (const auto& dialogue : server_.get_dialogues(username_)) {
         std::string username = dialogue.first_user.username != username_ ? 
                                dialogue.first_user.username :
                                dialogue.second_user.username;
         int unread_messages_count = server_.get_unread_messages_count(dialogue.dialogue_id, user_id_);
-        auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, avatars[username].toUTF8(), unread_messages_count));
+        auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, server_.get_user_picture(username, 1), unread_messages_count));
         w->clicked().connect([=] {
             this->update_messages(w->get_dialogue_name());
             this->current_dialogue_ = w->get_dialogue_name();
@@ -404,7 +403,6 @@ void ChatWidget::update_messages(const Wt::WString& username) {
 
 bool ChatWidget::create_dialogue(const Wt::WString& username) {
     if (server_.create_dialogue(username_, username)) {
-        // Little overhead
         update_dialogue_list();
         return true;
     }
@@ -429,7 +427,7 @@ void ChatWidget::print_message(const chat::Message& message) {
         video->resize(300, 300);
     }
 
-    // Js trick for page scroll
+    // JS trick for page scroll
     Wt::WApplication *app = Wt::WApplication::instance();
     app->doJavaScript(messages_->jsRef() + ".scrollTop += "
 		       + messages_->jsRef() + ".scrollHeight;");
