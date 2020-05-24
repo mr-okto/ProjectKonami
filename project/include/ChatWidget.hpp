@@ -4,6 +4,7 @@
 #include <Wt/WContainerWidget.h>
 #include <Wt/WMessageBox.h>
 #include <Wt/WLink.h>
+#include "DialogueWidget.hpp"
 
 #include "ChatServer.hpp"
 
@@ -30,6 +31,7 @@ private:
     bool        is_uploaded_;
     Wt::WString current_dialogue_;
     std::map<Wt::WString, chat::Dialogue> dialogues_;
+    std::map<Wt::WString, DialogueWidget*> dialogues_widgets_;
 
     Wt::Signal<Wt::WString>                       logout_signal_;
     Wt::JSlot                                     clearInput_;

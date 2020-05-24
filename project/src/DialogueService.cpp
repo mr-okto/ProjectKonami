@@ -83,7 +83,6 @@ std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::
         return_vec.push_back(message);
     }
     session_.end_transaction();
-    // sort(return_vec.begin(), return_vec.end());
     return return_vec;
 }
 
@@ -91,6 +90,10 @@ bool DialogueService::create_dialogue(uint first_user_id, uint second_user_id) {
     return std::get<1>(
         dialogue_manager_.get_or_create_dialogue(first_user_id, second_user_id)
     );
+}
+
+int DialogueService::get_unread_messages_count(uint dialogue_id, uint user_id) {
+    return dialogue_manager_.count_unread_messages(dialogue_id, user_id);
 }
 
 void DialogueService::post_message(Message& message) {

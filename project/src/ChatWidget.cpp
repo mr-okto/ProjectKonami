@@ -20,7 +20,6 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 
-#include "DialogueWidget.hpp"
 #include "ChatWidget.hpp"
 #include "UserWidget.hpp"
 
@@ -276,12 +275,16 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
         update_dialogue_list();
     } else if (event.type_ == ChatEvent::NEW_MSG) {
         set_dialogue_top(event.message_.user.username);
+        DialogueWidget* dialogue = dialogues_widgets_[event.message_.user.username];
         if (dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
             chat::Message message = event.message_;
             message.is_read = true;
             print_message(message);
             server_.mark_message_as_read(event.message_);
+            dialogue->set_unread_message_count(0);
+        } else {
+            dialogue->set_unread_message_count(dialogue->get_unread_message_count() + 1);
         }
 
     } else if(event.type_ == ChatEvent::READ_MESSAGE && 
@@ -334,34 +337,27 @@ void ChatWidget::fill_fileuploader() {
 }
 
 void ChatWidget::set_dialogue_top(const Wt::WString& dialogue_name) {
-    for (int i = 0; i < dialoguesList_->count(); i++) {
-            WWidget* widget = dialoguesList_->widget(i);
-            if (typeid(*widget) == typeid(DialogueWidget) &&
-                    dynamic_cast<DialogueWidget*>(widget)->get_dialogue_name() == dialogue_name) {
-                if (i == 0) {
-                    return;
-                }
-                dialoguesList_->insertWidget(0, dialoguesList_->removeWidget(widget));
-                break;
-            }
-        }
+    DialogueWidget* widget = dialogues_widgets_[dialogue_name];
+    dialoguesList_->insertWidget(0, dialoguesList_->removeWidget(widget));
 }
 
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
+    std::map<Wt::WString, Wt::WString> avatars = server_.avatar_map();
     for (const auto& dialogue : server_.get_dialogues(username_)) {
         std::string username = dialogue.first_user.username != username_ ? 
                                dialogue.first_user.username :
                                dialogue.second_user.username;
-        dialogues_[username] = dialogue;
-
-        auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, "", 0));
+        int unread_messages_count = server_.get_unread_messages_count(dialogue.dialogue_id, user_id_);
+        auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, avatars[username].toUTF8(), unread_messages_count));
         w->clicked().connect([=] {
             this->update_messages(w->get_dialogue_name());
             this->current_dialogue_ = w->get_dialogue_name();
             this->sendButton_->enable();
             this->messageEdit_->enable();
         });
+        dialogues_[username] = dialogue;
+        dialogues_widgets_[username] = w;
     }
 }
 
@@ -374,12 +370,12 @@ std::string ChatWidget::get_message_format(const chat::Message& message) {
     strftime(buf, sizeof(buf), "%H:%M", ts);
 
     std::stringstream ss;
-    ss << "<p style=\"margin-bottom: -4px\">";
+    ss << "<p style=\"display: flex; align-items: center; margin-bottom: 0px\">";
             ss << "<span style=\"font-size: large; font-weight: bolder;\">";
                 ss << message.user.username;
             ss << "</span>";
-            ss << "<span style=\"font-size: 75%; color: Gray;\">";
-                ss << "(" << std::string(buf) << ")";
+            ss << "<span style=\"font-size: 85%; color: Gray; margin-left: 10px\">";
+                ss << std::string(buf);
             ss << "</span>";
     ss << "</p>";
     if (message.is_read) {
@@ -401,7 +397,9 @@ void ChatWidget::update_messages(const Wt::WString& username) {
             message.is_read = true;
         }
         print_message(message);
+        dialogues_widgets_[username]->set_unread_message_count(0);
     }
+
 }
 
 bool ChatWidget::create_dialogue(const Wt::WString& username) {
@@ -439,10 +437,10 @@ void ChatWidget::print_message(const chat::Message& message) {
 
 chat::Content::FileType ChatWidget::parse_type(const std::string& filename)  {
     std::string extension = boost::filesystem::extension(filename);
-    if (extension == ".mp4") {  // FIXME
-        return chat::Content::VIDEO;
-    } else {
+    if (extension == ".jpeg" || extension == ".png" || extension == ".jpg") {  // FIXME
         return chat::Content::IMAGE;
+    } else {
+        return chat::Content::VIDEO;
     }
 }
 
@@ -472,10 +470,11 @@ void ChatWidget::send_message() {
         );
           
         chat::User receiver = dialogues_[current_dialogue_].first_user.username != username_ ?  // If
-                                    dialogues_[current_dialogue_].first_user :   // Else 
-                                    dialogues_[current_dialogue_].second_user;
+                              dialogues_[current_dialogue_].first_user :   // Else 
+                              dialogues_[current_dialogue_].second_user;
 
         set_dialogue_top(receiver.username);
+        dialogues_widgets_[receiver.username]->set_unread_message_count(0);   // TODO
         print_message(message);
         server_.send_msg(message, receiver);
     }
@@ -484,7 +483,7 @@ void ChatWidget::send_message() {
 void ChatWidget::update_users_list() {
     if (userList_) {
         userList_->clear();
-        std::map<Wt::WString,Wt::WString> avatars = server_.avatar_map();
+        std::map<Wt::WString, Wt::WString> avatars = server_.avatar_map();
         for (const auto& user : server_.online_users()) {
             if (user != username_) {
                 auto w = userList_->addWidget(std::make_unique<UserWidget>(user, avatars[user].toUTF8()));

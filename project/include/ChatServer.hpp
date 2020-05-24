@@ -41,6 +41,7 @@ public:
 
     std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
     std::vector<chat::Message> get_messages(uint dialogue_id, const std::string& username);
+    int get_unread_messages_count(uint dialogue_id, uint user_id);
     void send_msg(chat::Message& message, const chat::User& user);
 
     bool create_dialogue(const Wt::WString& creater, const Wt::WString& receiver);

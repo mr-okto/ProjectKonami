@@ -21,26 +21,21 @@ public:
             avatar_ = Layout->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(std::make_shared<Wt::WFileResource>("image/*", "/Users/aleks/Desktop/tp-firstsem/c++/ProjectKonami/photo/fdffd.jpeg"))));
 
         auto *displayName = Layout->addWidget(std::make_unique<Wt::WText>(dialogue_name_), 1);
+        unread_widget_ = Layout->addWidget(std::make_unique<Wt::WText>(std::to_string(unread_message_count)), 1);
         Layout->setContentsMargins(0, 0 ,0 ,0);
         setLayout(std::move(Layout));
         setStyleClass("user-widget");
     };
 
-    DialogueWidget(const DialogueWidget& widget) :
-            dialogue_name_(widget.dialogue_name_),
-            avatar_link_(widget.avatar_link_),
-            unread_message_count_(widget.unread_message_count_) {
-        auto Layout = std::make_unique<Wt::WHBoxLayout>();
-        avatar_ = Layout->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(std::make_shared<Wt::WFileResource>("image/*", "/Users/aleks/Desktop/tp-firstsem/c++/ProjectKonami/photo/fdffd.jpeg"))));
-
-        auto *displayName = Layout->addWidget(std::make_unique<Wt::WText>(dialogue_name_), 1);
-        Layout->setContentsMargins(0, 0 ,0 ,0);
-        setLayout(std::move(Layout));
-        setStyleClass("user-widget");
-    }
-
     Wt::WString get_dialogue_name() {return dialogue_name_;};
-    void set_unread_message_count(int count) {unread_message_count_ = count;};  // TODO надо сделать чтобы во вью тоже обновлялось
+    void set_unread_message_count(int count) {
+        unread_message_count_ = count;
+        if (count == 0) {
+            unread_widget_->setText("");
+        } else {
+            unread_widget_->setText(std::to_string(count));
+        }
+    };
     int get_unread_message_count() {return unread_message_count_;};
 
 private:
@@ -48,4 +43,5 @@ private:
     Wt::WString dialogue_name_;
     Wt::WLink avatar_link_;
     Wt::WImage* avatar_;
+    Wt::WText* unread_widget_;
 };

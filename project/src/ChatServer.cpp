@@ -138,6 +138,11 @@ std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id, const std:
     return dialogue_service_.get_messages(dialogue_id, username);
 }
 
+int ChatServer::get_unread_messages_count(uint dialogue_id, uint user_id) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+    return dialogue_service_.get_unread_messages_count(dialogue_id, user_id);
+}
+
 void ChatServer::send_msg(chat::Message& message, const chat::User& receiver) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
     dialogue_service_.post_message(message);
