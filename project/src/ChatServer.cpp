@@ -56,9 +56,9 @@ bool ChatServer::sign_up
     auto userModel = user_manager_.create_user(username.toUTF8(), password.toUTF8());
     if (userModel) {
         if (!avatar_path.empty()) {
-            std::cout << avatar_path << std::endl;
             auto blurredPaths = create_blurred_copies(avatar_path, "./avatars", userModel.id(), 5);
             for (int i = 0; i < 5; ++i) {
+                std::cout << blurredPaths[i] << std::endl;
                 user_manager_.add_picture(userModel.id(), blurredPaths[i], i + 1);
             }
         }
@@ -233,11 +233,13 @@ std::string ChatServer::get_user_picture(const Wt::WString &username, int accs_l
     for (const auto& pic : user->pictures_) {
         if (pic->access_lvl_ == accs_lvl) {
             db_session_.end_transaction();
-            avatar_map_[username] = pic->path_;
+//            if (avatar_map_.find(username) == avatar_map().end()) {
+//                avatar_map_[username] = pic->path_;
+//            }
             return pic->path_;
         }
     }
     db_session_.end_transaction();
-    avatar_map_[username] = std::string();
+//    avatar_map_[username] = std::string();
     return std::string();
 }

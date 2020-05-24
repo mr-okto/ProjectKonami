@@ -84,7 +84,7 @@ void ChatWidget::disconnect() {
 }
 
 void ChatWidget::create_UI() {
-    std::cout << username_ << " : " << user_id_ << std::endl;
+    std::cout << username_ << " : " << user_id_ << " : " << avatar_link_.url() << std::endl;
 
     clear();
 
@@ -228,7 +228,7 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
     gridLayout->addWidget(std::move(userList), 1, 2);
 
 
-    auto vLayout = Wt::cpp14::make_unique<Wt::WVBoxLayout>();
+    auto vLayout = std::make_unique<Wt::WVBoxLayout>();
 
     messageEdit->setStyleClass("chat-noedit");
     vLayout->addWidget(std::move(messageEdit));
@@ -236,16 +236,21 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
     vLayout->addWidget(std::move(fileUploader));
 
     // Create a horizontal layout for the buttons.
-    auto hLayout = Wt::cpp14::make_unique<Wt::WHBoxLayout>();
+    auto hLayout = std::make_unique<Wt::WHBoxLayout>();
 
     // Add button to horizontal layout with stretch = 0
     hLayout->addWidget(std::move(sendButton));
 
-    // Add button to horizontal layout with stretch = 0
-    hLayout->addWidget(std::move(logoutButton));
+    auto btnsLayout = std::make_unique<Wt::WHBoxLayout>();
+    btnsLayout->addWidget(std::make_unique<Wt::WPushButton>("Edit Profile"));
+    btnsLayout->addWidget(std::move(logoutButton));
+
+    // Add button to horizontal layout with stretch = 1
+    hLayout->addLayout(std::move(btnsLayout), 1, Wt::AlignmentFlag::Right);
+//    btn->setMargin(400, Wt::Side::Left);
 
     // Add nested layout to vertical layout with stretch = 0
-    vLayout->addLayout(std::move(hLayout), 0, Wt::AlignmentFlag::Left);
+    vLayout->addLayout(std::move(hLayout));
 
     gridLayout->addLayout(std::move(vLayout), 2, 1, 1, 2);
 
@@ -343,6 +348,7 @@ void ChatWidget::set_dialogue_top(const Wt::WString& dialogue_name) {
 
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
+    auto avatars = server_.avatar_map();
     for (const auto& dialogue : server_.get_dialogues(username_)) {
         std::string username = dialogue.first_user.username != username_ ? 
                                dialogue.first_user.username :
@@ -484,7 +490,8 @@ void ChatWidget::update_users_list() {
         std::map<Wt::WString, Wt::WString> avatars = server_.avatar_map();
         for (const auto& user : server_.online_users()) {
             if (user != username_) {
-                auto w = userList_->addWidget(std::make_unique<UserWidget>(user, avatars[user].toUTF8()));
+//                auto w = userList_->addWidget(std::make_unique<UserWidget>(user, avatars[user].toUTF8()));
+                auto w = userList_->addWidget(std::make_unique<UserWidget>(user, server_.get_user_picture(user, 5)));
                 w->clicked().connect([=] {
                     this->create_dialogue(w->get_username());
                 });

@@ -8,7 +8,7 @@
 #include <Wt/WFileResource.h>
 #include_next <Wt/WHBoxLayout.h>
 
-const std::string default_ = "./avatars/88/img_template_4.jpg";
+const std::string default_ = "./avatars/default-avatar.png";
 
 class DialogueWidget : public Wt::WContainerWidget {
 public:
