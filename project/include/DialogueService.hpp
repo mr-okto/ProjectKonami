@@ -57,16 +57,19 @@ struct Dialogue {
     User first_user;
     User second_user;
     std::time_t last_msg_time;
+    uint messages_count;
 
     Dialogue() :
         dialogue_id(0),
-        last_msg_time(0) {}
+        last_msg_time(0),
+        messages_count(0) {}
 
-    Dialogue(uint dialogue_id, const User& first_user, const User& second_user, time_t last_msg_time=0) :
+    Dialogue(uint dialogue_id, const User& first_user, const User& second_user, uint messages_count, time_t last_msg_time=0) :
         dialogue_id(dialogue_id),
         first_user(first_user),
         second_user(second_user),
-        last_msg_time(last_msg_time) {}
+        last_msg_time(last_msg_time),
+        messages_count(messages_count) {}
 };
 
 struct Message {

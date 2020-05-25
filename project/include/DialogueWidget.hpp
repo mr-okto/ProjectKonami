@@ -8,7 +8,7 @@
 #include <Wt/WFileResource.h>
 #include_next <Wt/WHBoxLayout.h>
 
-const std::string default_ = "./avatars/default-avatar.png";
+extern const std::string default_avatar;
 
 class DialogueWidget : public Wt::WContainerWidget {
 public:
@@ -16,18 +16,22 @@ public:
             unread_message_count_(unread_message_count),
             dialogue_name_(dialogue_name) {
         auto Layout = std::make_unique<Wt::WHBoxLayout>();
-
-        if (!path.empty())
-            avatar_ = Layout->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(std::make_shared<Wt::WFileResource>(path))));
-        else
-            avatar_ = Layout->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(std::make_shared<Wt::WFileResource>(default_))));
+        link_ = Wt::WLink(std::make_shared<Wt::WFileResource>(path));
+        avatar_ = Layout->addWidget(std::make_unique<Wt::WImage>(link_));
 
         Layout->addWidget(std::make_unique<Wt::WText>(dialogue_name_), 1);
-        unread_widget_ = Layout->addWidget(std::make_unique<Wt::WText>(std::to_string(unread_message_count)), 1);
-        /*auto button = Layout->addWidget(std::make_unique<Wt::WPushButton>("View"));
-        button->clicked().connect([=] {
-            std::cout << "PUSH" << std::endl;
-        });*/
+        std::string unread_str = unread_message_count_ ? std::to_string(unread_message_count) : "";
+        unread_widget_ = Layout->addWidget(std::make_unique<Wt::WText>(unread_str), 1);
+
+        avatar_->clicked().connect([=] {
+            Wt::WDialog dialog(this->dialogue_name_);
+            dialog.setClosable(true);
+            dialog.rejectWhenEscapePressed(true);
+            auto image = dialog.contents()->addWidget(std::make_unique<Wt::WImage>(this->link_));
+            image->resize(300, 300);
+            dialog.exec();
+        });
+
         Layout->setContentsMargins(0, 0 ,0 ,0);
         setLayout(std::move(Layout));
         setStyleClass("user-widget");
@@ -44,6 +48,11 @@ public:
         }
     };
 
+    void set_avatar(const std::string& path) {
+        link_ = Wt::WLink(std::make_shared<Wt::WFileResource>(path));
+        avatar_->setImageLink(link_);
+    }
+
     int get_unread_message_count() {return unread_message_count_;};
 
 private:
@@ -51,4 +60,5 @@ private:
     Wt::WString dialogue_name_;
     Wt::WImage* avatar_;
     Wt::WText* unread_widget_;
+    Wt::WLink link_;
 };

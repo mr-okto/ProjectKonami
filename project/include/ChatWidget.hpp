@@ -60,16 +60,19 @@ private:
 
     std::string get_message_format(const chat::Message& message);
     chat::Content::FileType parse_type(const std::string& filename);
+    int get_access_level(uint message_count);
+    bool change_photo_if_access_level_changed(DialogueWidget* dialogue);
 
     void update_users_list();
     void update_dialogue_list();
-    void set_dialogue_top(const Wt::WString& dialogue_name);
+    void set_dialogue_top(DialogueWidget* dialogue);
     void update_messages(const Wt::WString& username);
     void print_message(const chat::Message& message);
     bool create_dialogue(const Wt::WString& username);
     void send_message();
 
-    std::string copy_file(const std::string& file_path, const std::string& filename);
+    std::pair<std::string, chat::Content::FileType> save_file(const std::string& file_path, 
+                                                            const std::string& filename);
 
     void close_same_session();
 };

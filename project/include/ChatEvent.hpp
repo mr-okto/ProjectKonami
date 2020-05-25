@@ -19,6 +19,7 @@ public:
       NEW_MSG,
       NEW_DIALOGUE,
       READ_MESSAGE,
+      UPDATE_AVATAR,
     };
 
     ChatEvent(Type type, uint32_t user_id, std::string data = std::string())

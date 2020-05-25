@@ -43,7 +43,7 @@ std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username
         for (const auto& member : item->members_) {
             users.push_back(User((uint)member.id(), member->username_));
         }
-        return_vec.push_back(Dialogue((uint)item.id(), users[0], users[1]));
+        return_vec.push_back(Dialogue((uint)item.id(), users[0], users[1], item->messages_.size()));
     }
     session_.end_transaction();
     session_.start_transaction();

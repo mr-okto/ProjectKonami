@@ -23,6 +23,8 @@
 #include "ChatWidget.hpp"
 #include "UserWidget.hpp"
 
+#define MEDIA_ROOT "./media"
+
 ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& server)
     : Wt::WContainerWidget(),
       server_(server),
@@ -278,9 +280,15 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 
     if (event.type_ == ChatEvent::NEW_DIALOGUE) {
         update_dialogue_list();
+
     } else if (event.type_ == ChatEvent::NEW_MSG) {
-        set_dialogue_top(event.message_.user.username);
-        DialogueWidget* dialogue = dialogues_widgets_[event.message_.user.username];
+        std::string sender_name = event.message_.user.username;
+        DialogueWidget* dialogue = dialogues_widgets_[sender_name];
+    
+        change_photo_if_access_level_changed(dialogue);
+        set_dialogue_top(dialogue);
+        dialogues_[sender_name].messages_count++;
+    
         if (dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
             chat::Message message = event.message_;
@@ -292,7 +300,7 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
             dialogue->set_unread_message_count(dialogue->get_unread_message_count() + 1);
         }
 
-    } else if(event.type_ == ChatEvent::READ_MESSAGE && 
+    } else if (event.type_ == ChatEvent::READ_MESSAGE && 
                 dialogues_.count(current_dialogue_) &&
                 event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
         for (int i = messages_->count() - 1; i >= 0; i--) {
@@ -305,8 +313,27 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
                 break;
             }
         }
+    } else if (event.type_ == ChatEvent::UPDATE_AVATAR) {
+        if (dialogues_widgets_.count(event.username_)) {
+            dialogues_widgets_[event.username_]->set_avatar(event.data_.toUTF8());
+        }
     }
+}
 
+bool ChatWidget::change_photo_if_access_level_changed(DialogueWidget* dialogue) {
+    Wt::WString dialogue_name = dialogue->get_dialogue_name();
+    uint msg_count = dialogues_[dialogue_name].messages_count;
+ 
+    if (get_access_level(msg_count) != get_access_level(msg_count + 1)) {
+        Wt::WString dialogue_name = dialogue->get_dialogue_name();
+        std::string avatar_path = server_.get_user_picture(
+            dialogue_name, get_access_level(msg_count + 1)
+        );
+        dialogue->set_avatar(avatar_path);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void ChatWidget::fill_fileuploader() {
@@ -314,7 +341,7 @@ void ChatWidget::fill_fileuploader() {
     Wt::WFileUpload *fu = fileUploader_->addNew<Wt::WFileUpload>();
     Wt::WText *out = fileUploader_->addNew<Wt::WText>();
 
-    fu->setFilters("video/*|image/*");  // TODO
+    fu->setFilters("image/jpeg,image/png,image/jpeg,video/mp4");  // TODO
     fu->setFileTextSize(10000); // Set the maximum file size to 10000 kB.
     fu->setProgressBar(Wt::cpp14::make_unique<Wt::WProgressBar>());
 
@@ -341,9 +368,22 @@ void ChatWidget::fill_fileuploader() {
     fileUploaderPtr_ = fu;
 }
 
-void ChatWidget::set_dialogue_top(const Wt::WString& dialogue_name) {
-    DialogueWidget* widget = dialogues_widgets_[dialogue_name];
-    dialoguesList_->insertWidget(0, dialoguesList_->removeWidget(widget));
+void ChatWidget::set_dialogue_top(DialogueWidget* dialogue) {
+    dialoguesList_->insertWidget(0, dialoguesList_->removeWidget(dialogue));
+}
+
+int ChatWidget::get_access_level(uint message_count) {
+    if (message_count < 5) {
+        return 5;
+    } else if (message_count < 10) {
+        return 4;
+    } else if (message_count < 15) {
+        return 3;
+    } else if (message_count < 20) {
+        return 2;
+    } else {
+        return 1;
+    }
 }
 
 void ChatWidget::update_dialogue_list() {
@@ -354,7 +394,11 @@ void ChatWidget::update_dialogue_list() {
                                dialogue.first_user.username :
                                dialogue.second_user.username;
         int unread_messages_count = server_.get_unread_messages_count(dialogue.dialogue_id, user_id_);
-        auto w = dialoguesList_->addWidget(std::make_unique<DialogueWidget>(username, server_.get_user_picture(username, 1), unread_messages_count));
+        auto w = dialoguesList_->addWidget(
+            std::make_unique<DialogueWidget>(
+                username, server_.get_user_picture(username, get_access_level(dialogue.messages_count)), unread_messages_count
+            )
+        );
         w->clicked().connect([=] {
             this->update_messages(w->get_dialogue_name());
             this->current_dialogue_ = w->get_dialogue_name();
@@ -439,10 +483,11 @@ void ChatWidget::print_message(const chat::Message& message) {
 		       + messages_->jsRef() + ".scrollHeight;");
 }
 
-chat::Content::FileType ChatWidget::parse_type(const std::string& filename)  {
-    std::string extension = boost::filesystem::extension(filename);
-    if (extension == ".jpeg" || extension == ".png" || extension == ".jpg") {  // FIXME
+chat::Content::FileType ChatWidget::parse_type(const std::string& extension)  {
+    if (extension == ".jpeg" || extension == ".png" || extension == ".jpg") {  // TODO
         return chat::Content::IMAGE;
+    } else if (extension == ".mp4") {
+        return chat::Content::VIDEO;
     } else {
         return chat::Content::VIDEO;
     }
@@ -452,14 +497,14 @@ void ChatWidget::send_message() {
     if (!messageEdit_->text().empty() || is_uploaded_) {
         chat::Content content;
         if (is_uploaded_) {
-            std::string filename = copy_file(
+            std::pair<std::string, chat::Content::FileType> filepath_type = save_file(
                 fileUploaderPtr_->spoolFileName(), 
                 fileUploaderPtr_->clientFileName().toUTF8()
             );
             content = chat::Content(
-                parse_type(filename),
+                filepath_type.second,
                 messageEdit_->text().toUTF8(), 
-                filename
+                filepath_type.first
             );
             is_uploaded_ = false;
             fill_fileuploader();
@@ -477,8 +522,12 @@ void ChatWidget::send_message() {
                               dialogues_[current_dialogue_].first_user :   // Else 
                               dialogues_[current_dialogue_].second_user;
 
-        set_dialogue_top(receiver.username);
-        dialogues_widgets_[receiver.username]->set_unread_message_count(0);   // TODO
+        DialogueWidget* widget = dialogues_widgets_[receiver.username];
+        change_photo_if_access_level_changed(widget);
+        dialogues_[receiver.username].messages_count++;
+        set_dialogue_top(widget);
+        widget->set_unread_message_count(0);
+
         print_message(message);
         server_.send_msg(message, receiver);
     }
@@ -500,10 +549,26 @@ void ChatWidget::update_users_list() {
     }
 }
 
-std::string ChatWidget::copy_file(const std::string& file_path, const std::string& filename) {
-    std::string result_filename = "./photo/" + filename;  // FIXME
+std::pair<std::string, chat::Content::FileType> ChatWidget::save_file(
+            const std::string& file_path, 
+            const std::string& filename) {
+    std::string extension = boost::filesystem::extension(filename);
+    chat::Content::FileType type = parse_type(extension);
+
+    std::stringstream result_filename;
+    result_filename << MEDIA_ROOT;
+    if (type == chat::Content::IMAGE) {
+        result_filename << "/photo/";
+    } else if (type == chat::Content::VIDEO) {
+        result_filename << "/video/";
+    } else {
+        result_filename << "/other/";
+    }
+    result_filename << user_id_ << "_";
+    result_filename << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << extension;
+
     std::ifstream in(file_path, std::ios::binary | std::ios::in);
-    std::ofstream out(result_filename, std::ios::binary | std::ios::out);
+    std::ofstream out(result_filename.str(), std::ios::binary | std::ios::out);
 
     char byte = 0;
     while (in.read(&byte, sizeof(char))) {
@@ -512,7 +577,7 @@ std::string ChatWidget::copy_file(const std::string& file_path, const std::strin
     in.close();
     out.close();
 
-    return result_filename;
+    return std::make_pair(result_filename.str(), type);
 }
 
 std::unique_ptr<Wt::WText> ChatWidget::create_title(const Wt::WString& title) {
