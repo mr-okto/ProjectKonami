@@ -23,7 +23,7 @@
 #include "ChatWidget.hpp"
 #include "UserWidget.hpp"
 
-#define MEDIA_ROOT "./media"
+const std::string MEDIA_ROOT = "./media";
 
 ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& server)
     : Wt::WContainerWidget(),
@@ -558,7 +558,7 @@ std::pair<std::string, chat::Content::FileType> ChatWidget::save_file(
     std::stringstream result_filename;
     result_filename << MEDIA_ROOT;
     if (type == chat::Content::IMAGE) {
-        result_filename << "/photo/";
+        result_filename << "/image/";
     } else if (type == chat::Content::VIDEO) {
         result_filename << "/video/";
     } else {

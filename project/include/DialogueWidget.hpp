@@ -8,8 +8,6 @@
 #include <Wt/WFileResource.h>
 #include_next <Wt/WHBoxLayout.h>
 
-extern const std::string default_avatar;
-
 class DialogueWidget : public Wt::WContainerWidget {
 public:
     DialogueWidget(const Wt::WString& dialogue_name, const std::string& path, int unread_message_count) :

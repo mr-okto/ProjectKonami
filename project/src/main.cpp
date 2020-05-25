@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <filesystem>
 
 #include <Wt/WServer.h>
 #include <Wt/Dbo/Dbo.h>
@@ -14,7 +15,17 @@ std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env
   return std::make_unique<ChatApplication>(env, server);
 }
 
+void create_folders_if_does_not_exist() {
+  auto result = std::filesystem::create_directory("./media");
+  if (result) {
+    std::filesystem::create_directory("./media/video");
+    std::filesystem::create_directory("./media/image");
+    std::filesystem::create_directory("./media/other");
+  }
+}
+
 int main(int argc, char **argv) {
+  create_folders_if_does_not_exist();
   DbSession<Wt::Dbo::backend::Postgres> session;
   auto fname = DbSession<Wt::Dbo::backend::Postgres>::dbconfig_filename(argc, argv);
   if (!session.connect(fname)) {
