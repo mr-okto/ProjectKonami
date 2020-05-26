@@ -119,8 +119,8 @@ class DialogueService {
     ContentModel::Type parse_type(Content::FileType type);
     Content::FileType parse_type(ContentModel::Type type);
 
-    std::vector<Dialogue> get_dialogues(const std::string& username);
-    std::vector<Message> get_messages(uint dialog_id, const std::string& username);
+    std::vector<Dialogue> get_dialogues(uint user_id);
+    std::vector<Message> get_messages(uint dialogue_id);
     int get_unread_messages_count(uint dialogue_id, uint user_id);
     bool create_dialogue(uint first_user_id, uint second_user_id);
     void post_message(Message& message);

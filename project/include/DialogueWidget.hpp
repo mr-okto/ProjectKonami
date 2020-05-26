@@ -10,7 +10,11 @@
 
 class DialogueWidget : public Wt::WContainerWidget {
 public:
-    DialogueWidget(const Wt::WString& dialogue_name, const std::string& path, int unread_message_count) :
+    DialogueWidget(const Wt::WString& dialogue_name,
+                   uint dialogue_id,
+                   const std::string& path, 
+                   int unread_message_count) :
+            dialogue_id_(dialogue_id),
             unread_message_count_(unread_message_count),
             dialogue_name_(dialogue_name) {
         auto Layout = std::make_unique<Wt::WHBoxLayout>();
@@ -37,6 +41,8 @@ public:
 
     Wt::WString get_dialogue_name() {return dialogue_name_;};
 
+    uint get_dialogue_id() {return dialogue_id_;};
+
     void set_unread_message_count(int count) {
         unread_message_count_ = count;
         if (count == 0) {
@@ -54,6 +60,7 @@ public:
     int get_unread_message_count() {return unread_message_count_;};
 
 private:
+    uint dialogue_id_;
     int unread_message_count_;
     Wt::WString dialogue_name_;
     Wt::WImage* avatar_;

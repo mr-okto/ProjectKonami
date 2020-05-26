@@ -31,7 +31,8 @@ ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& ser
       username_(username),
       avatar_link_(server_.get_user_picture(username_, 5)),
       user_id_(id),
-      is_uploaded_(false)
+      is_uploaded_(false),
+      current_dialogue_id_(-1)
 
 {
     connect();
@@ -45,7 +46,8 @@ ChatWidget::ChatWidget(const Wt::WString &username, uint32_t id,
           username_(username),
           avatar_link_(server_.get_user_picture(username_, 5)),
           user_id_(id),
-          is_uploaded_(false)
+          is_uploaded_(false),
+          current_dialogue_id_(-1)
 
 {
     //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
@@ -283,14 +285,13 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
 
     } else if (event.type_ == ChatEvent::NEW_MSG) {
         std::string sender_name = event.message_.user.username;
-        DialogueWidget* dialogue = dialogues_widgets_[sender_name];
+        DialogueWidget* dialogue = dialogues_widgets_[event.message_.dialogue_id];
     
         change_photo_if_access_level_changed(dialogue);
         set_dialogue_top(dialogue);
-        dialogues_[sender_name].messages_count++;
+        dialogues_[event.message_.dialogue_id].messages_count++;
     
-        if (dialogues_.count(current_dialogue_) &&
-                event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
+        if (event.dialogue_id_ == current_dialogue_id_) {
             chat::Message message = event.message_;
             message.is_read = true;
             print_message(message);
@@ -301,8 +302,7 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
         }
 
     } else if (event.type_ == ChatEvent::READ_MESSAGE && 
-                dialogues_.count(current_dialogue_) &&
-                event.dialogue_id_ == dialogues_[current_dialogue_].dialogue_id) {
+                event.dialogue_id_ == current_dialogue_id_) {
         for (int i = messages_->count() - 1; i >= 0; i--) {
             WWidget* widget = messages_->widget(i);
             if (typeid(*widget) == typeid(Wt::WText) && 
@@ -314,15 +314,14 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
             }
         }
     } else if (event.type_ == ChatEvent::UPDATE_AVATAR) {
-        if (dialogues_widgets_.count(event.username_)) {
+        /*if (dialogues_widgets_.count(event.username_)) {
             dialogues_widgets_[event.username_]->set_avatar(event.data_.toUTF8());
-        }
+        }*/
     }
 }
 
 bool ChatWidget::change_photo_if_access_level_changed(DialogueWidget* dialogue) {
-    Wt::WString dialogue_name = dialogue->get_dialogue_name();
-    uint msg_count = dialogues_[dialogue_name].messages_count;
+    uint msg_count = dialogues_[dialogue->get_dialogue_id()].messages_count;
  
     if (get_access_level(msg_count) != get_access_level(msg_count + 1)) {
         Wt::WString dialogue_name = dialogue->get_dialogue_name();
@@ -389,24 +388,27 @@ int ChatWidget::get_access_level(uint message_count) {
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
     auto avatars = server_.avatar_map();
-    for (const auto& dialogue : server_.get_dialogues(username_)) {
+    for (const auto& dialogue : server_.get_dialogues(user_id_)) {
         std::string username = dialogue.first_user.username != username_ ? 
                                dialogue.first_user.username :
                                dialogue.second_user.username;
         int unread_messages_count = server_.get_unread_messages_count(dialogue.dialogue_id, user_id_);
         auto w = dialoguesList_->addWidget(
             std::make_unique<DialogueWidget>(
-                username, server_.get_user_picture(username, get_access_level(dialogue.messages_count)), unread_messages_count
+                username,
+                dialogue.dialogue_id,
+                server_.get_user_picture(username, get_access_level(dialogue.messages_count)),
+                unread_messages_count
             )
         );
         w->clicked().connect([=] {
-            this->update_messages(w->get_dialogue_name());
-            this->current_dialogue_ = w->get_dialogue_name();
+            this->update_messages(w->get_dialogue_id());
+            this->current_dialogue_id_ = w->get_dialogue_id();
             this->sendButton_->enable();
             this->messageEdit_->enable();
         });
-        dialogues_[username] = dialogue;
-        dialogues_widgets_[username] = w;
+        dialogues_[dialogue.dialogue_id] = dialogue;
+        dialogues_widgets_[dialogue.dialogue_id] = w;
     }
 }
 
@@ -438,21 +440,21 @@ std::string ChatWidget::get_message_format(const chat::Message& message) {
     return ss.str();
 }
 
-void ChatWidget::update_messages(const Wt::WString& username) {
+void ChatWidget::update_messages(uint dialogue_id) {
     messages_->clear();
-    for (auto& message : server_.get_messages(dialogues_[username].dialogue_id, username_.toUTF8())) {
+    for (auto& message : server_.get_messages(dialogue_id)) {
         if (message.user.username != username_ && !message.is_read) {
             server_.mark_message_as_read(message);
             message.is_read = true;
         }
         print_message(message);
-        dialogues_widgets_[username]->set_unread_message_count(0);
+        dialogues_widgets_[message.dialogue_id]->set_unread_message_count(0);
     }
 
 }
 
 bool ChatWidget::create_dialogue(const Wt::WString& username) {
-    if (server_.create_dialogue(username_, username)) {
+    if (server_.create_dialogue(user_id_, username)) {
         update_dialogue_list();
         return true;
     }
@@ -513,18 +515,18 @@ void ChatWidget::send_message() {
         }
 
         chat::Message message(
-            dialogues_[current_dialogue_].dialogue_id, 
+            current_dialogue_id_, 
             chat::User(user_id_, username_.toUTF8()),
             content
         );
           
-        chat::User receiver = dialogues_[current_dialogue_].first_user.username != username_ ?  // If
-                              dialogues_[current_dialogue_].first_user :   // Else 
-                              dialogues_[current_dialogue_].second_user;
+        chat::User receiver = dialogues_[current_dialogue_id_].first_user.username != username_ ?  // If
+                              dialogues_[current_dialogue_id_].first_user :   // Else 
+                              dialogues_[current_dialogue_id_].second_user;
 
-        DialogueWidget* widget = dialogues_widgets_[receiver.username];
+        DialogueWidget* widget = dialogues_widgets_[current_dialogue_id_];
         change_photo_if_access_level_changed(widget);
-        dialogues_[receiver.username].messages_count++;
+        dialogues_[current_dialogue_id_].messages_count++;
         set_dialogue_top(widget);
         widget->set_unread_message_count(0);
 

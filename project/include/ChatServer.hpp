@@ -39,12 +39,12 @@ public:
     std::string check_cookie(const std::string& cookie);
     void close_same_session(const Wt::WString& username_);
 
-    std::vector<chat::Dialogue> get_dialogues(const Wt::WString& username);
-    std::vector<chat::Message> get_messages(uint dialogue_id, const std::string& username);
+    std::vector<chat::Dialogue> get_dialogues(uint user_id);
+    std::vector<chat::Message> get_messages(uint dialogue_id);
     int get_unread_messages_count(uint dialogue_id, uint user_id);
     void send_msg(chat::Message& message, const chat::User& user);
 
-    bool create_dialogue(const Wt::WString& creater, const Wt::WString& receiver);
+    bool create_dialogue(uint creater_id, const Wt::WString& receiver);
     void mark_message_as_read(const chat::Message& message);
 
     uint get_user_id(const Wt::WString& username);

@@ -29,9 +29,9 @@ private:
     Wt::WLink   avatar_link_;
     uint32_t    user_id_;
     bool        is_uploaded_;
-    Wt::WString current_dialogue_;
-    std::map<Wt::WString, chat::Dialogue> dialogues_;
-    std::map<Wt::WString, DialogueWidget*> dialogues_widgets_;
+    uint current_dialogue_id_;
+    std::map<uint, chat::Dialogue> dialogues_;
+    std::map<uint, DialogueWidget*> dialogues_widgets_;
 
     Wt::Signal<Wt::WString>                       logout_signal_;
     Wt::JSlot                                     clearInput_;
@@ -56,8 +56,6 @@ private:
 
     void process_chat_event(const ChatEvent& event);
 
-    chat::Dialogue get_dialogue(const Wt::WString& dialogue_name) {return dialogues_[dialogue_name];}
-
     std::string get_message_format(const chat::Message& message);
     chat::Content::FileType parse_type(const std::string& filename);
     int get_access_level(uint message_count);
@@ -66,7 +64,7 @@ private:
     void update_users_list();
     void update_dialogue_list();
     void set_dialogue_top(DialogueWidget* dialogue);
-    void update_messages(const Wt::WString& username);
+    void update_messages(uint dialogue_id) ;
     void print_message(const chat::Message& message);
     bool create_dialogue(const Wt::WString& username);
     void send_message();

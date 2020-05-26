@@ -33,8 +33,8 @@ static bool operator<(const Dialogue& lhs, const Dialogue& rhs) {
     return lhs.last_msg_time > rhs.last_msg_time;
 }
 
-std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username) {
-    auto user = user_manager_.get_user(username);
+std::vector<Dialogue> DialogueService::get_dialogues(uint user_id) {
+    auto user = user_manager_.get_user(user_id);
     auto dialogues = user->dialogues_;
     std::vector<Dialogue> return_vec;
     session_.start_transaction();
@@ -59,7 +59,7 @@ std::vector<Dialogue> DialogueService::get_dialogues(const std::string& username
     return return_vec;
 }
 
-std::vector<Message> DialogueService::get_messages(uint dialogue_id, const std::string& username) {
+std::vector<Message> DialogueService::get_messages(uint dialogue_id) {
     auto messages = message_manager_.get_latest_messages(dialogue_id, 0);
     std::vector<Message> return_vec;
     session_.start_transaction();

@@ -127,14 +127,14 @@ std::map<Wt::WString, Wt::WString> ChatServer::avatar_map() {
     return avatar_map_;
 }
 
-std::vector<chat::Dialogue> ChatServer::get_dialogues(const Wt::WString& username) {
+std::vector<chat::Dialogue> ChatServer::get_dialogues(uint user_id) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    return dialogue_service_.get_dialogues(username.toUTF8());
+    return dialogue_service_.get_dialogues(user_id);
 }
 
-std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id, const std::string& username) {
+std::vector<chat::Message> ChatServer::get_messages(uint dialogue_id) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    return dialogue_service_.get_messages(dialogue_id, username);
+    return dialogue_service_.get_messages(dialogue_id);
 }
 
 int ChatServer::get_unread_messages_count(uint dialogue_id, uint user_id) {
@@ -150,9 +150,9 @@ void ChatServer::send_msg(chat::Message& message, const chat::User& receiver) {
     }
 }
 
-bool ChatServer::create_dialogue(const Wt::WString& creater, const Wt::WString& receiver) {
+bool ChatServer::create_dialogue(uint creater_id, const Wt::WString& receiver) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    if (dialogue_service_.create_dialogue(get_user_id(creater.toUTF8()), 
+    if (dialogue_service_.create_dialogue(creater_id, 
                                           get_user_id(receiver.toUTF8()))) {
         notify_user(ChatEvent(ChatEvent::NEW_DIALOGUE, receiver));
         return true;
