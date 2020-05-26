@@ -4,6 +4,7 @@
 #include <Wt/WContainerWidget.h>
 #include <Wt/WBootstrapTheme.h>
 #include <Wt/WEnvironment.h>
+#include <Wt/WTimer.h>
 
 #include "ChatApplication.hpp"
 #include "AuthWidget.hpp"
@@ -81,24 +82,30 @@ void ChatApplication::start_auth() {
     });
 }
 
-//void ChatApplication::idleTimeout() {
-//    if (!logged_in_ || idle_timeout_dialog_) {
-//        return;
-//    }
-//
-//    idle_timeout_dialog_ = addChild(std::make_unique<Wt::WDialog>("Idle timeout!"));
-//    idle_timeout_dialog_->contents()->addWidget(std::make_unique<Wt::WText>("This session will automatically quit in 1 minute, "
-//                                                                            "press 'abort' to continue using the application"));
-//
-//    auto btn = idle_timeout_dialog_->footer()->addWidget(std::make_unique<Wt::WPushButton>("abort"));
-//    btn->clicked().connect([this]() {
-//        removeChild(idle_timeout_dialog_.get());
-//    });
-//
+void ChatApplication::idleTimeout() {
+    if (!logged_in_ || idle_timeout_dialog_) {
+        return;
+    }
+
+    idle_timeout_dialog_ = addChild(std::make_unique<Wt::WDialog>("Idle timeout!"));
+    idle_timeout_dialog_->contents()->addWidget(std::make_unique<Wt::WText>("This session will automatically quit in 1 minute, "
+                                                                            "press 'abort' to continue using the application"));
+
+    auto btn = idle_timeout_dialog_->footer()->addWidget(std::make_unique<Wt::WPushButton>("abort"));
+    btn->clicked().connect([this]() {
+        removeChild(idle_timeout_dialog_.get());
+    });
+
 //    auto timer = idle_timeout_dialog_->contents()->addWidget(std::make_unique<WrappedTimer>());
 //    timer->scheduler.in(std::chrono::seconds (60), [this]() {
 //        quit();
 //    });
-//
-//    idle_timeout_dialog_->show();
-//}
+    auto timer = idle_timeout_dialog_->addChild(std::make_unique<Wt::WTimer>());
+    timer->setInterval(std::chrono::seconds{60});
+    timer->setSingleShot(true);
+    timer->timeout().connect([this]{
+        quit();
+    });
+    timer->start();
+    idle_timeout_dialog_->show();
+}

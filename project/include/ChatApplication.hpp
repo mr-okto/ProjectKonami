@@ -10,7 +10,7 @@ public:
     ChatApplication(const Wt::WEnvironment& env, ChatServer& server);
 
 protected:
-//    virtual void idleTimeout() override;
+    virtual void idleTimeout() override;
 
 private:
     ChatServer& server_;
