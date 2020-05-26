@@ -4,7 +4,9 @@
 #include <Wt/WContainerWidget.h>
 #include <Wt/WMessageBox.h>
 #include <Wt/WLink.h>
+
 #include "DialogueWidget.hpp"
+#include "MessageWidget.hpp"
 
 #include "ChatServer.hpp"
 
@@ -56,7 +58,6 @@ private:
 
     void process_chat_event(const ChatEvent& event);
 
-    std::string get_message_format(const chat::Message& message);
     chat::Content::FileType parse_type(const std::string& filename);
     int get_access_level(uint message_count);
     bool change_photo_if_access_level_changed(DialogueWidget* dialogue);
@@ -65,7 +66,7 @@ private:
     void update_dialogue_list();
     void set_dialogue_top(DialogueWidget* dialogue);
     void update_messages(uint dialogue_id) ;
-    void print_message(const chat::Message& message);
+    MessageWidget* print_message(const chat::Message& message);
     bool create_dialogue(const Wt::WString& username);
     void send_message();
 

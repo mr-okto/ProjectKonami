@@ -305,11 +305,12 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
                 event.dialogue_id_ == current_dialogue_id_) {
         for (int i = messages_->count() - 1; i >= 0; i--) {
             WWidget* widget = messages_->widget(i);
-            if (typeid(*widget) == typeid(Wt::WText) && 
-                    dynamic_cast<Wt::WText*>(widget)->text() == get_message_format(event.message_)) {
+            std::cout << dynamic_cast<MessageWidget*>(widget)->get_id() << "^^^^^" << event.message_.message_id << std::endl;
+            if (typeid(*widget) == typeid(MessageWidget) && 
+                    dynamic_cast<MessageWidget*>(widget)->get_id() == event.message_.message_id) {
                 chat::Message message = event.message_;
                 message.is_read = true;
-                dynamic_cast<Wt::WText*>(widget)->setText(get_message_format(message));
+                dynamic_cast<MessageWidget*>(widget)->set_message(message);
                 break;
             }
         }
@@ -418,33 +419,6 @@ void ChatWidget::update_dialogue_list() {
 }
 
 
-// Little html code
-std::string ChatWidget::get_message_format(const chat::Message& message) {
-    struct tm *ts;
-    char       buf[80];
-    ts = localtime(&message.time);
-    strftime(buf, sizeof(buf), "%H:%M", ts);
-
-    std::stringstream ss;
-    ss << "<p style=\"display: flex; align-items: center; margin-bottom: 0px\">";
-            ss << "<span style=\"font-size: large; font-weight: bolder;\">";
-                ss << message.user.username;
-            ss << "</span>";
-            ss << "<span style=\"font-size: 85%; color: Gray; margin-left: 10px\">";
-                ss << std::string(buf);
-            ss << "</span>";
-    ss << "</p>";
-    if (message.is_read) {
-        ss << message.content.message;
-    } else {
-        ss << "<font color=\"Gray\">";
-            ss << message.content.message;
-        ss << "</font>";
-    }
-
-    return ss.str();
-}
-
 void ChatWidget::update_messages(uint dialogue_id) {
     messages_->clear();
     for (auto& message : server_.get_messages(dialogue_id)) {
@@ -466,28 +440,14 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
     return false;
 }
 
-void ChatWidget::print_message(const chat::Message& message) {
-    // Message text
-    Wt::WText *w = messages_->addWidget(Wt::cpp14::make_unique<Wt::WText>());
-    w->setText(get_message_format(message));
-    w->setInline(false);
-
-    // Message media
-    if (message.content.type == chat::Content::IMAGE) {
-        auto image_resource = std::make_shared<Wt::WFileResource>("image/*", message.content.file_path);
-        auto image = messages_->addNew<Wt::WImage>(Wt::WLink(image_resource));
-        image->resize(300, 300);
-    } else if (message.content.type == chat::Content::VIDEO) {
-        auto video_resource = std::make_shared<Wt::WFileResource>("video/*", message.content.file_path);
-        auto video = messages_->addNew<Wt::WVideo>();
-        video->addSource(Wt::WLink(video_resource)); 
-        video->resize(300, 300);
-    }
-
+ MessageWidget* ChatWidget::print_message(const chat::Message& message) {
+    auto message_widget = messages_->addWidget(std::make_unique<MessageWidget>(message));
     // JS trick for page scroll
     Wt::WApplication *app = Wt::WApplication::instance();
     app->doJavaScript(messages_->jsRef() + ".scrollTop += "
 		       + messages_->jsRef() + ".scrollHeight;");
+    
+    return message_widget;
 }
 
 chat::Content::FileType ChatWidget::parse_type(const std::string& extension)  {
@@ -535,8 +495,9 @@ void ChatWidget::send_message() {
         set_dialogue_top(widget);
         widget->set_unread_message_count(0);
 
-        print_message(message);
+        MessageWidget* message_widget = print_message(message);
         server_.send_msg(message, receiver);
+        message_widget->set_id(message.message_id);
     }
 }
 
