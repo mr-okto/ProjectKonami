@@ -116,6 +116,7 @@ void ChatWidget::create_UI() {
     // Display scroll bars if contents overflows
     messages_->setOverflow(Wt::Overflow::Auto);
     userList_->setOverflow(Wt::Overflow::Auto);
+    dialoguesList_->setOverflow(Wt::Overflow::Auto);
 
     create_layout(std::move(messagesPtr), std::move(userListPtr),
                  std::move(messageEditPtr),
