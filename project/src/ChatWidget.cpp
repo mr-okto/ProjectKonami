@@ -32,7 +32,7 @@ ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& ser
       avatar_link_(server_.get_user_picture(username_, 5)),
       user_id_(id),
       is_uploaded_(false),
-      current_dialogue_id_(-1)
+      current_dialogue_id_(INT32_MAX)
 
 {
     connect();
@@ -47,7 +47,7 @@ ChatWidget::ChatWidget(const Wt::WString &username, uint32_t id,
           avatar_link_(server_.get_user_picture(username_, 5)),
           user_id_(id),
           is_uploaded_(false),
-          current_dialogue_id_(-1)
+          current_dialogue_id_(INT32_MAX)
 
 {
     //(TODO) add graceful shutdown to session-cookie by timeout (implement singletone scheduler)
@@ -364,6 +364,10 @@ void ChatWidget::fill_fileuploader() {
         this->fill_fileuploader();
     });
 
+    if (current_dialogue_id_ == INT32_MAX) {
+        fu->disable();
+    }
+
     fileUploaderPtr_ = fu;
 }
 
@@ -404,6 +408,7 @@ void ChatWidget::update_dialogue_list() {
         w->clicked().connect([=] {
             this->update_messages(w->get_dialogue_id());
             this->current_dialogue_id_ = w->get_dialogue_id();
+            this->fileUploaderPtr_->enable();
             this->sendButton_->enable();
             this->messageEdit_->enable();
         });
