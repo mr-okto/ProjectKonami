@@ -17,6 +17,7 @@ std::unique_ptr<Wt::WApplication> create_application(const Wt::WEnvironment& env
 
 void create_folders_if_does_not_exist() {
   auto result = std::filesystem::create_directory("./media");
+  std::filesystem::create_directory("./avatars");
   if (result) {
     std::filesystem::create_directory("./media/video");
     std::filesystem::create_directory("./media/image");
