@@ -58,8 +58,6 @@ private:
 
     void process_chat_event(const ChatEvent& event);
 
-    chat::Content::FileType parse_type(const std::string& filename);
-    int get_access_level(uint message_count);
     bool change_photo_if_access_level_changed(DialogueWidget* dialogue);
 
     void update_users_list();
@@ -69,9 +67,6 @@ private:
     MessageWidget* print_message(const chat::Message& message);
     bool create_dialogue(const Wt::WString& username);
     void send_message();
-
-    std::pair<std::string, chat::Content::FileType> save_file(const std::string& file_path, 
-                                                            const std::string& filename);
 
     void close_same_session();
 };

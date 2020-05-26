@@ -25,6 +25,63 @@
 
 const std::string MEDIA_ROOT = "./media";
 
+static chat::Content::FileType parse_type(const std::string& extension) {
+    if (extension == ".jpeg" || extension == ".png" || extension == ".jpg") {  // TODO
+        return chat::Content::IMAGE;
+    } else if (extension == ".mp4") {
+        return chat::Content::VIDEO;
+    } else {
+        return chat::Content::VIDEO;
+    }
+}
+
+static int get_access_level(uint message_count) {
+    if (message_count < 5) {
+        return 5;
+    } else if (message_count < 10) {
+        return 4;
+    } else if (message_count < 15) {
+        return 3;
+    } else if (message_count < 20) {
+        return 2;
+    } else {
+        return 1;
+    }
+}
+
+static std::pair<std::string, chat::Content::FileType> save_file(
+            const std::string& file_path, 
+            const std::string& filename,
+            uint user_id) {
+    std::string extension = boost::filesystem::extension(filename);
+    chat::Content::FileType type = parse_type(extension);
+
+    std::stringstream result_filename;
+    result_filename << MEDIA_ROOT;
+    if (type == chat::Content::IMAGE) {
+        result_filename << "/image/";
+    } else if (type == chat::Content::VIDEO) {
+        result_filename << "/video/";
+    } else {
+        result_filename << "/other/";
+    }
+    result_filename << user_id << "_";
+    result_filename << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    result_filename << extension;
+
+    std::ifstream in(file_path, std::ios::binary | std::ios::in);
+    std::ofstream out(result_filename.str(), std::ios::binary | std::ios::out);
+
+    char byte = 0;
+    while (in.read(&byte, sizeof(char))) {
+        out.write(&byte, sizeof(char));
+    }
+    in.close();
+    out.close();
+
+    return std::make_pair(result_filename.str(), type);
+}
+
 ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& server)
     : Wt::WContainerWidget(),
       server_(server),
@@ -285,7 +342,6 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
         update_dialogue_list();
 
     } else if (event.type_ == ChatEvent::NEW_MSG) {
-        std::string sender_name = event.message_.user.username;
         DialogueWidget* dialogue = dialogues_widgets_[event.message_.dialogue_id];
     
         change_photo_if_access_level_changed(dialogue);
@@ -306,7 +362,6 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
                 event.dialogue_id_ == current_dialogue_id_) {
         for (int i = messages_->count() - 1; i >= 0; i--) {
             WWidget* widget = messages_->widget(i);
-            std::cout << dynamic_cast<MessageWidget*>(widget)->get_id() << "^^^^^" << event.message_.message_id << std::endl;
             if (typeid(*widget) == typeid(MessageWidget) && 
                     dynamic_cast<MessageWidget*>(widget)->get_id() == event.message_.message_id) {
                 chat::Message message = event.message_;
@@ -377,20 +432,6 @@ void ChatWidget::set_dialogue_top(DialogueWidget* dialogue) {
     dialoguesList_->insertWidget(0, dialoguesList_->removeWidget(dialogue));
 }
 
-int ChatWidget::get_access_level(uint message_count) {
-    if (message_count < 5) {
-        return 5;
-    } else if (message_count < 10) {
-        return 4;
-    } else if (message_count < 15) {
-        return 3;
-    } else if (message_count < 20) {
-        return 2;
-    } else {
-        return 1;
-    }
-}
-
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
     auto avatars = server_.avatar_map();
@@ -451,23 +492,14 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
     return message_widget;
 }
 
-chat::Content::FileType ChatWidget::parse_type(const std::string& extension)  {
-    if (extension == ".jpeg" || extension == ".png" || extension == ".jpg") {  // TODO
-        return chat::Content::IMAGE;
-    } else if (extension == ".mp4") {
-        return chat::Content::VIDEO;
-    } else {
-        return chat::Content::VIDEO;
-    }
-}
-
 void ChatWidget::send_message() {
     if (!messageEdit_->text().empty() || is_uploaded_) {
         chat::Content content;
         if (is_uploaded_) {
             std::pair<std::string, chat::Content::FileType> filepath_type = save_file(
                 fileUploaderPtr_->spoolFileName(), 
-                fileUploaderPtr_->clientFileName().toUTF8()
+                fileUploaderPtr_->clientFileName().toUTF8(),
+                user_id_
             );
             content = chat::Content(
                 filepath_type.second,
@@ -516,37 +548,6 @@ void ChatWidget::update_users_list() {
             }
         }
     }
-}
-
-std::pair<std::string, chat::Content::FileType> ChatWidget::save_file(
-            const std::string& file_path, 
-            const std::string& filename) {
-    std::string extension = boost::filesystem::extension(filename);
-    chat::Content::FileType type = parse_type(extension);
-
-    std::stringstream result_filename;
-    result_filename << MEDIA_ROOT;
-    if (type == chat::Content::IMAGE) {
-        result_filename << "/image/";
-    } else if (type == chat::Content::VIDEO) {
-        result_filename << "/video/";
-    } else {
-        result_filename << "/other/";
-    }
-    result_filename << user_id_ << "_";
-    result_filename << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) << extension;
-
-    std::ifstream in(file_path, std::ios::binary | std::ios::in);
-    std::ofstream out(result_filename.str(), std::ios::binary | std::ios::out);
-
-    char byte = 0;
-    while (in.read(&byte, sizeof(char))) {
-        out.write(&byte, sizeof(char));
-    }
-    in.close();
-    out.close();
-
-    return std::make_pair(result_filename.str(), type);
 }
 
 std::unique_ptr<Wt::WText> ChatWidget::create_title(const Wt::WString& title) {
