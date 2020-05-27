@@ -16,6 +16,8 @@ class UserManager {
   bool update_password(IdType user_id, const std::string &pwd_hash);
   PictureModelPtr add_picture(IdType user_id, const std::string &path, int access_lvl);
   PictureModelPtr add_picture(const UserModelPtr &user, const std::string &path, int access_lvl);
+  Pictures get_pictures(IdType user_id);
+  bool hide_pictures(IdType user_id);
 };
 
 template< class DBConnector >
@@ -99,4 +101,31 @@ PictureModelPtr UserManager<DBConnector>::add_picture(const UserModelPtr &user, 
   PictureModelPtr result = db_session_.add(std::move(new_picture));
   db_session_.end_transaction();
   return result;
+}
+
+template<class DBConnector>
+Pictures UserManager<DBConnector>::get_pictures(IdType user_id) {
+  db_session_.start_transaction();
+  UserModelPtr user = get_user(user_id);
+  if (!user) {
+    return Pictures();
+  }
+  Pictures pictures = db_session_.template find<PictureModel>().where("user_id = ?").bind(user.id())
+      .where("access_lvl >= ?").bind(0);
+  db_session_.end_transaction();
+  return pictures;
+}
+
+template<class DBConnector>
+bool UserManager<DBConnector>::hide_pictures(IdType user_id) {
+  Pictures pictures = get_pictures(user_id);
+  if (pictures.empty()) {
+    return false;
+  }
+  db_session_.start_transaction();
+  for (auto &pic: pictures) {
+    pic.modify()->access_lvl_ = -1;
+  }
+  db_session_.end_transaction();
+  return true;
 }
