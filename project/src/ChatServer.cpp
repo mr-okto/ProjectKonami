@@ -240,7 +240,7 @@ std::string ChatServer::get_user_picture(const Wt::WString &username, int accs_l
         }
     }
     db_session_.end_transaction();
-    const std::string default_avatar = "./avatars/default-avatar.png";
+    const std::string default_avatar = "./default-avatar.png";
 //    avatar_map_[username] = std::string();
     return default_avatar;
 }

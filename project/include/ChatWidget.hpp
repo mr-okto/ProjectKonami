@@ -4,7 +4,9 @@
 #include <Wt/WContainerWidget.h>
 #include <Wt/WMessageBox.h>
 #include <Wt/WLink.h>
+
 #include "DialogueWidget.hpp"
+#include "MessageWidget.hpp"
 
 #include "ChatServer.hpp"
 
@@ -41,7 +43,7 @@ private:
     Wt::Core::observing_ptr<Wt::WContainerWidget> userList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> dialoguesList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> fileUploader_;
-    Wt::WFileUpload*                              fileUploaderPtr_;
+    Wt::Core::observing_ptr<Wt::WFileUpload>      fileUploaderPtr_;
 
     void fill_fileuploader();
     void create_UI();
@@ -56,21 +58,15 @@ private:
 
     void process_chat_event(const ChatEvent& event);
 
-    std::string get_message_format(const chat::Message& message);
-    chat::Content::FileType parse_type(const std::string& filename);
-    int get_access_level(uint message_count);
     bool change_photo_if_access_level_changed(DialogueWidget* dialogue);
 
     void update_users_list();
     void update_dialogue_list();
     void set_dialogue_top(DialogueWidget* dialogue);
     void update_messages(uint dialogue_id) ;
-    void print_message(const chat::Message& message);
+    MessageWidget* print_message(const chat::Message& message);
     bool create_dialogue(const Wt::WString& username);
     void send_message();
-
-    std::pair<std::string, chat::Content::FileType> save_file(const std::string& file_path, 
-                                                            const std::string& filename);
 
     void close_same_session();
 };
