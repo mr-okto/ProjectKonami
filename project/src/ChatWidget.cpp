@@ -3,7 +3,6 @@
 #include <Wt/WEnvironment.h>
 #include <Wt/WInPlaceEdit.h>
 #include <Wt/WHBoxLayout.h>
-#include <Wt/WSelectionBox.h>
 #include <Wt/WVBoxLayout.h>
 #include <Wt/WLabel.h>
 #include <Wt/WLineEdit.h>
@@ -86,7 +85,9 @@ ChatWidget::ChatWidget(const Wt::WString& username, uint32_t id, ChatServer& ser
     : Wt::WContainerWidget(),
       server_(server),
       username_(username),
-      avatar_link_(server_.get_user_picture(username_, 5)),
+      avatar_link_(
+              std::make_shared<Wt::WFileResource>(
+                      server_.get_user_picture(username_, 1))),
       user_id_(id),
       is_uploaded_(false),
       current_dialogue_id_(INT32_MAX)
@@ -101,7 +102,9 @@ ChatWidget::ChatWidget(const Wt::WString &username, uint32_t id,
         : Wt::WContainerWidget(),
           server_(server),
           username_(username),
-          avatar_link_(server_.get_user_picture(username_, 5)),
+          avatar_link_(
+                  std::make_shared<Wt::WFileResource>(
+                          server_.get_user_picture(username_, 1))),
           user_id_(id),
           is_uploaded_(false),
           current_dialogue_id_(INT32_MAX)
@@ -313,8 +316,16 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
 
     // Add nested layout to vertical layout with stretch = 0
     vLayout->addLayout(std::move(hLayout));
-
     gridLayout->addLayout(std::move(vLayout), 2, 1, 1, 2);
+
+    auto profileLayout = std::make_unique<Wt::WHBoxLayout>();
+    auto profile = std::make_unique<Wt::WContainerWidget>();
+    Wt::WImage* profilePictue = profile->addWidget(std::make_unique<Wt::WImage>(avatar_link_));
+    profile->addWidget(std::make_unique<Wt::WText>(username_));
+    profile->setStyleClass("profile-widget");
+    profile->setMaximumSize(200, Wt::WLength::Auto);
+    profileLayout->addWidget(std::move(profile));
+    gridLayout->addLayout(std::move(profileLayout), 2, 0);
 
     gridLayout->setRowStretch(1, 1);
     gridLayout->setColumnStretch(1, 1);

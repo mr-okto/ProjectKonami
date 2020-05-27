@@ -143,6 +143,7 @@ void AuthWidget::sign_up() {
 void AuthWidget::validate_reg_dialog(Wt::WDialog &dialog, Wt::WText* status_msg) {
     if (registration_form_->is_valid()) {
         dialog.accept();
+        start_chat(registration_form_->get_username(), registration_form_->get_password_first());
     } else if (registration_form_->error() == RegistrationForm::ErrorType::PasswordMismatch) {
         status_msg->setText("Password mismatch.");
     } else if (registration_form_->error() == RegistrationForm::ErrorType::ShortPassword) {

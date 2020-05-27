@@ -8,10 +8,10 @@
 typedef unsigned int uint;
 
 class DialogueWidget : public Wt::WContainerWidget {
- public:
+public:
     DialogueWidget(const Wt::WString& dialogue_name,
                    uint dialogue_id,
-                   const std::string& path, 
+                   const std::string& path,
                    int unread_message_count);
 
     uint get_dialogue_id() const;
@@ -21,7 +21,7 @@ class DialogueWidget : public Wt::WContainerWidget {
     void set_avatar(const std::string& path);
     void set_unread_message_count(int count);
 
- private:
+private:
     uint dialogue_id_;
     int unread_message_count_;
     Wt::WString dialogue_name_;
