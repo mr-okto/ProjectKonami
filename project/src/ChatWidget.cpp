@@ -483,7 +483,8 @@ bool ChatWidget::create_dialogue(const Wt::WString& username) {
 }
 
  MessageWidget* ChatWidget::print_message(const chat::Message& message) {
-    auto message_widget = messages_->addWidget(std::make_unique<MessageWidget>(message));
+    bool flag = message.user.username == username_;
+    auto message_widget = messages_->addWidget(std::make_unique<MessageWidget>(message, flag));
     // JS trick for page scroll
     Wt::WApplication *app = Wt::WApplication::instance();
     app->doJavaScript(messages_->jsRef() + ".scrollTop += "

@@ -7,24 +7,29 @@
 
 #include "MessageWidget.hpp"
 
-MessageWidget::MessageWidget(const chat::Message& message) : 
-        id_(message.message_id) {
+MessageWidget::MessageWidget(const chat::Message& message, bool flag) : 
+        id_(message.message_id),
+        flag_(flag) {
 
     // Message text
     text_ = this->addWidget(Wt::cpp14::make_unique<Wt::WText>());
     text_->setText(get_message_format(message));
+    text_->setTextFormat(Wt::TextFormat::XHTML);
+    if (flag_) {
+        text_->setTextAlignment(Wt::AlignmentFlag::Right);
+    }
     text_->setInline(false);
 
     // Message media
     if (message.content.type == chat::Content::IMAGE) {
         auto image_resource = std::make_shared<Wt::WFileResource>("image/*", message.content.file_path);
         auto image = this->addNew<Wt::WImage>(Wt::WLink(image_resource));
-        image->resize(300, 300);
+        image->setStyleClass("message-widget");
     } else if (message.content.type == chat::Content::VIDEO) {
         auto video_resource = std::make_shared<Wt::WFileResource>("video/*", message.content.file_path);
         auto video = this->addNew<Wt::WVideo>();
         video->addSource(Wt::WLink(video_resource)); 
-        video->resize(300, 300);
+        video->setStyleClass("message-widget");
     }
 };
 
@@ -47,13 +52,22 @@ std::string MessageWidget::get_message_format(const chat::Message& message) cons
     strftime(buf, sizeof(buf), "%H:%M", ts);
 
     std::stringstream ss;
-    ss << "<p style=\"display: flex; align-items: center; margin-bottom: 0px\">";
+    ss << "<p style=\"margin-bottom: 0px\">";
+        if (!flag_) {
             ss << "<span style=\"font-size: large; font-weight: bolder;\">";
                 ss << message.user.username;
             ss << "</span>";
             ss << "<span style=\"font-size: 85%; color: Gray; margin-left: 10px\">";
                 ss << std::string(buf);
             ss << "</span>";
+        } else {
+            ss << "<span style=\"font-size: 85%; color: Gray; margin-right: 10px\">";
+                ss << std::string(buf);
+            ss << "</span>";
+            ss << "<span style=\"font-size: large; font-weight: bolder;\">";
+                ss << message.user.username;
+            ss << "</span>";
+        }
     ss << "</p>";
     if (message.is_read) {
         ss << message.content.message;

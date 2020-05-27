@@ -164,3 +164,8 @@ textarea.chat-noedit {
   -o-filter: brightness(70%);
   filter: brightness(70%);
 }
+
+.message-widget {
+  max-width: 25rem;
+  object-fit: contain;
+}
