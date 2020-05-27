@@ -43,7 +43,7 @@ private:
     Wt::Core::observing_ptr<Wt::WContainerWidget> userList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> dialoguesList_;
     Wt::Core::observing_ptr<Wt::WContainerWidget> fileUploader_;
-    Wt::WFileUpload*                              fileUploaderPtr_;
+    Wt::Core::observing_ptr<Wt::WFileUpload>      fileUploaderPtr_;
 
     void fill_fileuploader();
     void create_UI();

@@ -253,23 +253,23 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
                               std::unique_ptr<Wt::WWidget> logoutButton, std::unique_ptr<Wt::WWidget> chatUserList,
                               std::unique_ptr<Wt::WWidget> fileUploader) {
 
-    /*
+ /*
   * Create a vertical layout, which will hold 3 rows,
   * organized like this:
   *
   * WVBoxLayout
-  * --------------------------------------------
-  * | nested WHBoxLayout (vertical stretch=1)  |
-  * |                              |           |
-  * |  messages                    | userList  |
-  * |   (horizontal stretch=1)     |           |
-  * |                              |           |
-  * --------------------------------------------
-  * | message edit area                        |
-  * --------------------------------------------
-  * |  upload file                             |
-  * | send | logout                            |
-  * --------------------------------------------
+  * ------------------------------------------------------
+  *           | nested WHBoxLayout (vertical stretch=1)  |
+  *           |                              |           |
+  * Dialogues |         messages             | userList  |
+  *           |   (horizontal stretch=1)     |           |
+  *           |                              |           |
+  *           |-------------------------------------------
+  *           | message edit area                        |
+  *           | ------------------------------------------
+  *           |  upload file                             |
+  *           | send               edit profile | Logout |
+  * ------------------------------------------------------
   */
 
     // 3x3 grid layout

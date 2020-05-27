@@ -2,17 +2,17 @@
 
 #include <Wt/Dbo/Dbo.h>
 #include <Wt/Dbo/backend/Postgres.h>
-#include <DbSession.hpp>
-#include <DialogueManager.hpp>
-#include <MessageManager.hpp>
-#include <UserManager.hpp>
-#include <Models.hpp>
-
 #include <ctime>
 #include <chrono>
 #include <vector>
 #include <string>
 #include <map>
+
+#include "DbSession.hpp"
+#include "DialogueManager.hpp"
+#include "MessageManager.hpp"
+#include "UserManager.hpp"
+#include "Models.hpp"
 
 typedef unsigned int uint;
 
@@ -108,9 +108,10 @@ struct Message {
         message_id(message_id) {}
 };
 
+template <typename T>
 class DialogueService {
  public:
-    DialogueService(DbSession<Wt::Dbo::backend::Postgres>& session) :
+    DialogueService(DbSession<T>& session) :
         session_(session),
         dialogue_manager_(session),
         message_manager_(session),
@@ -127,9 +128,127 @@ class DialogueService {
     void mark_message_as_read(uint message_id);
 
  private:
-    DbSession<Wt::Dbo::backend::Postgres>& session_;
-    DialogueManager<Wt::Dbo::backend::Postgres> dialogue_manager_;
-    MessageManager<Wt::Dbo::backend::Postgres> message_manager_;
-    UserManager<Wt::Dbo::backend::Postgres> user_manager_;
+    DbSession<T>& session_;
+    DialogueManager<T> dialogue_manager_;
+    MessageManager<T> message_manager_;
+    UserManager<T> user_manager_;
 };
+
+template <typename T>
+ContentModel::Type DialogueService<T>::parse_type(Content::FileType type) {
+    if (type == Content::IMAGE) {
+        return ContentModel::IMAGE;
+    } else if (type == Content::VIDEO) {
+        return ContentModel::VIDEO;
+    } else if (type == Content::DOCUMENT) {
+        return ContentModel::DOCUMENT;  
+    } else {
+        return ContentModel::OTHER;
+    }
+}
+
+template <typename T>
+Content::FileType DialogueService<T>::parse_type(ContentModel::Type type) {
+    if (type == ContentModel::IMAGE) {
+        return Content::IMAGE;
+    } else if (type == ContentModel::VIDEO) {
+        return Content::VIDEO;
+    } else if (type == ContentModel::DOCUMENT) {
+        return Content::DOCUMENT;  
+    } else {
+        return Content::OTHER;
+    }
+}
+
+template <typename T>
+std::vector<Dialogue> DialogueService<T>::get_dialogues(uint user_id) {
+    UserModelPtr user = user_manager_.get_user(user_id);
+    Dialogues dialogues = user->dialogues_;
+    std::vector<Dialogue> dualogues_vec;
+    session_.start_transaction();
+    for (const auto& item : dialogues) {
+        std::vector<User> users;
+        for (const auto& member : item->members_) {
+            users.push_back(User((uint)member.id(), member->username_));
+        }
+        dualogues_vec.push_back(Dialogue((uint)item.id(), users[0], users[1], item->messages_.size()));
+    }
+    session_.end_transaction();
+    session_.start_transaction();
+    for (auto& item : dualogues_vec) {
+        MessageModelPtr last_msg = message_manager_.get_last_msg(item.dialogue_id);
+        if (last_msg) {
+            item.last_msg_time = last_msg->creation_dt_;
+        }
+            
+    }
+    session_.end_transaction();
+    sort(dualogues_vec.begin(), dualogues_vec.end(), [](const Dialogue& lhs, const Dialogue& rhs) {
+        return lhs.last_msg_time > rhs.last_msg_time;
+    });
+
+    return dualogues_vec;
+}
+
+template <typename T>
+std::vector<Message> DialogueService<T>::get_messages(uint dialogue_id) {
+    Messages messages = message_manager_.get_latest_messages(dialogue_id, 0);
+    std::vector<Message> return_vec;
+    session_.start_transaction();
+    for (const auto& item : messages) {
+        auto message_model = *item->content_elements_.begin();
+        Content content(
+            parse_type(message_model->type_),
+            item->text_,
+            message_model->file_path_
+        );
+
+        User user(
+            (uint)item->author_.id(),
+            item->author_->username_
+        );
+
+        Message message(
+            (uint)dialogue_id, 
+            user, 
+            content, 
+            item->creation_dt_,
+            item->is_read_,
+            (uint)message_model.id()
+        );
+        return_vec.push_back(message);
+    }
+    session_.end_transaction();
+    return return_vec;
+}
+
+template <typename T>
+bool DialogueService<T>::create_dialogue(uint first_user_id, uint second_user_id) {
+    return std::get<1>(
+        dialogue_manager_.get_or_create_dialogue(first_user_id, second_user_id)
+    );
+}
+
+template <typename T>
+int DialogueService<T>::get_unread_messages_count(uint dialogue_id, uint user_id) {
+    return dialogue_manager_.count_unread_messages(dialogue_id, user_id);
+}
+
+template <typename T>
+void DialogueService<T>::post_message(Message& message) {
+    MessageModelPtr message_model = message_manager_.create_msg(
+        message.dialogue_id, message.user.user_id, message.content.message
+    );
+    message_manager_.add_content(
+        message_model, parse_type(message.content.type), message.content.file_path
+    );
+    message.message_id = message_model.id();
+}
+
+template <typename T>
+void DialogueService<T>::mark_message_as_read(uint message_id) {
+    session_.start_transaction();
+    message_manager_.mark_read(message_id);
+    session_.end_transaction();
+}
 }

@@ -73,7 +73,7 @@ private:
     DbSession<Wt::Dbo::backend::Postgres>& db_session_;
 
     SessionManager        session_manager_;
-    chat::DialogueService dialogue_service_;
+    chat::DialogueService<Wt::Dbo::backend::Postgres> dialogue_service_;
     Auth                  auth_service_;
 
     std::set<Wt::WString> online_users_;
