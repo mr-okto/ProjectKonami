@@ -26,7 +26,7 @@ DialogueWidget::DialogueWidget(const Wt::WString& dialogue_name,
         dialog.setClosable(true);
         dialog.rejectWhenEscapePressed(true);
         auto image = dialog.contents()->addWidget(std::make_unique<Wt::WImage>(this->link_));
-        image->resize(300, 300);
+        image->setStyleClass("message-widget");
         dialog.exec();
     });
 
