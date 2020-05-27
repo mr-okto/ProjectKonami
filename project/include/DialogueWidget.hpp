@@ -21,7 +21,8 @@ public:
         link_ = Wt::WLink(std::make_shared<Wt::WFileResource>(path));
         avatar_ = Layout->addWidget(std::make_unique<Wt::WImage>(link_));
 
-        Layout->addWidget(std::make_unique<Wt::WText>(dialogue_name_), 1);
+        auto name = Layout->addWidget(std::make_unique<Wt::WText>(dialogue_name_), 1);
+        name->setMargin(10, Wt::Side::Top);
         std::string unread_str = unread_message_count_ ? std::to_string(unread_message_count) : "";
         unread_widget_ = Layout->addWidget(std::make_unique<Wt::WText>(unread_str), 1);
 

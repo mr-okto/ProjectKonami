@@ -20,7 +20,8 @@ public:
         avatar_ = Layout->addWidget(std::make_unique<Wt::WImage>(Wt::WLink(std::make_shared<Wt::WFileResource>(path))));
 
     //    avatar_->setMargin(30, Wt::WFlags<Wt::Side>::enum_type::Right);
-        Layout->addWidget(std::make_unique<Wt::WText>(username), 1);
+        auto name = Layout->addWidget(std::make_unique<Wt::WText>(username), 1);
+        name->setMargin(10, Wt::Side::Top);
         Layout->setContentsMargins(0, 0 ,0 ,0);
         setLayout(std::move(Layout));
         setStyleClass("user-widget");
