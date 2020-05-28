@@ -44,7 +44,7 @@ button {
 .loginForms {
   width: 280px;
   height: 130px;
-  max-height: 260px;
+  max-height: 280px;
 }
 
 .rememberMe {
@@ -136,6 +136,19 @@ textarea.chat-noedit {
   margin-bottom: 10px;
   width: 500px;
   max-height: 300px;
+}
+
+.profile-settings {
+  margin-left: auto;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  width: 350px;
+  max-height: 300px;
+}
+
+.profile-settings-form {
+  margin-left: 40px;
+  font-weight: bolder;
 }
 
 .help-text {

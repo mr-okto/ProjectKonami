@@ -53,7 +53,7 @@ private:
     Wt::WText  *status_msg_;
     Wt::WString status_string_;
 
-    Wt::WContainerWidget * file_upload_container;
+    Wt::WContainerWidget * file_upload_container_;
     Wt::WFileUpload *file_upload_;
 
     std::string copy_temp_img_to_avatar_folder(
