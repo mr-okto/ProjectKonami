@@ -44,7 +44,7 @@ public:
     int get_unread_messages_count(uint dialogue_id, uint user_id);
     void send_msg(chat::Message& message, const chat::User& user);
 
-    bool create_dialogue(uint creater_id, const Wt::WString& receiver);
+    std::pair<chat::Dialogue, bool> create_dialogue(uint creater_id, const Wt::WString& receiver);
     void mark_message_as_read(const chat::Message& message);
 
     uint get_user_id(const Wt::WString& username);

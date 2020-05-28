@@ -65,7 +65,7 @@ private:
     void set_dialogue_top(DialogueWidget* dialogue);
     void update_messages(uint dialogue_id) ;
     MessageWidget* print_message(const chat::Message& message);
-    bool create_dialogue(const Wt::WString& username);
+    chat::Dialogue create_dialogue(const Wt::WString& username);
     void send_message();
 
     void close_same_session();

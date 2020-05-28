@@ -8,8 +8,8 @@
 #include "MessageWidget.hpp"
 
 MessageWidget::MessageWidget(const chat::Message& message, bool flag) : 
-        id_(message.message_id),
-        flag_(flag) {
+        flag_(flag),
+        id_(message.message_id) {
 
     // Message text
     text_ = this->addWidget(Wt::cpp14::make_unique<Wt::WText>());

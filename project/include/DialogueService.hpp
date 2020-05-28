@@ -123,7 +123,7 @@ class DialogueService {
     std::vector<Dialogue> get_dialogues(uint user_id);
     std::vector<Message> get_messages(uint dialogue_id);
     int get_unread_messages_count(uint dialogue_id, uint user_id);
-    bool create_dialogue(uint first_user_id, uint second_user_id);
+    std::pair<chat::Dialogue, bool> create_dialogue(uint first_user_id, uint second_user_id);
     void post_message(Message& message);
     void mark_message_as_read(uint message_id);
 
@@ -171,7 +171,7 @@ std::vector<Dialogue> DialogueService<T>::get_dialogues(uint user_id) {
         for (const auto& member : item->members_) {
             users.push_back(User((uint)member.id(), member->username_));
         }
-        dualogues_vec.push_back(Dialogue((uint)item.id(), users[0], users[1], item->messages_.size()));
+        dualogues_vec.push_back(Dialogue((uint)item.id(), users[0], users[1], 0));
     }
     session_.end_transaction();
     session_.start_transaction();
@@ -180,7 +180,7 @@ std::vector<Dialogue> DialogueService<T>::get_dialogues(uint user_id) {
         if (last_msg) {
             item.last_msg_time = last_msg->creation_dt_;
         }
-            
+        item.messages_count = dialogue_manager_.count_messages(item.dialogue_id, user_id); 
     }
     session_.end_transaction();
     sort(dualogues_vec.begin(), dualogues_vec.end(), [](const Dialogue& lhs, const Dialogue& rhs) {
@@ -223,10 +223,17 @@ std::vector<Message> DialogueService<T>::get_messages(uint dialogue_id) {
 }
 
 template <typename T>
-bool DialogueService<T>::create_dialogue(uint first_user_id, uint second_user_id) {
-    return std::get<1>(
-        dialogue_manager_.get_or_create_dialogue(first_user_id, second_user_id)
-    );
+std::pair<chat::Dialogue, bool> DialogueService<T>::create_dialogue(uint first_user_id, uint second_user_id) {
+    session_.start_transaction();
+    auto dialogue_iscreate = dialogue_manager_.get_or_create_dialogue(first_user_id, second_user_id);
+    session_.end_transaction();
+    session_.start_transaction();
+    std::vector<User> users;
+    for (const auto& member : std::get<0>(dialogue_iscreate)->members_) {
+        users.push_back(User((uint)member.id(), member->username_));
+    }
+    session_.end_transaction();
+    return {chat::Dialogue(std::get<0>(dialogue_iscreate).id(), users[0], users[1], 0), std::get<1>(dialogue_iscreate)};
 }
 
 template <typename T>

@@ -150,14 +150,14 @@ void ChatServer::send_msg(chat::Message& message, const chat::User& receiver) {
     }
 }
 
-bool ChatServer::create_dialogue(uint creater_id, const Wt::WString& receiver) {
+std::pair<chat::Dialogue, bool> ChatServer::create_dialogue(uint creater_id, const Wt::WString& receiver) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
-    if (dialogue_service_.create_dialogue(creater_id, 
-                                          get_user_id(receiver.toUTF8()))) {
+    std::pair<chat::Dialogue, bool> dialogue_iscreate = dialogue_service_.create_dialogue(creater_id, 
+                                                                                          get_user_id(receiver.toUTF8()));
+    if (dialogue_iscreate.second) {
         notify_user(ChatEvent(ChatEvent::NEW_DIALOGUE, receiver));
-        return true;
-    }
-    return false;
+    }                                                             
+    return dialogue_iscreate;
 }
 
 void ChatServer::mark_message_as_read(const chat::Message& message) {

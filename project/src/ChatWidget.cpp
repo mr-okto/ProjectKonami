@@ -485,12 +485,12 @@ void ChatWidget::update_messages(uint dialogue_id) {
 
 }
 
-bool ChatWidget::create_dialogue(const Wt::WString& username) {
-    if (server_.create_dialogue(user_id_, username)) {
+chat::Dialogue ChatWidget::create_dialogue(const Wt::WString& username) {
+    std::pair<chat::Dialogue, bool> dialogue_iscreate = server_.create_dialogue(user_id_, username);
+    if (dialogue_iscreate.second) {
         update_dialogue_list();
-        return true;
     }
-    return false;
+    return dialogue_iscreate.first;
 }
 
  MessageWidget* ChatWidget::print_message(const chat::Message& message) {
@@ -535,8 +535,6 @@ void ChatWidget::send_message() {
                               dialogues_[current_dialogue_id_].second_user;
 
         DialogueWidget* widget = dialogues_widgets_[current_dialogue_id_];
-        change_photo_if_access_level_changed(widget);
-        dialogues_[current_dialogue_id_].messages_count++;
         set_dialogue_top(widget);
         widget->set_unread_message_count(0);
 
@@ -555,7 +553,12 @@ void ChatWidget::update_users_list() {
 //                auto w = userList_->addWidget(std::make_unique<UserWidget>(user, avatars[user].toUTF8()));
                 auto w = userList_->addWidget(std::make_unique<UserWidget>(user, server_.get_user_picture(user, 5)));
                 w->clicked().connect([=] {
-                    this->create_dialogue(w->get_username());
+                    chat::Dialogue d = this->create_dialogue(w->get_username());
+                    this->update_messages(d.dialogue_id);
+                    this->current_dialogue_id_ = d.dialogue_id;
+                    this->fileUploaderPtr_->enable();
+                    this->sendButton_->enable();
+                    this->messageEdit_->enable();
                 });
             }
         }
