@@ -1,10 +1,8 @@
 #include <Wt/WLineEdit.h>
-#include <Wt/WHBoxLayout.h>
 #include <Wt/WVBoxLayout.h>
 #include <Wt/WText.h>
 #include <Wt/WLabel.h>
 #include <Wt/WProgressBar.h>
-#include <Wt/WLengthValidator.h>
 #include <fstream>
 
 #include "RegistrationForm.hpp"
@@ -51,8 +49,8 @@ void RegistrationForm::create_UI() {
     password_edit_second_->setAttributeValue("type", "password");
 
     line = vLayout->addWidget(std::make_unique<Wt::WContainerWidget>(),0,Wt::AlignmentFlag::Middle);
-    line->addWidget(std::make_unique<Wt::WText>("Upload avatars: "));
-    file_upload_container = line->addWidget(std::make_unique<Wt::WContainerWidget>());
+    line->addWidget(std::make_unique<Wt::WText>("Upload avatar: "));
+    file_upload_container_ = line->addWidget(std::make_unique<Wt::WContainerWidget>());
     create_file_uploader();
 
     line = vLayout->addWidget(std::make_unique<Wt::WContainerWidget>(),0,Wt::AlignmentFlag::Middle);
@@ -106,8 +104,8 @@ void RegistrationForm::set_user_exists_error() {
 }
 
 void RegistrationForm::create_file_uploader() {
-    file_upload_container->clear();
-    file_upload_ = file_upload_container->addWidget(std::make_unique<Wt::WFileUpload>());
+    file_upload_container_->clear();
+    file_upload_ = file_upload_container_->addWidget(std::make_unique<Wt::WFileUpload>());
     file_upload_->setInline(true);
     file_upload_->setFileTextSize(100);
     file_upload_->setProgressBar(std::make_unique<Wt::WProgressBar>());

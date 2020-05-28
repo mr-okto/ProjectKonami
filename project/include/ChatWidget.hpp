@@ -5,6 +5,7 @@
 #include <Wt/WMessageBox.h>
 #include <Wt/WLink.h>
 #include "DialogueWidget.hpp"
+#include "EditProfileForm.hpp"
 
 #include "ChatServer.hpp"
 
@@ -43,6 +44,10 @@ private:
     Wt::Core::observing_ptr<Wt::WContainerWidget> fileUploader_;
     Wt::WFileUpload*                              fileUploaderPtr_;
 
+    EditProfileForm*                              edit_profile_form_;
+    Wt::WPushButton*                              edit_profile_btn_;
+
+
     void fill_fileuploader();
     void create_UI();
     void create_layout(std::unique_ptr<Wt::WWidget> messages,
@@ -53,6 +58,7 @@ private:
                     std::unique_ptr<Wt::WWidget> chatUserList,
                     std::unique_ptr<Wt::WWidget> fileUploader);
     std::unique_ptr<Wt::WText> create_title(const Wt::WString& title);
+    void show_edit_profile();
 
     void process_chat_event(const ChatEvent& event);
 

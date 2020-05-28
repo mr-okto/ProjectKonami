@@ -244,3 +244,27 @@ std::string ChatServer::get_user_picture(const Wt::WString &username, int accs_l
 //    avatar_map_[username] = std::string();
     return default_avatar;
 }
+
+bool ChatServer::update_username(uint32_t userId, const Wt::WString& from, const Wt::WString& to) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+     if (user_manager_.update_username(userId, to.toUTF8())) {
+         return true;
+     }
+     return false;
+}
+
+bool ChatServer::update_avatar(uint32_t id, const std::string& newPicture) {
+    std::unique_lock<std::recursive_mutex> lock(mutex_);
+
+    UserModelPtr userModel = user_manager_.get_user(id);
+    user_manager_.hide_pictures(userModel.id());
+
+    auto newPictures = create_blurred_copies(newPicture, "./avatars", userModel.id(), 5);
+    for (int i = 0; i < 5; ++i) {
+        user_manager_.add_picture(userModel, newPictures[i], i + 1);
+        std::cout << newPictures[i] << std::endl;
+    }
+    post_chat_event(ChatEvent(ChatEvent::Type::UPDATE_AVATAR, userModel->username_, id, newPictures[4]));
+    return true;
+}
