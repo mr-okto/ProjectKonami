@@ -7,6 +7,7 @@
 
 #include "DialogueWidget.hpp"
 #include "MessageWidget.hpp"
+#include "EditProfileForm.hpp"
 
 #include "ChatServer.hpp"
 
@@ -29,6 +30,7 @@ private:
     ChatServer& server_;
     Wt::WString username_;
     Wt::WLink   avatar_link_;
+    Wt::WImage* profile_picture_;
     uint32_t    user_id_;
     bool        is_uploaded_;
     uint current_dialogue_id_;
@@ -46,6 +48,10 @@ private:
     Wt::Core::observing_ptr<Wt::WContainerWidget> fileUploader_;
     Wt::Core::observing_ptr<Wt::WFileUpload>      fileUploaderPtr_;
 
+    EditProfileForm*                              edit_profile_form_;
+    Wt::WPushButton*                              edit_profile_btn_;
+
+
     void fill_fileuploader();
     void create_UI();
     void create_layout(std::unique_ptr<Wt::WWidget> messages,
@@ -56,6 +62,7 @@ private:
                     std::unique_ptr<Wt::WWidget> chatUserList,
                     std::unique_ptr<Wt::WWidget> fileUploader);
     std::unique_ptr<Wt::WText> create_title(const Wt::WString& title);
+    void show_edit_profile();
 
     void process_chat_event(const ChatEvent& event);
 

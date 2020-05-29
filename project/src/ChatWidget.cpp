@@ -307,8 +307,10 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
     hLayout->addWidget(std::move(sendButton));
 
     auto btnsLayout = std::make_unique<Wt::WHBoxLayout>();
-    btnsLayout->addWidget(std::make_unique<Wt::WPushButton>("Edit Profile"));
+    edit_profile_btn_ = btnsLayout->addWidget(std::make_unique<Wt::WPushButton>("Edit Profile"));
     btnsLayout->addWidget(std::move(logoutButton));
+
+    edit_profile_btn_->clicked().connect(this, &ChatWidget::show_edit_profile);
 
     // Add button to horizontal layout with stretch = 1
     hLayout->addLayout(std::move(btnsLayout), 1, Wt::AlignmentFlag::Right);
@@ -320,7 +322,7 @@ void ChatWidget::create_layout(std::unique_ptr<Wt::WWidget> messages, std::uniqu
 
     auto profileLayout = std::make_unique<Wt::WHBoxLayout>();
     auto profile = std::make_unique<Wt::WContainerWidget>();
-    Wt::WImage* profilePictue = profile->addWidget(std::make_unique<Wt::WImage>(avatar_link_));
+    profile_picture_ = profile->addWidget(std::make_unique<Wt::WImage>(avatar_link_));
     profile->addWidget(std::make_unique<Wt::WText>(username_));
     profile->setStyleClass("profile-widget");
     profile->setMaximumSize(200, Wt::WLength::Auto);
@@ -448,9 +450,8 @@ void ChatWidget::set_dialogue_top(DialogueWidget* dialogue) {
 
 void ChatWidget::update_dialogue_list() {
     dialoguesList_->clear();
-    auto avatars = server_.avatar_map();
     for (const auto& dialogue : server_.get_dialogues(user_id_)) {
-        std::string username = dialogue.first_user.username != username_ ? 
+        std::string username = dialogue.first_user.username != username_ ?
                                dialogue.first_user.username :
                                dialogue.second_user.username;
         int unread_messages_count = server_.get_unread_messages_count(dialogue.dialogue_id, user_id_);
@@ -578,4 +579,34 @@ std::unique_ptr<Wt::WText> ChatWidget::create_title(const Wt::WString& title) {
 
 void ChatWidget::close_same_session() {
     server_.close_same_session(username_);
+}
+
+void ChatWidget::show_edit_profile() {
+    Wt::WDialog dialog("Profile settings");
+    dialog.setClosable(true);
+    dialog.rejectWhenEscapePressed(true);
+    dialog.contents()->setStyleClass("profile-settings");
+
+    Wt::WText *statusMsg = dialog.footer()->addWidget(std::make_unique<Wt::WText>());
+    edit_profile_form_ = dialog.contents()->addWidget(std::make_unique<EditProfileForm>(username_, user_id_, server_, *statusMsg));
+    edit_profile_form_->setStyleClass("profile-settings-form");
+    edit_profile_form_->updated_username().connect([this](const Wt::WString& newUsername) {
+        sign_out();
+    });
+
+    edit_profile_form_->updated_avatar().connect([this](const std::string& newAvatarLink) {
+        avatar_link_.setResource(std::make_shared<Wt::WFileResource>(newAvatarLink));
+        profile_picture_->setImageLink(avatar_link_);
+    });
+
+
+    Wt::WPushButton *updateBtn = dialog.footer()->addWidget(std::make_unique<Wt::WPushButton>("Exit"));
+    statusMsg->setInline(false);
+    statusMsg->setTextFormat(Wt::TextFormat::XHTML);
+    statusMsg->setTextAlignment(Wt::AlignmentFlag::Center);
+
+    updateBtn->clicked().connect([&dialog]() {
+        dialog.accept();
+    });
+    dialog.exec();
 }

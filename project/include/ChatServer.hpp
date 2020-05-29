@@ -60,6 +60,9 @@ public:
     bool sign_out(const Wt::WString& username);
     void weak_sign_out(Client * client, const Wt::WString& username_);
 
+    bool update_username(uint32_t userId, const Wt::WString& from, const Wt::WString& to);
+    std::string update_avatar(uint32_t id, const std::string& newPicture);
+
     std::set<Wt::WString> online_users();
     std::map<Wt::WString, Wt::WString> avatar_map(); // by default contains 5 lvl access of blurred picture
     std::vector<Wt::WString> get_all_users();

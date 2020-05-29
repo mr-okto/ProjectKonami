@@ -105,6 +105,36 @@ TEST_F(DbTest, DbUserManager_AddPicture_Test) {
   EXPECT_EQ(result->user_, user);
 }
 
+TEST_F(DbTest, DbUserManager_GetPicture_Test) {
+  UserManager<Postgres> user_manager(session_);
+  auto user = user_manager.create_user(test_uname_, test_pwd_);
+  ASSERT_EQ(!user, false);
+  auto pic = user_manager.add_picture(user.id(), "some_path", 0);
+  ASSERT_NE(!pic, true);
+  auto result = user_manager.get_pictures(user.id());
+  EXPECT_EQ(result.size(), 1);
+}
+
+TEST_F(DbTest, DbUserManager_HidePicture_False_Test) {
+  UserManager<Postgres> user_manager(session_);
+  auto user = user_manager.create_user(test_uname_, test_pwd_);
+  ASSERT_EQ(!user, false);
+  auto result = user_manager.hide_pictures(user.id());
+  EXPECT_EQ(result, false);
+}
+
+TEST_F(DbTest, DbUserManager_HidePicture_True_Test) {
+  UserManager<Postgres> user_manager(session_);
+  auto user = user_manager.create_user(test_uname_, test_pwd_);
+  ASSERT_EQ(!user, false);
+  auto pic = user_manager.add_picture(user.id(), "some_path", 0);
+  ASSERT_NE(!pic, true);
+  auto result = user_manager.hide_pictures(user.id());
+  EXPECT_EQ(result, true);
+  auto empty_pics = user_manager.get_pictures(user.id());
+  EXPECT_EQ(empty_pics.size(), 0);
+}
+
 TEST_F(DbTest, DbDialogueManager_GetDialogue_Test) {
   UserManager<Postgres> user_manager(session_);
   auto user_a = user_manager.create_user(test_uname_, test_pwd_);
