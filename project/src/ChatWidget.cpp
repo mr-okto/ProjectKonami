@@ -385,8 +385,9 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
         }
     } else if (event.type_ == ChatEvent::UPDATE_AVATAR) {
         if (username_to_dialogue_id.count(event.username_)) {
-            DialogueWidget* widget = dialogues_widgets_[username_to_dialogue_id[event.username_]];
-            uint unread_messages_count = widget->get_unread_message_count();
+            uint dialogue_id = username_to_dialogue_id[event.username_];
+            DialogueWidget* widget = dialogues_widgets_[dialogue_id];
+            uint unread_messages_count = dialogues_[dialogue_id].messages_count;
             std::string new_avatar = server_.get_user_picture(event.username_, get_access_level(unread_messages_count));
             widget->set_avatar(new_avatar);
         }
