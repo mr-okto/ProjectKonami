@@ -382,9 +382,12 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
             }
         }
     } else if (event.type_ == ChatEvent::UPDATE_AVATAR) {
-        /*if (dialogues_widgets_.count(event.username_)) {
-            dialogues_widgets_[event.username_]->set_avatar(event.data_.toUTF8());
-        }*/
+        if (username_to_dialogue_id.count(event.username_)) {
+            DialogueWidget* widget = dialogues_widgets_[username_to_dialogue_id[event.username_]];
+            uint unread_messages_count = widget->get_unread_message_count();
+            std::string new_avatar = server_.get_user_picture(event.username_, get_access_level(unread_messages_count));
+            widget->set_avatar(new_avatar);
+        }
     }
 }
 
@@ -468,6 +471,7 @@ void ChatWidget::update_dialogue_list() {
         });
         dialogues_[dialogue.dialogue_id] = dialogue;
         dialogues_widgets_[dialogue.dialogue_id] = w;
+        username_to_dialogue_id[username] = dialogue.dialogue_id;
     }
 }
 

@@ -34,6 +34,7 @@ private:
     uint current_dialogue_id_;
     std::map<uint, chat::Dialogue> dialogues_;
     std::map<uint, DialogueWidget*> dialogues_widgets_;
+    std::map<Wt::WString, uint> username_to_dialogue_id;
 
     Wt::Signal<Wt::WString>                       logout_signal_;
     Wt::JSlot                                     clearInput_;
