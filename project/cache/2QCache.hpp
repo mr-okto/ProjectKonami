@@ -1,5 +1,7 @@
 #pragma once
 
+#include <exception>
+
 #include "BaseCache.hpp"
 #include "FifoCache.hpp"
 #include "LRUCache.hpp"
@@ -22,6 +24,9 @@ class Q2Cache
 
 template <typename Key, typename Value>
 Q2Cache<Key, Value>::Q2Cache(int size) {
+    if (size < 5) {
+        throw std::invalid_argument{"Invalid size"};
+    }
     int fifo_size = int(size * 0.4);
     int LRU_size = size - fifo_size * 2;
 
@@ -42,6 +47,16 @@ Q2Cache<Key, Value>::Q2Cache(int size) {
 
 template <typename Key, typename Value>
 void Q2Cache<Key, Value>::Put(Key key, Value value) {
+    try {
+        HotLRU.Get(key);
+        HotLRU.Put(key, value);
+    } catch (const std::range_error& e) {}
+
+    try {
+        OutCache.Get(key);
+        OutCache.Put(key, value);
+    } catch (const std::range_error& e) {}
+
     InCache.Put(key, value);
 }
 
