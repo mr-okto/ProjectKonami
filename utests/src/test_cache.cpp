@@ -249,9 +249,3 @@ TEST(Q2Cache, push_to_hot_path) {
     EXPECT_THROW(cache.Get(3), std::range_error);
     EXPECT_THROW(cache.Get(4), std::range_error);
 }
-
-
-int main(int argc, char** argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
