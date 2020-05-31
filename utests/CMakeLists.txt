@@ -6,7 +6,7 @@ include_directories(include ${PROJECT_SOURCE_DIR}/project/include/ ${GTEST_INCLU
 
 file(GLOB UNIT_SOURCES ${PROJECT_SOURCE_DIR}/project/src/*.cpp)
 list(FILTER UNIT_SOURCES EXCLUDE REGEX ".main.cpp$")
-set(TEST_SOURCES src/TestDb.cpp src/TestMain.cpp src/test_cache.cpp)
+set(TEST_SOURCES src/TestDb.cpp src/TestMain.cpp)
 
 if (NOT TARGET passwdqc)
 add_library(passwdqc STATIC  ${PROJECT_SOURCE_DIR}/project/src/passwdqc/passwdqc_check.c ${PROJECT_SOURCE_DIR}/project/src/passwdqc/passwdqc.h)
