@@ -138,6 +138,9 @@ void ChatWidget::connect() {
     if (server_.connect
         (this, std::bind(&ChatWidget::process_chat_event, this, std::placeholders::_1))) {
         Wt::WApplication::instance()->enableUpdates(true);
+        if (!message_received_) {
+            message_received_ = std::make_unique<Wt::WSound>("sounds/message_received.mp3");
+        }
     }
 }
 
@@ -369,6 +372,10 @@ void ChatWidget::process_chat_event(const ChatEvent& event) {
             dialogue->set_unread_message_count(0);
         } else {
             dialogue->set_unread_message_count(dialogue->get_unread_message_count() + 1);
+        }
+
+        if (message_received_) {
+            message_received_->play();
         }
 
     } else if (event.type_ == ChatEvent::READ_MESSAGE && 

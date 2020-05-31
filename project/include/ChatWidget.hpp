@@ -4,6 +4,7 @@
 #include <Wt/WContainerWidget.h>
 #include <Wt/WMessageBox.h>
 #include <Wt/WLink.h>
+#include <Wt/WSound.h>
 
 #include "DialogueWidget.hpp"
 #include "MessageWidget.hpp"
@@ -50,6 +51,8 @@ private:
 
     EditProfileForm*                              edit_profile_form_;
     Wt::WPushButton*                              edit_profile_btn_;
+
+    std::unique_ptr<Wt::WSound> message_received_;
 
 
     void fill_fileuploader();
