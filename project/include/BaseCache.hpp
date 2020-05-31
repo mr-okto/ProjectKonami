@@ -106,8 +106,8 @@ template <typename Key, typename Value, typename CacheStrategy>
 void BaseNoAlgCache<Key, Value, CacheStrategy>::Delete(const Key &key) {
     cache_func.Delete(key);
     auto elem_it = FindElem(key);
-    items_map.erase(elem_it);
     ElDeleteHook(key, elem_it->second);
+    items_map.erase(elem_it);
 }
 
 template <typename Key, typename Value, typename CacheStrategy>
