@@ -6,8 +6,8 @@
 #include <memory>
 
 #include "SessionManager.hpp"
-#include "Models.hpp"
-#include "UserManager.hpp"
+#include "DbData.hpp"
+#include "UserDbHandler.hpp"
 
 class IAuth {
 public:
@@ -32,7 +32,7 @@ private:
     std::string current_login_;
     std::string current_password_;
 
-    UserManager<Wt::Dbo::backend::Postgres>& user_manager_;
+    UserDbHandler<Wt::Dbo::backend::Postgres>& user_manager_;
     ITokenGenerator* token_generator_;
     SessionManager* session_manager_;
 
@@ -41,7 +41,7 @@ public:
     Auth(const Auth&) = delete ;
     ~Auth() = default;
 
-    explicit Auth(UserManager<Wt::Dbo::backend::Postgres>& user_manager, SessionManager* session_manager) :
+    explicit Auth(UserDbHandler<Wt::Dbo::backend::Postgres>& user_manager, SessionManager* session_manager) :
             user_manager_(user_manager),
             session_manager_(session_manager) {};
 

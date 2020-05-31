@@ -9,46 +9,46 @@
 
 namespace dbo = Wt::Dbo;
 
-class DialogueModel;
-class MessageModel;
-class PictureModel;
-class UserModel;
-class ContentModel;
+class DialogueDbData;
+class MessageDbData;
+class PictureDbData;
+class UserDbData;
+class ContentDbData;
 
-typedef dbo::ptr<DialogueModel> DialogueModelPtr;
-typedef dbo::ptr<MessageModel> MessageModelPtr;
-typedef dbo::ptr<PictureModel> PictureModelPtr;
-typedef dbo::ptr<UserModel> UserModelPtr;
-typedef dbo::ptr<ContentModel> ContentModelPtr;
+typedef dbo::ptr<DialogueDbData> DialoguePtr;
+typedef dbo::ptr<MessageDbData> MessagePtr;
+typedef dbo::ptr<PictureDbData> PicturePtr;
+typedef dbo::ptr<UserDbData> UserPtr;
+typedef dbo::ptr<ContentDbData> ContentPtr;
 typedef long long IdType;
-typedef dbo::collection<dbo::ptr<DialogueModel>> Dialogues;
-typedef dbo::collection<dbo::ptr<MessageModel>> Messages;
-typedef dbo::collection<dbo::ptr<PictureModel>> Pictures;
-typedef dbo::collection<dbo::ptr<UserModel>> Users;
-typedef dbo::collection<dbo::ptr<ContentModel>> ContentElements;
+typedef dbo::collection<dbo::ptr<DialogueDbData>> Dialogues;
+typedef dbo::collection<dbo::ptr<MessageDbData>> Messages;
+typedef dbo::collection<dbo::ptr<PictureDbData>> Pictures;
+typedef dbo::collection<dbo::ptr<UserDbData>> Users;
+typedef dbo::collection<dbo::ptr<ContentDbData>> ContentElements;
 
 namespace Wt::Dbo {
   // Auto-increment id fields
   template<>
-  struct dbo_traits<DialogueModel> : public dbo_default_traits {
+  struct dbo_traits<DialogueDbData> : public dbo_default_traits {
     static const char *surrogateIdField() {
       return "id";
     }
   };
   template<>
-  struct dbo_traits<MessageModel> : public dbo_default_traits {
+  struct dbo_traits<MessageDbData> : public dbo_default_traits {
     static const char *surrogateIdField() {
       return "id";
     }
   };
   template<>
-  struct dbo_traits<PictureModel> : public dbo_default_traits {
+  struct dbo_traits<PictureDbData> : public dbo_default_traits {
     static const char *surrogateIdField() {
       return "id";
     }
   };
   template<>
-  struct dbo_traits<UserModel> : public dbo_default_traits {
+  struct dbo_traits<UserDbData> : public dbo_default_traits {
     static const char *surrogateIdField() {
       return "id";
     }
@@ -56,10 +56,10 @@ namespace Wt::Dbo {
 }
 
 
-class DialogueModel {
+class DialogueDbData {
  public:
-  dbo::collection<UserModelPtr> members_;
-  dbo::collection<MessageModelPtr> messages_;
+  dbo::collection<UserPtr> members_;
+  dbo::collection<MessagePtr> messages_;
   template<class Action>
   void persist(Action& a) {
     dbo::hasMany(a, messages_, dbo::ManyToOne, "dialogue");
@@ -67,14 +67,14 @@ class DialogueModel {
   }
 };
 
-class MessageModel {
+class MessageDbData {
  public:
   std::string text_;
   std::time_t creation_dt_;
   bool is_read_;
-  DialogueModelPtr dialogue_;
-  UserModelPtr author_;
-  dbo::collection<ContentModelPtr> content_elements_;
+  DialoguePtr dialogue_;
+  UserPtr author_;
+  dbo::collection<ContentPtr> content_elements_;
 
   template<class Action>
   void persist(Action& a) {
@@ -87,11 +87,11 @@ class MessageModel {
   }
 };
 
-class PictureModel {
+class PictureDbData {
  public:
   std::string path_;
   int access_lvl_;
-  UserModelPtr user_;
+  UserPtr user_;
 
   template<class Action>
   void persist(Action& a) {
@@ -101,7 +101,7 @@ class PictureModel {
   }
 };
 
-class UserModel {
+class UserDbData {
  public:
   enum Gender {
     MALE,
@@ -112,8 +112,8 @@ class UserModel {
   std::string display_name_;
   std::string pwd_hash_;
   Gender gender_;
-  dbo::collection<DialogueModelPtr> dialogues_;
-  dbo::collection<PictureModelPtr> pictures_;
+  dbo::collection<DialoguePtr> dialogues_;
+  dbo::collection<PicturePtr> pictures_;
 
   template<class Action>
   void persist(Action& a) {
@@ -126,7 +126,7 @@ class UserModel {
   }
 };
 
-class ContentModel {
+class ContentDbData {
  public:
   enum Type {
     IMAGE,
@@ -137,7 +137,7 @@ class ContentModel {
   Type type_;
   std::string file_path_;
   std::string metadata_;
-  MessageModelPtr message_;
+  MessagePtr message_;
 
   template<class Action>
   void persist(Action& a) {

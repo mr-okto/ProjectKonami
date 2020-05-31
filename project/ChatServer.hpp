@@ -48,7 +48,7 @@ public:
     void mark_message_as_read(const chat::Message& message);
 
     uint get_user_id(const Wt::WString& username);
-    UserModelPtr get_user_model(const Wt::WString& username);
+    UserPtr get_user_model(const Wt::WString& username);
     std::string get_user_picture(const Wt::WString& username, int accs_lvl);
 
     // Try to sign in with given username and password.
@@ -82,7 +82,7 @@ private:
     std::set<Wt::WString> online_users_;
     std::map<Wt::WString, Wt::WString> avatar_map_;
 
-    UserManager<Wt::Dbo::backend::Postgres> user_manager_;
+    UserDbHandler<Wt::Dbo::backend::Postgres> user_manager_;
 
     void post_chat_event(const ChatEvent& event);
 };

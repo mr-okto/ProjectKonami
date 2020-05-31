@@ -13,7 +13,7 @@ bool Auth::sign_in(const std::string& username,
     if (session_manager_->has_reserved(username)) {
         return false;
     }
-    UserModelPtr storaged_user = user_manager_.get_user(username);
+    UserPtr storaged_user = user_manager_.get_user(username);
 
     if (storaged_user &&
             storaged_user->username_ == username &&
@@ -33,7 +33,7 @@ bool Auth::sign_out(std::string username) {
 }
 
 bool Auth::sign_up(const std::string& username, const std::string& password) {
-    UserModelPtr storaged_user = user_manager_.create_user(username, password);
+    UserPtr storaged_user = user_manager_.create_user(username, password);
 
     if (storaged_user) {
         return true;

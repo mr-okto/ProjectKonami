@@ -5,7 +5,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <Models.hpp>
+#include <DbData.hpp>
 
 namespace dbo = Wt::Dbo;
 
@@ -72,11 +72,11 @@ bool DbSession<DBConnector>::connect(const std::string &host,
   is_connected_ = true;
   try {
     db_session_.setConnection(std::move(db_connector));
-    db_session_.mapClass<DialogueModel>("dialogue");
-    db_session_.mapClass<MessageModel>("message");
-    db_session_.mapClass<UserModel>("user");
-    db_session_.mapClass<PictureModel>("picture");
-    db_session_.mapClass<ContentModel>("content");
+    db_session_.mapClass<DialogueDbData>("dialogue");
+    db_session_.mapClass<MessageDbData>("message");
+    db_session_.mapClass<UserDbData>("user");
+    db_session_.mapClass<PictureDbData>("picture");
+    db_session_.mapClass<ContentDbData>("content");
   }
   catch (Wt::Dbo::Exception &e) {
     std::cerr << e.what();
