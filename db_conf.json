@@ -1,7 +1,0 @@
-{
-  "host": "$KONAMI_DB_HOST",
-  "port": 5432,
-  "db_user": "$KONAMI_DB_USER",
-  "db_password": "$KONAMI_DB_PWD",
-  "db_name": "$KONAMI_DB_NAME"
-}
