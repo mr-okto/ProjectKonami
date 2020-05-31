@@ -1,66 +1,66 @@
 #pragma once
 
 #include "DbSession.hpp"
-#include "Models.hpp"
+#include "DbData.hpp"
 
 template< class DBConnector >
-class UserManager {
+class UserDbHandler {
  public:
   DbSession<DBConnector> &db_session_;
-  explicit UserManager(DbSession<DBConnector> &db_session);
+  explicit UserDbHandler(DbSession<DBConnector> &db_session);
   Users get_all_users();
-  UserModelPtr create_user(const std::string &username, const std::string &pwd_hash);
-  UserModelPtr get_user(IdType id);
-  UserModelPtr get_user(const std::string &username);
+  UserPtr create_user(const std::string &username, const std::string &pwd_hash);
+  UserPtr get_user(IdType id);
+  UserPtr get_user(const std::string &username);
   bool update_username(IdType user_id, const std::string &username);
   bool update_password(IdType user_id, const std::string &pwd_hash);
-  PictureModelPtr add_picture(IdType user_id, const std::string &path, int access_lvl);
-  PictureModelPtr add_picture(const UserModelPtr &user, const std::string &path, int access_lvl);
+  PicturePtr add_picture(IdType user_id, const std::string &path, int access_lvl);
+  PicturePtr add_picture(const UserPtr &user, const std::string &path, int access_lvl);
   Pictures get_pictures(IdType user_id);
   bool hide_pictures(IdType user_id);
 };
 
 template< class DBConnector >
-UserManager<DBConnector>::UserManager(DbSession<DBConnector> &db_session)
+UserDbHandler<DBConnector>::UserDbHandler(DbSession<DBConnector> &db_session)
     : db_session_(db_session) {}
 
 template< class DBConnector >
-Users UserManager<DBConnector>::get_all_users() {
+Users UserDbHandler<DBConnector>::get_all_users() {
   db_session_.start_transaction();
-  Users result = db_session_.template find<UserModel>().orderBy("username");
+  Users result = db_session_.template find<UserDbData>().orderBy("username");
   db_session_.end_transaction();
   return result;
 }
 
 template< class DBConnector >
-UserModelPtr UserManager<DBConnector>::create_user(const std::string &username, const std::string &pwd_hash) {
+UserPtr UserDbHandler<DBConnector>::create_user(const std::string &username, const std::string &pwd_hash) {
   if (get_user(username)) {
     // Username already exists
-    return UserModelPtr();
+    return UserPtr();
   }
-  auto new_user = std::make_unique<UserModel>(UserModel());
+  auto new_user = std::make_unique<UserDbData>(UserDbData());
   new_user->username_ = username;
   new_user->pwd_hash_ = pwd_hash;
   return db_session_.add(std::move(new_user));
 }
 
 template< class DBConnector >
-UserModelPtr UserManager<DBConnector>::get_user(IdType id) {
-  return db_session_.template get_by_id<UserModel>(id);
+UserPtr UserDbHandler<DBConnector>::get_user(IdType id) {
+  return db_session_.template get_by_id<UserDbData>(id);
 }
 
 template< class DBConnector >
-UserModelPtr UserManager<DBConnector>::get_user(const std::string &username) {
+UserPtr UserDbHandler<DBConnector>::get_user(const std::string &username) {
   db_session_.start_transaction();
-  UserModelPtr user = db_session_.template find<UserModel>().where("username = ?").bind(username);
+  UserPtr user = db_session_.template find<UserDbData>().where("username = ?").bind(username);
   db_session_.end_transaction();
   return user;
 }
 
 template< class DBConnector >
-bool UserManager<DBConnector>::update_username(IdType user_id, const std::string &username) {
+bool UserDbHandler<DBConnector>::update_username(IdType user_id, const std::string &username) {
   db_session_.start_transaction();
-  UserModelPtr user = get_user(user_id);
+  UserPtr user = get_user(user_id);
   bool result = (bool) user;
   if (result) {
     user.modify()->username_ = username;
@@ -70,9 +70,9 @@ bool UserManager<DBConnector>::update_username(IdType user_id, const std::string
 }
 
 template< class DBConnector >
-bool UserManager<DBConnector>::update_password(IdType user_id, const std::string &pwd_hash) {
+bool UserDbHandler<DBConnector>::update_password(IdType user_id, const std::string &pwd_hash) {
   db_session_.start_transaction();
-  UserModelPtr user = get_user(user_id);
+  UserPtr user = get_user(user_id);
   bool result = (bool) user;
   if (result) {
     user.modify()->pwd_hash_ = pwd_hash;
@@ -82,8 +82,8 @@ bool UserManager<DBConnector>::update_password(IdType user_id, const std::string
 }
 
 template< class DBConnector >
-PictureModelPtr UserManager<DBConnector>::add_picture(IdType user_id, const std::string &path, int access_lvl) {
-  UserModelPtr user = get_user(user_id);
+PicturePtr UserDbHandler<DBConnector>::add_picture(IdType user_id, const std::string &path, int access_lvl) {
+  UserPtr user = get_user(user_id);
   if (!user) {
     return nullptr;
   }
@@ -91,33 +91,33 @@ PictureModelPtr UserManager<DBConnector>::add_picture(IdType user_id, const std:
 }
 
 template< class DBConnector >
-PictureModelPtr UserManager<DBConnector>::add_picture(const UserModelPtr &user, const std::string &path, int access_lvl) {
-  auto new_picture = std::make_unique<PictureModel>(PictureModel());
+PicturePtr UserDbHandler<DBConnector>::add_picture(const UserPtr &user, const std::string &path, int access_lvl) {
+  auto new_picture = std::make_unique<PictureDbData>(PictureDbData());
   new_picture->path_ = path;
   new_picture->access_lvl_ = access_lvl;
 
   db_session_.start_transaction();
   new_picture->user_ = user;
-  PictureModelPtr result = db_session_.add(std::move(new_picture));
+  PicturePtr result = db_session_.add(std::move(new_picture));
   db_session_.end_transaction();
   return result;
 }
 
 template<class DBConnector>
-Pictures UserManager<DBConnector>::get_pictures(IdType user_id) {
+Pictures UserDbHandler<DBConnector>::get_pictures(IdType user_id) {
   db_session_.start_transaction();
-  UserModelPtr user = get_user(user_id);
+  UserPtr user = get_user(user_id);
   if (!user) {
     return Pictures();
   }
-  Pictures pictures = db_session_.template find<PictureModel>().where("user_id = ?").bind(user.id())
+  Pictures pictures = db_session_.template find<PictureDbData>().where("user_id = ?").bind(user.id())
       .where("access_lvl >= ?").bind(0);
   db_session_.end_transaction();
   return pictures;
 }
 
 template<class DBConnector>
-bool UserManager<DBConnector>::hide_pictures(IdType user_id) {
+bool UserDbHandler<DBConnector>::hide_pictures(IdType user_id) {
   Pictures pictures = get_pictures(user_id);
   if (pictures.empty()) {
     return false;

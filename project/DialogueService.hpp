@@ -9,10 +9,10 @@
 #include <map>
 
 #include "DbSession.hpp"
-#include "DialogueManager.hpp"
-#include "MessageManager.hpp"
-#include "UserManager.hpp"
-#include "Models.hpp"
+#include "DialogueDbHandler.hpp"
+#include "MessageDbHandler.hpp"
+#include "UserDbHandler.hpp"
+#include "DbData.hpp"
 
 typedef unsigned int uint;
 
@@ -117,8 +117,8 @@ class DialogueService {
         message_manager_(session),
         user_manager_(session) {}
 
-    ContentModel::Type parse_type(Content::FileType type);
-    Content::FileType parse_type(ContentModel::Type type);
+    ContentDbData::Type parse_type(Content::FileType type);
+    Content::FileType parse_type(ContentDbData::Type type);
 
     std::vector<Dialogue> get_dialogues(uint user_id);
     std::vector<Message> get_messages(uint dialogue_id);
@@ -129,31 +129,31 @@ class DialogueService {
 
  private:
     DbSession<T>& session_;
-    DialogueManager<T> dialogue_manager_;
-    MessageManager<T> message_manager_;
-    UserManager<T> user_manager_;
+    DialogueDbHandler<T> dialogue_manager_;
+    MessageDbHandler<T> message_manager_;
+    UserDbHandler<T> user_manager_;
 };
 
 template <typename T>
-ContentModel::Type DialogueService<T>::parse_type(Content::FileType type) {
+ContentDbData::Type DialogueService<T>::parse_type(Content::FileType type) {
     if (type == Content::IMAGE) {
-        return ContentModel::IMAGE;
+        return ContentDbData::IMAGE;
     } else if (type == Content::VIDEO) {
-        return ContentModel::VIDEO;
+        return ContentDbData::VIDEO;
     } else if (type == Content::DOCUMENT) {
-        return ContentModel::DOCUMENT;  
+        return ContentDbData::DOCUMENT;
     } else {
-        return ContentModel::OTHER;
+        return ContentDbData::OTHER;
     }
 }
 
 template <typename T>
-Content::FileType DialogueService<T>::parse_type(ContentModel::Type type) {
-    if (type == ContentModel::IMAGE) {
+Content::FileType DialogueService<T>::parse_type(ContentDbData::Type type) {
+    if (type == ContentDbData::IMAGE) {
         return Content::IMAGE;
-    } else if (type == ContentModel::VIDEO) {
+    } else if (type == ContentDbData::VIDEO) {
         return Content::VIDEO;
-    } else if (type == ContentModel::DOCUMENT) {
+    } else if (type == ContentDbData::DOCUMENT) {
         return Content::DOCUMENT;  
     } else {
         return Content::OTHER;
@@ -162,7 +162,7 @@ Content::FileType DialogueService<T>::parse_type(ContentModel::Type type) {
 
 template <typename T>
 std::vector<Dialogue> DialogueService<T>::get_dialogues(uint user_id) {
-    UserModelPtr user = user_manager_.get_user(user_id);
+    UserPtr user = user_manager_.get_user(user_id);
     Dialogues dialogues = user->dialogues_;
     std::vector<Dialogue> dualogues_vec;
     session_.start_transaction();
@@ -176,7 +176,7 @@ std::vector<Dialogue> DialogueService<T>::get_dialogues(uint user_id) {
     session_.end_transaction();
     session_.start_transaction();
     for (auto& item : dualogues_vec) {
-        MessageModelPtr last_msg = message_manager_.get_last_msg(item.dialogue_id);
+        MessagePtr last_msg = message_manager_.get_last_msg(item.dialogue_id);
         if (last_msg) {
             item.last_msg_time = last_msg->creation_dt_;
         }
@@ -243,7 +243,7 @@ int DialogueService<T>::get_unread_messages_count(uint dialogue_id, uint user_id
 
 template <typename T>
 void DialogueService<T>::post_message(Message& message) {
-    MessageModelPtr message_model = message_manager_.create_msg(
+    MessagePtr message_model = message_manager_.create_msg(
         message.dialogue_id, message.user.user_id, message.content.message
     );
     message_manager_.add_content(

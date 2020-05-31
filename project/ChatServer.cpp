@@ -220,7 +220,7 @@ void ChatServer::close_same_session(const Wt::WString& username_) {
     }
 }
 
-UserModelPtr ChatServer::get_user_model(const Wt::WString &username) {
+UserPtr ChatServer::get_user_model(const Wt::WString &username) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
     return user_manager_.get_user(username.toUTF8());
 }
@@ -228,7 +228,7 @@ UserModelPtr ChatServer::get_user_model(const Wt::WString &username) {
 std::string ChatServer::get_user_picture(const Wt::WString &username, int accs_lvl) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
 
-    UserModelPtr user = user_manager_.get_user(username.toUTF8());
+    UserPtr user = user_manager_.get_user(username.toUTF8());
     db_session_.start_transaction();
     for (const auto& pic : user->pictures_) {
         if (pic->access_lvl_ == accs_lvl) {
@@ -257,7 +257,7 @@ bool ChatServer::update_username(uint32_t userId, const Wt::WString& from, const
 std::string ChatServer::update_avatar(uint32_t id, const std::string& newPicture) {
     std::unique_lock<std::recursive_mutex> lock(mutex_);
 
-    UserModelPtr userModel = user_manager_.get_user(id);
+    UserPtr userModel = user_manager_.get_user(id);
     user_manager_.hide_pictures(userModel.id());
 
     auto newPictures = create_blurred_copies(newPicture, "./avatars", userModel.id(), 5);
