@@ -139,7 +139,7 @@ void ChatWidget::connect() {
         (this, std::bind(&ChatWidget::process_chat_event, this, std::placeholders::_1))) {
         Wt::WApplication::instance()->enableUpdates(true);
         if (!message_received_) {
-            message_received_ = std::make_unique<Wt::WSound>("sounds/message_received.mp3");
+            message_received_ = std::make_unique<Wt::WSound>("./sounds/message_received.mp3");
         }
     }
 }
