@@ -605,9 +605,10 @@ void ChatWidget::show_edit_profile() {
         sign_out();
     });
 
-    edit_profile_form_->updated_avatar().connect([this](const std::string& newAvatarLink) {
+    edit_profile_form_->updated_avatar().connect([this, &dialog](const std::string& newAvatarLink) {
         avatar_link_.setResource(std::make_shared<Wt::WFileResource>(newAvatarLink));
         profile_picture_->setImageLink(avatar_link_);
+        dialog.accept();
     });
 
 

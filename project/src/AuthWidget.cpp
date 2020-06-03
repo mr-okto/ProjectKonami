@@ -11,7 +11,7 @@
 #include <Wt/WCheckBox.h>
 #include <Wt/WEvent.h>
 #include <Wt/Utils.h>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 #include "AuthWidget.hpp"
 
@@ -201,12 +201,12 @@ std::unique_ptr<Wt::WVBoxLayout> AuthWidget::create_input_forms_layout() {
 
 std::string
 AuthWidget::copy_temp_img_to_avatar_folder(const std::string& tmp_file_path, const std::string& client_filename) {
-//    auto ext = std::filesystem::path(client_filename).extension();
-//    if (ext == ".jpg") {
-//        client_filename = client_filename.erase(client_filename.find(ext), ext.string().length()) + "";
-//    }
+    std::string extension = boost::filesystem::extension(client_filename);
 
-    std::string result_filename = "./avatars/" + client_filename;// + ".jpeg";
+    std::stringstream time;
+
+    time << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::string result_filename = "./avatars/" + time.str() + extension;
     std::ifstream in(tmp_file_path, std::ios::binary | std::ios::in);
     std::ofstream out(result_filename, std::ios::binary | std::ios::out);
 

@@ -3,6 +3,7 @@
 #include <Wt/WLineEdit.h>
 #include <Wt/WPushButton.h>
 #include <Wt/WProgressBar.h>
+#include <filesystem>
 
 #include "EditProfileForm.hpp"
 
@@ -102,7 +103,12 @@ std::string
 EditProfileForm::copy_temp_img_to_avatar_folder(
         const std::string &tmp_file_path, const std::string &client_filename)
 {
-    std::string result_filename = "./avatars/" + client_filename;// + ".jpeg";
+    auto ext = std::filesystem::path(client_filename).extension();
+
+    std::stringstream time;
+
+    time << std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::string result_filename = "./avatars/" + time.str() + ext.string();
     std::ifstream in(tmp_file_path, std::ios::binary | std::ios::in);
     std::ofstream out(result_filename, std::ios::binary | std::ios::out);
 
