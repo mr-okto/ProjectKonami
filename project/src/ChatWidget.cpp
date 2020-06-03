@@ -16,6 +16,7 @@
 #include <Wt/WFileResource.h>
 #include <Wt/WProgressBar.h>
 #include <Wt/WVideo.h>
+#include <Wt/WLink.h>
 #include <boost/filesystem.hpp>
 #include <fstream>
 
@@ -139,7 +140,9 @@ void ChatWidget::connect() {
         (this, std::bind(&ChatWidget::process_chat_event, this, std::placeholders::_1))) {
         Wt::WApplication::instance()->enableUpdates(true);
         if (!message_received_) {
-            message_received_ = std::make_unique<Wt::WSound>("./sounds/message_received.mp3");
+            message_received_ = std::make_unique<Wt::WSound>(
+                    Wt::MediaEncoding::MP3,
+                    Wt::WLink(std::make_shared<Wt::WFileResource>("./sounds/message_received.mp3")));
         }
     }
 }
