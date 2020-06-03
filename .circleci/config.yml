@@ -29,7 +29,7 @@ jobs:
           mkdir /tmp/git_repo && mv -t /tmp/git_repo build/project/ProjectKonami \
           project/resources herokuDockerfile heroku.yml db_conf.json \
           project/simplechat.xml project/*.css project/default-avatar.png \
-          project/wt_config.xml project/sounds/message_received.mp3
+          project/wt_config.xml project/sounds
 
       - deploy:
           working_directory:
